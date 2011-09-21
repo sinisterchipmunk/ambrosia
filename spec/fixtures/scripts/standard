@@ -1,0 +1,74 @@
+###
+Single line comments start with one pound ('#'). Multiline comments are denoted with 3 pounds.
+
+This is an indent-sensitive syntax. Indents are used for blocks, while outdents close the block.
+
+Screens are defined at the top level (no indent) with the form [screen name] [colon]. They contain
+blocks of code to be evaluated in that screen.
+
+Anywhere else, _references_ to screen names are denoted with [colon] [screen name]. These are used
+as arguments to functions, such as goto(:screen_name). The screen name can be referenced as if it
+were itself a function, causing the terminal to switch immediately to the specified screen if no
+other conditions have tested true.
+
+Variables are defined dynamically based upon their content. Variable types can't be changed, but they
+can be cast into other types. If the type cannot be inferred from context, its type will default to
+'string'. Variable names can contain periods and underscores.
+
+Keypresses can be checked as part of an if-condition or a switch.
+###
+
+
+init:
+  txn.unique_id = oebr.unique_id
+  txn.ref_num = ""
+  title = "Beryl"
+  screen_after_swipe = :enter_amount
+  screen_after_confirm = :submit_data
+  screen_after_amount = :confirm_amount
+  payment.amount = 0
+  payment.cashback = 0
+  card.ccv = card.avs.zip = card.avs.address = txn.invoice_number = ""
+  oebr.time_zone = -5
+  
+  idle
+
+idle:
+  main_menu if keypress 'menu'
+  
+  card_swipe:
+    next = :swipe_from_idle
+    error = :card_read_error
+  
+    # uses the 'idle' view for a prompt
+    # OR construct the prompt view programmatically:
+    prompt
+      img src="/images/SageCM.gif" alt="/images/SageCM.gif"; br
+      
+      p; `You have 1 unread message.`; br
+      p; `Please swipe card or press the "F" key.`; br
+
+main_menu:
+  switch keypress
+    when 1: credit_menu
+    when 2: debit_menu
+    when 3: batch_inquiry
+    when 4: batch_settlement
+    when 5: admin_menu
+    when 6: messaging
+    when 7: print_coupon
+    when 'f1': help
+  
+  # render the 'main_menu' view
+  display
+  
+  # OR construct it programmatically
+  display
+    table width=100% height=100%
+      tr
+        td align=left
+          `1. `
+        td align=left
+          a href=:credit_menu
+            `Credit`
+      # ...
