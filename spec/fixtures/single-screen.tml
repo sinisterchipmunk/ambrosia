@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
-<tml cache="allow" xmlns="http://www.ingenico.co.uk/tml"> 
-  <head> 
-    <defaults cancel="emb://embedded.tml" /> 
-  </head>
-  <screen id="init">
-  </screen>
-</tml>

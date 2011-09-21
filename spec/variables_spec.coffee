@@ -22,4 +22,3 @@ describe "tml variables", ->
       
       it "should have a <setvar> element", ->
         expect(screen.first("setvar")).toBeTruthy()
-      

@@ -5,6 +5,11 @@ describe "Builder", ->
   
   beforeEach -> builder = build('tml')
   
+  it "multiple siblings should not be joined by commas", ->
+    builder.b 'screen', id: 1
+    builder.b 'screen', id: 2
+    expect(builder.toString()).not.toMatch(/,/)
+  
   it "should default root to itself", ->
     expect(builder.root).toBe(builder)
     

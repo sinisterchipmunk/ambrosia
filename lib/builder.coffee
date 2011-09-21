@@ -37,7 +37,7 @@ exports.Builder = class Builder
     front += "#{k}=\"#{v}\" " for k, v of @attrs
     if @tags.length > 0
       @tabs() + front.trim() + ">\n" +
-        (tag.toString(false) + "\n" for tag in @tags) +
+        (tag.toString(false) + "\n" for tag in @tags).join("") +
       @tabs() + "</#{@name}>"
     else
       @tabs() + front + "/>"
