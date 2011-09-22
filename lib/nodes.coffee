@@ -31,12 +31,24 @@ exports.Literal = class Literal
   
   build: -> @value
   
-exports.Assign = class Assign
+class Type
+  tmltype: ->
+    switch @type
+      when 'string', 'integer', 'opaque', 'datetime' then @type
+      when 'boolean' then 'integer'
+      else throw new Error "untranslatable type: #{@type}"
+  
+exports.Assign = class Assign extends Type
   constructor: (@lvalue, @rvalue) ->
-    
+    @type = @rvalue.type
+  
   build: (screen) ->
-    screen.root.b 'vardcl', name: @lvalue.value, type: @rvalue.tmltype() or "string"
-    screen.b 'setvar', name: @lvalue.value, lo: @rvalue.value
+    lval = @lvalue.build(screen)
+    rval = @rvalue.build(screen)
+    
+    screen.root.b 'vardcl', name: lval, type: rval.tmltype() or "string"
+    screen.b 'setvar', name: lval, lo: rval
+    this # this is so assigns can chain assigns
     
 exports.Screen = class Screen
   constructor: (@inner, @block) -> 
@@ -46,21 +58,15 @@ exports.Screen = class Screen
       screen = builder.b "screen", id: @inner.value
     else
       screen = builder.b "screen"
-
+  
     if @block
       @block.build(screen)
   
-exports.Value = class Value
+exports.Value = class Value extends Type
   constructor: (@type, @value) -> 
     
-  tmltype: ->
-    switch @type
-      when 'string', 'integer', 'opaque', 'datetime' then @type
-      when 'boolean' then 'integer'
-      else throw new Error "untranslatable type: #{@type}"
-    
   build: (builder) ->
-    @value
+    this
     
 exports.NumberValue = class NumberValue extends Value
   constructor: (v) -> super('integer', parseInt v)

@@ -53,6 +53,27 @@ describe "Builder", ->
     builder.b 'screen', id: 'two'
     
     expect(builder.first('screen', id: 'two').attrs.id).toEqual('two')
+    
+  it "should return all elements", ->
+    builder.b 'screen', id: 'one'
+    builder.b 'screen', id: 'two'
+    builder.b 'vardcl', name: 'three'
+    
+    expect(builder.all().length).toEqual 3
+    
+  it "should return all elements matching `name`", ->
+    builder.b 'screen', id: 'one'
+    builder.b 'screen', id: 'two'
+    builder.b 'vardcl', name: 'three'
+    
+    expect(builder.all('screen').length).toEqual 2
+    
+  it "should return all elements matching `name` AND `attrs` if given", ->
+    builder.b 'screen', id: 'one', name: 'other'
+    builder.b 'screen', id: 'two', name: 'other'
+    builder.b 'screen', id: 'three', name: 'another'
+    
+    expect(builder.all('screen', name: 'other').length).toEqual 2
 
   it "should set parent on children and grandchildren", ->
     builder.b 'screen', (b) -> b.b 'next'

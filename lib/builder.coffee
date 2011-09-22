@@ -22,15 +22,22 @@ exports.Builder = class Builder
     child
     
   first: (name, attrs = null) ->
+    @all(name, attrs)[0]
+    
+  all: (name, attrs = null) ->
+    result = []
     for tag in @tags
-      if tag.name.toLowerCase() == name.toLowerCase()
+      if !name || tag.name.toLowerCase() == name.toLowerCase()
         if attrs
+          match = true
           for k, v of attrs
-            if tag.attrs[k] == v
-              return tag
+            if tag.attrs[k] != v
+              match = false
+              break
+          result.push tag if match
         else
-          return tag
-    null
+          result.push tag
+    result
     
   stringify: ->
     front = "<#{@name} "
