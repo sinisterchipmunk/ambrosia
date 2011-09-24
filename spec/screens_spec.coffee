@@ -18,4 +18,24 @@ describe "tml blocks", ->
 
     it "should produce a <screen> element with id 'init'", ->
       expect(doc.first("screen", id:'init')).toBeTruthy()
+      
+  describe "a one-line screen", ->
+    beforeEach -> doc = dom("init: something = 1")
     
+    it "should set something to 1", ->
+      simulate doc, (sim) ->
+        expect(sim.state.variables.something.value).toEqual(1)
+  
+  # describe "a function call from init", ->
+  #   beforeEach -> doc = dom("init: result = other\nother: return 1")
+  # 
+  #   it "should produce 2 screens", ->
+  #     expect(doc.all("screen").length).toEqual 2
+  #   
+  #   it "should produce a 'return.other' variable", ->
+  #     expect(doc.first("vardcl", name: 'return.other')).toBeTruthy()
+  #     
+  #   describe "the init screen", ->
+  #     # beforeEach -> debugger = debug(doc.first("screen", id: "init"))
+  #     
+  #     

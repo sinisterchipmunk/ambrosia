@@ -47,6 +47,10 @@ exports.Assign = class Assign extends Type
     lval = @lvalue.build(screen)
     rval = @rvalue.build(screen)
     
+    throw new Error "Can't use assignment as left value" if lval instanceof Assign
+    if rval instanceof Assign
+      rval = "tmlvar:#{rval.lvalue.build(screen)}"
+    
     screen.root.b 'vardcl', name: lval, type: @rvalue.tmltype() or "string"
     screen.b 'setvar', name: lval, lo: rval
     this # this is so assigns can chain assigns
@@ -67,10 +71,13 @@ exports.Value = class Value extends Type
   constructor: (@type, @value) -> 
     
   build: (builder) ->
-    this
+    @value.build(builder)
     
 exports.NumberValue = class NumberValue extends Value
-  constructor: (v) -> super('integer', parseInt v)
+  constructor: (v) ->
+    v.value = parseInt v.value
+    v.value = 0 if isNaN(v.value) or !isFinite(v.value)
+    super('integer', v)
   
 exports.StringValue = class StringValue extends Value
   constructor: (v) -> super('string', v)

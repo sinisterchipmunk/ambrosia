@@ -81,6 +81,7 @@ grammar =
   Screen: [
     o 'Identifier :', -> new Screen($1)
     o 'Identifier : Block', -> new Screen($1, $3)
+    o 'Identifier : Body', -> new Screen($1, $3)
   ]
   
   # Definition: [
