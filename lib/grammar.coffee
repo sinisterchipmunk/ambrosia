@@ -53,9 +53,10 @@ grammar =
   
   Value: [
     o 'Identifier', -> new Identifier($1)
-    o 'NUMBER', -> new NumberValue($1)
-    o 'STRING', -> new StringValue($1)
-    o 'BOOL', -> new BoolValue($1)
+    o 'NUMBER', -> new NumberValue(new Literal $1)
+    o 'STRING', -> new StringValue(new Literal $1)
+    o 'BOOL', -> new BoolValue(new Literal $1)
+    o ': Identifier', -> new ScreenReference($2)
     # o 'JS', -> new Value($1)
     # o 'ARRAY', -> new Literal($1)
   ]
@@ -63,6 +64,9 @@ grammar =
   Assign: [
     o 'Identifier = Expression', -> new Assign($1, $3)
     o 'Identifier = INDENT Expression OUTDENT', -> new Assign($1, $4)
+    
+    # this is produced by code `one = :one`
+    o 'Identifier CALL_START { = Expression } CALL_END', -> new Assign($1, $5)
   ]
   
   ParamList: [

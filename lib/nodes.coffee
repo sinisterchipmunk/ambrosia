@@ -36,6 +36,7 @@ class Type
     switch @type
       when 'string', 'integer', 'opaque', 'datetime' then @type
       when 'boolean' then 'integer'
+      when 'screenref' then 'string'
       else throw new Error "untranslatable type: #{@type}"
   
 exports.Assign = class Assign extends Type
@@ -46,7 +47,7 @@ exports.Assign = class Assign extends Type
     lval = @lvalue.build(screen)
     rval = @rvalue.build(screen)
     
-    screen.root.b 'vardcl', name: lval, type: rval.tmltype() or "string"
+    screen.root.b 'vardcl', name: lval, type: @rvalue.tmltype() or "string"
     screen.b 'setvar', name: lval, lo: rval
     this # this is so assigns can chain assigns
     
@@ -81,3 +82,8 @@ exports.Identifier = class Identifier extends Value
   # for now treat as string
   constructor: (v) -> super('string', v)
   
+exports.ScreenReference = class ScreenReference extends Value
+  constructor: (v) -> super('screenref', v)
+  
+  build: (builder) ->
+    "##{@value.build(builder)}"
