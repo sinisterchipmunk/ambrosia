@@ -16,15 +16,15 @@ describe "methods", ->
       sim = simulate doc
       sim.goto "#init"
       sim.start (sim) ->
-        expect(sim.state.variables.something.value).toEqual(1)
+        expect(sim.state.variables['init.something'].value).toEqual(1)
   
-  describe "an implicit function call from main", ->
+  describe "a function call from main", ->
     sim = null
     beforeEach ->
-      doc = dom "main: result = other\nother: return 1"
+      doc = dom "main: result = other()\nother: return 1"
       
       # main:
-      #   result = other
+      #   result = other()
       #   
       # other:
       #   return 1
@@ -37,14 +37,3 @@ describe "methods", ->
       
     it "should return from function with value 1", ->
       expect(sim.state.variables.result.value).toEqual 1
-
-  describe "an explicit function call from main", ->
-    sim = null
-    beforeEach ->
-      doc = dom "main: result = other()\nother: return 1"
-      x = 30
-      sim = simulate doc, (sim) -> (--x) != 0
-
-    it "should return from function with value 1", ->
-      expect(sim.state.variables.result.value).toEqual 1
-

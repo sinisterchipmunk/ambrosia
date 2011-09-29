@@ -28,6 +28,10 @@ grammar =
     o 'Identifier CALL_START ParamList CALL_END :', -> new Method $1, $3, new Block
     o 'Identifier CALL_START ParamList CALL_END : Block', -> new Method $1, $3, $6
     o 'Identifier CALL_START ParamList CALL_END : Line', -> new Method $1, $3, Block.wrap [$6]
+    # init (a, b):
+    o 'Identifier CALL_START ( ParamList ) : CALL_END', -> new Method $1, $4, new Block
+    o 'Identifier CALL_START ( ParamList ) : CALL_END Block', -> new Method $1, $4, $8
+    o 'Identifier CALL_START ( ParamList ) : CALL_END Line', -> new Method $1, $4, Block.wrap [$8]
   ]
 
   Methods: [
@@ -37,7 +41,7 @@ grammar =
   ]
   
   Identifier: [
-    o 'IDENTIFIER',                             -> new Literal $1
+    o 'IDENTIFIER',                             -> new Identifier new Literal $1
   ]
 
   # Any list of statements and expressions, separated by line breaks or semicolons.
@@ -62,7 +66,11 @@ grammar =
   ]
   
   Expression: [
-    o 'Value'
+    o 'Identifier', -> new Identifier($1)
+    o 'NUMBER', -> new NumberValue(new Literal $1)
+    o 'STRING', -> new StringValue(new Literal $1)
+    o 'BOOL', -> new BoolValue(new Literal $1)
+    o ': Identifier', -> new ScreenReference($2)
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
@@ -81,16 +89,6 @@ grammar =
     o 'Expression MATH Expression', -> new Operation $1, $2, $3
     o 'Expression + Expression', -> new Operation $1, $2, $3
     o 'Expression - Expression', -> new Operation $1, $2, $3
-  ]
-  
-  Value: [
-    o 'Identifier', -> new Identifier($1)
-    o 'NUMBER', -> new NumberValue(new Literal $1)
-    o 'STRING', -> new StringValue(new Literal $1)
-    o 'BOOL', -> new BoolValue(new Literal $1)
-    o ': Identifier', -> new ScreenReference($2)
-    # o 'JS', -> new Value($1)
-    # o 'ARRAY', -> new Literal($1)
   ]
   
   Assign: [

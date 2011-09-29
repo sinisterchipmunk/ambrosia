@@ -1,4 +1,5 @@
 TMLBuilder = require('./tml_builder').TMLBuilder
+Scope = require('./variable_scope').VariableScope
 
 exports.Base = class Base
   constructor: (@nodes...) ->
@@ -11,10 +12,32 @@ exports.Base = class Base
       if children
         self[children[index]] = node
     @after_initialize() if @after_initialize
+  
+  create: (klass, args...) ->
+    child = new klass args...
+    child.parent = this
+    # need to do this right away since child is created after parent already exists
+    child.run_prepare_blocks()
+    child
+    
+  run_prepare_blocks: ->
+    @prepare() if @prepare
+    for node in @nodes
+      node.run_prepare_blocks() if node instanceof Base
+  
   children: -> []
-  build: ->
+  
   compile: -> throw new Error "no compiler for node"
+  
   type: -> throw new Error "node has no type"
+  
+  current_scope: ->
+    p = this
+    while p
+      return p.scope if p.scope
+      p = p.parent
+    throw new Error "BUG: No scope!"
+    
   root: ->
     p = this
     while p
@@ -22,33 +45,26 @@ exports.Base = class Base
       p = p.parent
     parent
   
-# Documents (and all their nodes) are built in 2 phases. The first phase (build) processes nodes created
-# by the developer (and/or code generated in rewriter.coffee) -- the actual program code --
-# and creates a high-level document. The document contains information like variable names and types,
-# method names, return types, and so forth.
-#
-# The second phase (compile) iterates through this high level document and creates the low-level
-# TML code which corresponds to it.
 exports.Document = class Document extends Base
   after_initialize: ->
+    @scope = new Scope
     @methods = {}
-    @variables = {}
-    @build()
+    @run_prepare_blocks()
+  
+  find_method: (name) ->
+    method = @methods[name]
+    throw new Error "No method named #{name}" if !method
+    method
     
   children: -> ['block']
       
-  build: ->
-    @block.build()
-    
   compileDOM: ->
     builder = new TMLBuilder
-    
-    for name, variable of @variables
-      builder.vardcl name, variable.type, variable.value
-      
     for name, method of @methods
-      method.compile(builder)
-      
+      method.compile builder
+    # important to compile scopes last, because method nodes are still building them until now
+    @current_scope().compile builder
+    
     builder
       
   compile: ->
@@ -57,16 +73,14 @@ exports.Document = class Document extends Base
 exports.Block = class Block extends Base
   constructor: (nodes) -> super(nodes...)
   
-  build: ->
-    for node in @nodes
-      node.build()
-  
   compile: (builder) ->
     for node in @nodes
       node.compile builder
       
   push: (node) ->
+    node.parent = this
     @nodes.push node
+    node.run_prepare_blocks()
   
   # Wrap up the given nodes as a **Block**, unless it already happens
   # to be one.
@@ -77,8 +91,6 @@ exports.Block = class Block extends Base
 exports.Literal = class Literal extends Base
   children: -> ['value']
   
-  build: -> @value.toString()
-  
   compile: (builder) -> @value.toString()
 
 exports.Method = class Method extends Base
@@ -87,15 +99,19 @@ exports.Method = class Method extends Base
   after_initialize: ->
     @next = "#__return__"
     if typeof(@inner) == 'string'
-      @inner = build: -> @inner
-
-  getID: -> @id or= @inner.build()
+      @inner = compile: -> @inner
+      
+  getID: -> @id or= @inner.compile()
     
   tmltype: -> 'opaque'
 
-  build: ->
-    @root().methods[@getID()] = this
-    @block.build() if @block
+  prepare: ->
+    id = @getID()
+    if id != 'main'
+      @scope = @current_scope().sub id
+    @root().methods[id] = this
+    @current_scope().define 'return', null
+    @current_scope().define param.compile(), null for param in @params
   
   compile: (builder) ->
     if id = @getID()
@@ -103,13 +119,13 @@ exports.Method = class Method extends Base
     else
       throw new Error "Method needs a name"
     screen.attrs.next = @next
-    @block.compile(screen) if @block
+    @block.compile screen if @block
 
 exports.MethodCall = class MethodCall extends Base
   children: -> ['method_name', 'params']
   tmltype: -> @_tmltype || 'integer'
   getMethodName: ->
-    @_method_name or= @method_name.build()
+    @_method_name or= @method_name.compile()
     
   compile: (screen) ->
     function_screen_id = @getMethodName()
@@ -123,8 +139,15 @@ exports.MethodCall = class MethodCall extends Base
     # insert the destination _following_ the method call into the call stack
     screen.b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
     screen.b 'setvar', name: 'call.stack', lo: "##{return_screen_id}", op: "plus", ro: "tmlvar:call.stack"
-    # set up parameters and direct the current screen into the method screen
+    # direct the current screen into the method screen
     screen.b 'next', uri: "##{function_screen_id}"
+
+    method = @root().find_method function_screen_id
+    throw new Error "Invalid parameter count: #{@params.length} for #{method.params.length}" if @params.length != method.params.length
+    for i in [0...method.params.length]
+      param_name = new Identifier method.params[i].compile(screen)
+      param = @params[i]
+      method.create(Assign, param_name, param).compile screen
     
     # create and return the return screen
     # subsequent ops will be performed transparently on the return screen
@@ -134,7 +157,7 @@ class Type extends Base
   tmltype: ->
     switch type = @type()
       when 'string', 'integer', 'opaque', 'datetime' then type
-      when 'boolean' then 'integer'
+      when 'boolean', 'number' then 'integer'
       when 'screenref' then 'string'
       else throw new Error "untranslatable type: #{type}"
   
@@ -144,29 +167,23 @@ exports.Assign = class Assign extends Type
   children: -> ['lvalue', 'rvalue']
   
   compile: (screen) ->
-    lval = @lvalue.compile screen
+    throw new Error "Can't use assignment as left value" if @lvalue instanceof Assign
+
     rval = @rvalue.compile screen
-    
-    throw new Error "Can't use assignment as left value" if lval instanceof Assign
     if rval instanceof Assign
-      rval = "tmlvar:#{rval.lvalue.compile(screen)}"
-      
-    if @rvalue instanceof Identifier
-      # a local variable name or a screen name.
-      # If it's a screen name then it's not by reference, and should be treated as
-      # a method call.
-      for scrid, scr of @root().methods
-        if rval == scrid # method call
-          @rvalue = new MethodCall(new Literal(rval), [])
-          rval = @rvalue.compile screen
-          break
+      rval = "tmlvar:"+@current_scope().lookup(rval.lvalue.compile screen).name
+    else if @rvalue instanceof Identifier
+      rval = "tmlvar:"+@current_scope().lookup(rval).name
     
-    screen.root.vardcl lval, @rvalue.tmltype() || "string"
+    lval = @lvalue.compile screen
+    type = @rvalue.tmltype()
+    lval = @current_scope().define lval, type
     
     if @rvalue instanceof MethodCall
       screen.attrs.next = "##{rval.attrs.id}"
       screen = rval
-      rval = "tmlvar:#{@rvalue.getMethodName()}.return"
+      return_variable = @root().find_method(@rvalue.getMethodName()).current_scope().lookup("return").name
+      rval = "tmlvar:#{return_variable}"
 
     if @rvalue instanceof Operation
       screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
@@ -194,7 +211,7 @@ exports.Value = class Value extends Type
   type: -> @_type
     
   compile: (builder) ->
-    @value.compile(builder)
+    if typeof(@value) == 'string' then @value else @value.compile builder
     
 exports.NumberValue = class NumberValue extends Value
   constructor: (v) ->
@@ -209,18 +226,22 @@ exports.BoolValue = class BoolValue extends Value
   constructor: (v) -> super('boolean', (if v.toString().toLowerCase() == 'true' then 1 else 0))
   
 exports.Identifier = class Identifier extends Value
-  # for now treat as string
   constructor: (v) -> super('string', v)
+  compile: (builder) -> super
   
 exports.ScreenReference = class ScreenReference extends Value
   constructor: (v) -> super('screenref', v)
   
   compile: (builder) ->
-    "##{@value.compile(builder)}"
+    "##{@value.compile builder}"
 
 exports.Return = class Return extends Base
   children: -> ['expression']
     
   compile: (builder) ->
     screen_id = builder.attrs.id
-    new Assign(new Literal("#{screen_id}.return"), @expression).compile(builder)
+    @create(Assign, new Identifier("return"), @expression).compile builder
+
+for i, klass of exports
+  if klass.prototype instanceof Base
+    klass.prototype.__name or= i
