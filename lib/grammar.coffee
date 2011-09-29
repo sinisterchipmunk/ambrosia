@@ -16,9 +16,19 @@ o = (patternString, action, options) ->
 grammar =
   Root: [
     o '', -> new Document new Block
-    o '{ Screen }', -> new Document(Block.wrap [ $2 ])
-    # o 'Body', -> new Document($1)
-    # o 'Block TERMINATOR', -> new Document($1)
+    o '{ Methods }', -> new Document(Block.wrap $2)
+  ]
+  
+  Method: [
+    o 'Identifier :', -> new Method($1)
+    o 'Identifier : Block', -> new Method($1, $3)
+    o 'Identifier : Line', -> new Method($1, Block.wrap [$3])
+    # o 'Identifier : Expression TERMINATOR', -> new Method($1, $3)
+  ]
+
+  Methods: [
+    o 'Method', -> [$1]
+    o 'Methods TERMINATOR Method', -> $1.concat [$3]
   ]
   
   Identifier: [
@@ -28,7 +38,7 @@ grammar =
   # Any list of statements and expressions, separated by line breaks or semicolons.
   Body: [
     o 'Line',                                   -> Block.wrap [$1]
-    o 'Body TERMINATOR Line',                   -> $1.push $3
+    o 'Body TERMINATOR Line',                   -> $1.push $3; $1
     o 'Body TERMINATOR',                        -> new Block
   ]
   
@@ -49,6 +59,16 @@ grammar =
   Expression: [
     o 'Value'
     o 'Assign'
+    o 'MethodCall'
+  ]
+  
+  Statement: [
+    o 'RETURN Expression', -> new Return $2
+  ]
+  
+  MethodCall: [
+    o 'Identifier CALL_START ParamList CALL_END', -> new MethodCall $1, $3
+    o 'Identifier CALL_START CALL_END', -> new MethodCall $1, []
   ]
   
   Value: [
@@ -78,42 +98,6 @@ grammar =
     o 'Identifier'
   ]
   
-  Screen: [
-    o 'Identifier :', -> new Screen($1)
-    o 'Identifier : Block', -> new Screen($1, $3)
-    o 'Identifier : Body', -> new Screen($1, $3)
-  ]
-  
-  # Definition: [
-  #   o 'Identifier CALL_START ParamList CALL_END',            -> new Definition($1, $3)
-  #   o 'Identifier CALL_START ParamList CALL_END TERMINATOR', -> new Definition($1, $3)
-  # ]
-  # 
-  # MultipleDefinitions: [
-  #   o 'Definition',                     -> [$1]
-  #   o 'MultipleDefinitions Definition', -> $1.concat [$2]
-  # ]
-  # 
-  # Main: [
-  #   o 'Identifier'
-  # ]
-  # 
-  # Shader: [
-  #   o '{ Identifier : INDENT Main OUTDENT }'
-  #   o '{ "fragment" : INDENT Main OUTDENT }'
-  # ]
-  # 
-  # Header: [
-  #   o 'Shader', -> console.log($1)
-  # 
-  #   # uniforms: mvMatrix, pMatrix
-  #   o '{ Identifier : MultipleDefinitions }', -> new Header($2, $4)
-  #   o '{ Identifier : INDENT MultipleDefinitions OUTDENT }', -> new Header($2, $5)
-  #   
-  #   # uniform mat4 mvMatrix, pMatrix;
-  #   o 'Identifier CALL_START Identifier CALL_START ParamList CALL_END CALL_END', -> new Definition($3, $5, $1)
-  # ]
-
 operators = [
   ['left',      '.', '?.', '::']
   ['left',      'CALL_START', 'CALL_END']

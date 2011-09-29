@@ -21,8 +21,30 @@ exports.Builder = class Builder
     @tags.push(child)
     child
     
-  first: (name, attrs = null) ->
-    @all(name, attrs)[0]
+  insert: (name, attrs, inner, sort) ->
+    if attrs && !sort
+      if attrs.before || attrs.after
+        sort = attrs
+        attrs = {}
+    if typeof(inner) == 'object' && !sort
+      sort = inner
+      inner = null
+      
+    child = new Builder(name, attrs, inner, @depth + 1, this)
+    if sort.before
+      if (index = @tags.indexOf @first(sort.before)) != -1
+        @tags.splice index, 0, child
+        return child
+    if sort.after
+      if (index = @tags.indexOf @last(sort.after)) != -1
+        @tags.splice index+1, 0, child
+        return child
+    @tags.push child
+    child
+    
+  first: (name, attrs = null) -> @all(name, attrs)[0]
+    
+  last: (name, attrs = null) -> all = @all(name, attrs); all[all.length-1]
     
   all: (name, attrs = null) ->
     result = []

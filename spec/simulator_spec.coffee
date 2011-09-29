@@ -62,7 +62,7 @@ describe "Simulator", ->
         false
         
     it "should raise an error if no next screen exists", ->
-      expect(-> simulate doc, (sim) -> true).toThrow("Cannot step forward: screen 'idle' is a dead end!")
+      expect(-> simulate doc, (sim) -> true).toThrow("Cannot step forward: screen 'init' is a dead end!")
         
     it "should raise an error jumping to nonexistent screens", ->
       expect(-> simulate doc, (sim) -> sim.goto "missing").toThrow("Screen 'missing' not found!")

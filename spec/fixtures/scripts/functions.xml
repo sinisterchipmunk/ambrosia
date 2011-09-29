@@ -1,0 +1,71 @@
+<tml>
+  <vardcl name="call.stack_shift" type="string" />
+  <vardcl name="call.stack" type="string" />
+  <vardcl name="one" type="integer" />
+  <vardcl name="two" type="integer" />
+  <vardcl name="three" type="integer" />
+  <vardcl name="init.a" type="integer" />
+  <vardcl name="init.b" type="integer" />
+  <vardcl name="init.c" type="integer" />
+  <vardcl name="init.return" type="integer" />
+  <vardcl name="second.c" type="integer" />
+  <vardcl name="second.return" type="integer" />
+  
+  <screen id="__main__">
+    <next uri="#main" />
+  </screen>
+
+  <!-- called when returning from a function, figures out where to return to -->
+  <screen id="__return__">
+    <next uri="#__shift_char__">
+      <!-- if no items in stack, return to main; else, shift 1 character -->
+      <variant uri="#__main__" lo="tmlvar:call.stack_shift" op="equal" ro="" />
+    </next>
+    <setvar name="call.stack_shift" lo="tmlvar:call.return_stack" op="item" ro="0" />
+  </screen>
+  <screen id="__shift_char__">
+    <!-- shift 1 character in a loop until the first character is ; -->
+    <next uri="#__shift_char__">
+      <variant uri="__shift_last__" lo="tmlvar:call.return_stack" op="equal" ro=";" format="c" />
+    </next>
+    <setvar name="call.return_stack" lo="tmlvar:call.return_stack" op="minus" ro="-1" />
+  </screen>
+  <screen id="__shift_last__">
+    <!-- remove the ; from the beginning of the string, then go to the return destination -->
+    <next uri="tmlvar:call.stack_shift">
+    <setvar name="call.return_stack" lo="tmlvar:call.return_stack" op="minus" ro="-1" />
+  </screen>
+  
+  <screen id="main">
+    <next uri="#init" />
+    <setvar name="call.stack" ro="tmlvar:call.stack" op="plus" lo="#___main___init" />
+    <setvar name="call.stack" ro="tmlvar:call.stack" op="plus" lo=";" />
+    <setvar name="init.a" lo="1" />
+    <setvar name="init.b" lo="2" />
+    <setvar name="init.c" lo="3" />
+  </screen>
+  
+  <screen id="init">
+    <next uri="#second" />
+    <setvar name="call.stack" ro="tmlvar:call.stack" op="plus" lo="#_init_second" />
+    <setvar name="call.stack" ro="tmlvar:call.stack" op="plus" lo=";" />
+    <setvar name="one" lo="tmlvar:init.a" />
+    <setvar name="two" lo="tmlvar:init.b" />
+  </screen>
+  
+  <screen id="second">
+    <next uri="#__return__" />
+    <setvar name="three" lo="tmlvar:second.c" />
+    <setvar name="second.return" lo="tmlvar:init.c" op="plus" ro="1" />
+  </screen>
+  
+  <screen id="_init_second">
+    <next uri="#__return__" />
+    <setvar name="init.return" lo="second.return" />
+  </screen>
+  
+  <screen id="___main___init">
+    <next uri="#__return__" />
+    <setvar name="result" lo="tmlvar:init.return" />
+  </screen>
+</tml>

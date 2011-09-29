@@ -1,13 +1,12 @@
-builder = require './builder'
+TMLBuilder = require('./tml_builder').TMLBuilder  
 
 exports.Document = class Document
   constructor: (@block) ->
-    @builder = new builder.Builder 'tml', xmlns: "http://www.ingenico.co.uk/tml", cache: "deny"
-    @builder.b 'head', (b) ->
-      b.b 'defaults', cancel: 'emb://embedded.tml'
+    @builder = new TMLBuilder
     @build()
       
   build: ->
+    @builder.screens = []
     @block.build @builder
       
   compile: ->
@@ -17,8 +16,17 @@ exports.Block = class Block
   constructor: (@nodes = []) ->
 
   build: (builder) ->
+    # first, collect the `Method`s so we can do things like function calls by screen name
+    for node in @nodes
+      if node instanceof Method
+        builder.root.screens.push node
+    
+    # now, build the block
     for node in @nodes
       node.build builder
+      
+  push: (node) ->
+    @nodes.push node
   
   # Wrap up the given nodes as a **Block**, unless it already happens
   # to be one.
@@ -29,7 +37,56 @@ exports.Block = class Block
 exports.Literal = class Literal
   constructor: (@value) ->
   
-  build: -> @value
+  build: (builder) ->
+    @value.toString()
+
+exports.Method = class Method
+  constructor: (@inner, @block) ->
+    if typeof(@inner) == 'string'
+      @inner = { build: -> @inner }
+
+  getID: (builder) ->
+    @id or= @inner.build(builder)
+    
+  tmltype: -> 'opaque'
+
+  build: (builder) ->
+    if id = @getID(builder)
+      screen = builder.screen id
+    else
+      throw new Error "Method needs a name"
+
+    screen.attrs.next or= "#__return__"
+
+    if @block
+      @block.build(screen)
+
+exports.MethodCall = class MethodCall
+  constructor: (@method_name, @params) ->
+    
+  tmltype: -> @_tmltype || 'integer'
+  
+  getMethodName: (screen) ->
+    @_method_name or= @method_name.build(screen)
+    
+  build: (screen) ->
+    function_screen_id = @getMethodName(screen)
+    return_screen_id = "_#{screen.attrs['id']}_#{function_screen_id}"
+    
+    # console.log function_screen_id, screen.root.first('screen', id: function_screen_id)
+    # @_tmltype = screen.root.first('screen', id: function_screen_id).tmltype()
+    
+    # create the call stack if it doesn't exist already
+    screen.root.add_return_screen()
+    # insert the destination _following_ the method call into the call stack
+    screen.b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
+    screen.b 'setvar', name: 'call.stack', lo: "##{return_screen_id}", op: "plus", ro: "tmlvar:call.stack"
+    # set up parameters and direct the current screen into the method screen
+    screen.b 'next', uri: "##{function_screen_id}"
+    
+    # create and return the return screen
+    # subsequent ops will be performed transparently on the return screen
+    screen.root.b 'screen', id: return_screen_id, next: "#__return__"
   
 class Type
   tmltype: ->
@@ -44,28 +101,34 @@ exports.Assign = class Assign extends Type
     @type = @rvalue.type
   
   build: (screen) ->
-    lval = @lvalue.build(screen)
-    rval = @rvalue.build(screen)
+    lval = @lvalue.build screen
+    rval = @rvalue.build screen
     
     throw new Error "Can't use assignment as left value" if lval instanceof Assign
     if rval instanceof Assign
       rval = "tmlvar:#{rval.lvalue.build(screen)}"
+      
+    if @rvalue instanceof Identifier
+      # a local variable name or a screen name.
+      # If it's a screen name then it's not by reference, and should be treated as
+      # a method call.
+      for scr in screen.root.screens
+        if rval == scr.getID() # method call
+          @rvalue = new MethodCall(new Literal(rval), [])
+          rval = @rvalue.build screen
+          break
     
-    screen.root.b 'vardcl', name: lval, type: @rvalue.tmltype() or "string"
+    screen.root.vardcl lval, @rvalue.tmltype() || "string"
+    
+    # if rval instanceof Builder
+    if @rvalue instanceof MethodCall
+      screen.attrs.next = "##{rval.attrs.id}"
+      screen = rval
+      rval = "tmlvar:#{@rvalue.getMethodName()}.return"
+
     screen.b 'setvar', name: lval, lo: rval
+    
     this # this is so assigns can chain assigns
-    
-exports.Screen = class Screen
-  constructor: (@inner, @block) -> 
-    
-  build: (builder) ->
-    if @inner.value
-      screen = builder.b "screen", id: @inner.value
-    else
-      screen = builder.b "screen"
-  
-    if @block
-      @block.build(screen)
   
 exports.Value = class Value extends Type
   constructor: (@type, @value) -> 
@@ -94,3 +157,10 @@ exports.ScreenReference = class ScreenReference extends Value
   
   build: (builder) ->
     "##{@value.build(builder)}"
+
+exports.Return = class Return
+  constructor: (@expression) ->
+    
+  build: (builder) ->
+    screen_id = builder.attrs.id
+    new Assign(new Literal("#{screen_id}.return"), @expression).build(builder)

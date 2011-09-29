@@ -4,6 +4,55 @@ describe "Builder", ->
   builder = null
   
   beforeEach -> builder = build('tml')
+
+  describe "insertion", ->
+    beforeEach ->
+      builder.b 'one'
+      builder.b 'one'
+      builder.b 'two'
+      builder.b 'two'
+      
+    it "with attrs but missing inner", ->
+      builder.insert 'three', {}, after: 'four'
+      expect(builder.tags[4].name).toEqual('three')
+      
+    describe "with missing target", ->
+      it "(before)", ->
+        builder.insert 'three', before: 'four'
+        tags = (tag.name for tag in builder.tags)
+        expect(tags[0]).toEqual 'one'
+        expect(tags[1]).toEqual 'one'
+        expect(tags[2]).toEqual 'two'
+        expect(tags[3]).toEqual 'two'
+        expect(tags[4]).toEqual 'three'
+      
+      it "(after)", ->
+        builder.insert 'three', after: 'four'
+        tags = (tag.name for tag in builder.tags)
+        expect(tags[0]).toEqual 'one'
+        expect(tags[1]).toEqual 'one'
+        expect(tags[2]).toEqual 'two'
+        expect(tags[3]).toEqual 'two'
+        expect(tags[4]).toEqual 'three'
+  
+    describe "with existing target", ->
+      it "(before)", ->
+        builder.insert 'three', before: 'two'
+        tags = (tag.name for tag in builder.tags)
+        expect(tags[0]).toEqual 'one'
+        expect(tags[1]).toEqual 'one'
+        expect(tags[2]).toEqual 'three'
+        expect(tags[3]).toEqual 'two'
+        expect(tags[4]).toEqual 'two'
+      
+      it "(after)", ->
+        builder.insert 'three', after: 'one'
+        tags = (tag.name for tag in builder.tags)
+        expect(tags[0]).toEqual 'one'
+        expect(tags[1]).toEqual 'one'
+        expect(tags[2]).toEqual 'three'
+        expect(tags[3]).toEqual 'two'
+        expect(tags[4]).toEqual 'two'
   
   it "multiple siblings should not be joined by commas", ->
     builder.b 'screen', id: 1

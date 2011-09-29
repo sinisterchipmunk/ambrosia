@@ -14,53 +14,14 @@
 #        return false # halt execution
 #
 
-DefaultVariableValue = (variable) ->
-  CastValue variable.attrs.value, variable.attrs.type
+{ DefaultVariableValue, CastValue, VariableValue, Literalize } = require './simulator/common'
+{ Expression } = require './simulator/expression'
+{ Literalize } = require './simulator/common'
+require './simulator/all_expressions'
     
-CastValue = (value, type) ->
-  value = (value || "").toString()
-  switch type
-    when 'integer'
-      result = parseInt value
-      result = 0 if isNaN(result) or !isFinite(result)
-      result
-    when 'datetime' then new Date(value)
-    when 'opaque', 'string' then value
-    else value # TML variable types default to 'string'
-
-VariableValue = (variable_state, varname) ->
-  if variable_state[varname] != undefined
-    variable_state[varname]
-  else
-    throw new Error "Undefined variable: #{varname}"
-    
-Literalize = (variable_state, value, type) ->
-  if value.toString()['tmlvar:']
-    lvalue = VariableValue(variable_state, value[7..-1])
-  else lvalue = CastValue(value, type)
-    
-ProcessExpression = (variable_state, expr, type) ->
-  lvalue = Literalize(variable_state, expr.lo, type)
-  unless expr.ro and expr.ro != ''
-    return lvalue # no ro means it's a simple assignment
-  
-  rvalue = Literalize(variable_state, expr.ro, type)
-  switch(expr.op)
-    when 'plus' then lvalue + rvalue
-    when 'minus' then lvalue - rvalue
-    else throw "Unrecognized arithmetic operator: #{expr.op}"
-
 exports.Simulator = class Simulator
   constructor: (@dom) ->
     if @dom.name != 'tml' then throw new Error("TML builder required")
-    
-  init_variables: ->
-    for variable in @dom.all("vardcl")
-      @state.variables[variable.attrs.name] =
-        type: variable.attrs.type or "string"
-        value: DefaultVariableValue(variable)
-    
-  initialize: ->
     @state =
       screen:
         id: null
@@ -70,39 +31,58 @@ exports.Simulator = class Simulator
       @goto start.attrs.id
     else throw new Error "No screens found!"
     
+  init_variables: ->
+    for variable in @dom.all("vardcl")
+      @state.variables[variable.attrs.name] =
+        type: variable.attrs.type or "string"
+        value: DefaultVariableValue(variable)
+    
   goto: (id) ->
     id = id[1..-1] if id[0] == '#'
     screen = @dom.first("screen", id: id)
     throw new Error "Screen '#{id}' not found!" unless screen
     @state.screen.id = screen.attrs.id
     @state.screen.element = screen
+    @process_variable_assignments()
     
   process_variable_assignments: ->
     for assign in @state.screen.element.all('setvar')
       variable = @state.variables[assign.attrs.name]
-      variable.value = ProcessExpression(@state.variables, assign.attrs, variable.type)
+      variable.value = Expression.evaluate variable.type, assign.attrs, @state.variables
     
   step: ->
-    @process_variants()
-    @process_variable_assignments()
+    @process_variants() # also triggers variable assigns
     
   find_possible_variants: ->
     candidates = []
-    # check for matching conditions
-    # the last candidate is the value of <next>
     next = @state.screen.element.first('next')
-    if next then next = next.attrs['uri'] else next = @state.screen.element.attrs['next']
-    if next then candidates.push next
+    
+    # check for matching conditions
+    if next
+      for variant in next.all("variant")
+        if variant.attrs['key']
+          throw new Error "TODO: Not implemented: handle keypress variants"
+        else
+          result = Expression.evaluate "boolean", variant.attrs, @state.variables
+          candidates.push variant.attrs['uri'] if result
+
+    # the last candidate is the value of <next>
+    next = (next and next.attrs['uri']) or @state.screen.element.attrs['next']
+    candidates.push next if next
+    
+    # finally, convert candidates which are references to TML variables into their values
+    candidates = for candidate in candidates
+      if /^tmlvar:/.test candidate then Literalize(@state.variables, candidate, 'string')
+      else candidate
+    
     candidates
     
   process_variants: ->
     candidates = @find_possible_variants()
     if candidates.length == 0
-      throw new Error "Cannot step forward: screen 'idle' is a dead end!"
+      throw new Error "Cannot step forward: screen '#{@state.screen.id}' is a dead end!"
     else
       @goto candidates[0]
 
   start: (callback) ->
-    @initialize()
-    @process_variable_assignments()
     @step() until not callback(this)

@@ -20,17 +20,18 @@ describe "tml variables", ->
       expect(doc.all("vardcl").length).toEqual 3
       
     it "should have 3 setvars", ->
-      expect(doc.first("screen").all("setvar").length).toEqual 3
+      screen = doc.first("screen", id: "init")
+      expect(screen.all("setvar").length).toEqual 3
       
       # verify order
-      all = (s.attrs.name for s in doc.first("screen").all("setvar"))
+      all = (s.attrs.name for s in screen.all("setvar"))
       expect(all[0]).toEqual "three"
       expect(all[1]).toEqual "two"
       expect(all[2]).toEqual "one"
       
-      expect(doc.first("screen").first("setvar", name: 'three').attrs.lo.toString()).toEqual '0'
-      expect(doc.first("screen").first("setvar", name: 'two').attrs.lo).toEqual 'tmlvar:three'
-      expect(doc.first("screen").first("setvar", name: 'one').attrs.lo).toEqual 'tmlvar:two'
+      expect(screen.first("setvar", name: 'three').attrs.lo.toString()).toEqual '0'
+      expect(screen.first("setvar", name: 'two').attrs.lo).toEqual 'tmlvar:three'
+      expect(screen.first("setvar", name: 'one').attrs.lo).toEqual 'tmlvar:two'
 
   describe "assigned within a screen", ->
     beforeEach -> doc = dom "init:\n\tone = 1"
@@ -47,7 +48,7 @@ describe "tml variables", ->
     
     describe "the resultant <screen> element", ->
       screen = null
-      beforeEach -> screen = doc.first "screen"
+      beforeEach -> screen = doc.first "screen", id: "init"
       
       it "should have a <setvar> element", ->
         expect(screen.first("setvar")).toBeTruthy()
