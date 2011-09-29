@@ -65,6 +65,7 @@ grammar =
     o 'Value'
     o 'Assign'
     o 'MethodCall'
+    o 'Operation'
   ]
   
   Statement: [
@@ -74,6 +75,12 @@ grammar =
   MethodCall: [
     o 'Identifier CALL_START ParamList CALL_END', -> new MethodCall $1, $3
     o 'Identifier CALL_START CALL_END', -> new MethodCall $1, []
+  ]
+  
+  Operation: [
+    o 'Expression MATH Expression', -> new Operation $1, $2, $3
+    o 'Expression + Expression', -> new Operation $1, $2, $3
+    o 'Expression - Expression', -> new Operation $1, $2, $3
   ]
   
   Value: [

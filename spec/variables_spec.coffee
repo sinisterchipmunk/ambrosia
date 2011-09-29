@@ -3,6 +3,18 @@ require './spec_helper'
 describe "tml variables", ->
   doc = null
   
+  describe "assigning to expression result", ->
+    beforeEach -> doc = dom "init:\n\tone = 1 + 1"
+    
+    it "should define variable 'one'", ->
+      expect(doc.first("vardcl", name: 'one', type: 'integer')).toBeTruthy()
+      
+    it "should set value of 'one' on 'init' screen", ->
+      set = doc.first("screen", id:"init").first("setvar", name:"one")
+      expect(set.attrs.lo).toEqual '1'
+      expect(set.attrs.ro).toEqual '1'
+      expect(set.attrs.op).toEqual 'plus'
+  
   describe "assigning a screen reference", ->
     beforeEach -> doc = dom "init:\n\tone = :one"
     

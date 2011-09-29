@@ -132,14 +132,14 @@ exports.MethodCall = class MethodCall extends Base
   
 class Type extends Base
   tmltype: ->
-    switch @type
-      when 'string', 'integer', 'opaque', 'datetime' then @type
+    switch type = @type()
+      when 'string', 'integer', 'opaque', 'datetime' then type
       when 'boolean' then 'integer'
       when 'screenref' then 'string'
-      else throw new Error "untranslatable type: #{@type}"
+      else throw new Error "untranslatable type: #{type}"
   
 exports.Assign = class Assign extends Type
-  after_initialize: -> @type = @rvalue.type
+  type: -> @rvalue.type()
   
   children: -> ['lvalue', 'rvalue']
   
@@ -168,12 +168,30 @@ exports.Assign = class Assign extends Type
       screen = rval
       rval = "tmlvar:#{@rvalue.getMethodName()}.return"
 
-    screen.b 'setvar', name: lval, lo: rval
+    if @rvalue instanceof Operation
+      screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
+    else
+      screen.b 'setvar', name: lval, lo: rval
     
     this # this is so assigns can chain assigns
+
+exports.Operation = class Operation extends Type
+  children: -> ['lvalue', 'operator', 'rvalue']
+  
+  type: -> @lvalue.type()
+  
+  compile: (screen) ->
+    lo: @lvalue.compile(screen)
+    ro: @rvalue.compile(screen)
+    op: switch @operator
+      when '+' then 'plus'
+      when '-' then 'minus'
+      else @operator
   
 exports.Value = class Value extends Type
-  children: -> ['type', 'value']
+  children: -> ['_type', 'value']
+  
+  type: -> @_type
     
   compile: (builder) ->
     @value.compile(builder)
