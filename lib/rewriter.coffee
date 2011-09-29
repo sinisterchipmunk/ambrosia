@@ -24,7 +24,7 @@ class exports.Rewriter
     @closeOpenIndexes()
     @addImplicitIndentation()
     @tagPostfixConditionals()
-    @addImplicitBraces()
+    # @addImplicitBraces()
     @addImplicitParentheses()
     @tokens
 

@@ -1,5 +1,5 @@
 # first, build coffee to js so that line numbers reported in error stacks actually mean something
-coffee -c -o ./out ./lib/**/*.coffee
+coffee -c -o ./out ./lib/**/*.coffee ./lib/*.coffee
 if [[ $? ]]
 then
   # build was successful

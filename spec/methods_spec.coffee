@@ -22,13 +22,18 @@ describe "methods", ->
     sim = null
     beforeEach ->
       doc = dom "main: result = other\nother: return 1"
+      
+      # main:
+      #   result = other
+      #   
+      # other:
+      #   return 1
+      #   
       # console.log doc.toString()
       
       # FIXME we need a better way to set stop conditions. Breakpoints?
       x = 30
-      sim = simulate doc, (sim) ->
-        # console.log sim.state.screen.id, sim.state.variables;
-        (--x) != 0
+      sim = simulate doc, (sim) -> (--x) != 0
       
     it "should return from function with value 1", ->
       expect(sim.state.variables.result.value).toEqual 1

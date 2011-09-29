@@ -16,19 +16,24 @@ o = (patternString, action, options) ->
 grammar =
   Root: [
     o '', -> new Document new Block
-    o '{ Methods }', -> new Document(Block.wrap $2)
+    o 'Methods', -> new Document(Block.wrap $1)
   ]
   
   Method: [
-    o 'Identifier :', -> new Method($1)
-    o 'Identifier : Block', -> new Method($1, $3)
-    o 'Identifier : Line', -> new Method($1, Block.wrap [$3])
-    # o 'Identifier : Expression TERMINATOR', -> new Method($1, $3)
+    o 'Identifier :', -> new Method $1, []
+    o 'Identifier : Block', -> new Method $1, [], $3
+    o 'Identifier : Line', -> new Method $1, [], Block.wrap [$3]
+    
+    # init(a, b):
+    o 'Identifier CALL_START ParamList CALL_END :', -> new Method $1, $3, new Block
+    o 'Identifier CALL_START ParamList CALL_END : Block', -> new Method $1, $3, $6
+    o 'Identifier CALL_START ParamList CALL_END : Line', -> new Method $1, $3, Block.wrap [$6]
   ]
 
   Methods: [
     o 'Method', -> [$1]
     o 'Methods TERMINATOR Method', -> $1.concat [$3]
+    o 'Methods TERMINATOR', -> $1
   ]
   
   Identifier: [
@@ -86,7 +91,7 @@ grammar =
     o 'Identifier = INDENT Expression OUTDENT', -> new Assign($1, $4)
     
     # this is produced by code `one = :one`
-    o 'Identifier CALL_START { = Expression } CALL_END', -> new Assign($1, $5)
+    o 'Identifier CALL_START = Expression CALL_END', -> new Assign($1, $5)
   ]
   
   ParamList: [
@@ -95,7 +100,7 @@ grammar =
   ]
   
   Param: [
-    o 'Identifier'
+    o 'Expression'
   ]
   
 operators = [

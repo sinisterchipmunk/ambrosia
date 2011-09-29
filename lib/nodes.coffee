@@ -1,29 +1,69 @@
-TMLBuilder = require('./tml_builder').TMLBuilder  
+TMLBuilder = require('./tml_builder').TMLBuilder
 
-exports.Document = class Document
-  constructor: (@block) ->
-    @builder = new TMLBuilder
+exports.Base = class Base
+  constructor: (@nodes...) ->
+    nodes = @nodes
+    self = this
+    children = @children()
+    for index in [0...nodes.length]
+      node = nodes[index]
+      node.parent = self
+      if children
+        self[children[index]] = node
+    @after_initialize() if @after_initialize
+  children: -> []
+  build: ->
+  compile: -> throw new Error "no compiler for node"
+  type: -> throw new Error "node has no type"
+  root: ->
+    p = this
+    while p
+      parent = p
+      p = p.parent
+    parent
+  
+# Documents (and all their nodes) are built in 2 phases. The first phase (build) processes nodes created
+# by the developer (and/or code generated in rewriter.coffee) -- the actual program code --
+# and creates a high-level document. The document contains information like variable names and types,
+# method names, return types, and so forth.
+#
+# The second phase (compile) iterates through this high level document and creates the low-level
+# TML code which corresponds to it.
+exports.Document = class Document extends Base
+  after_initialize: ->
+    @methods = {}
+    @variables = {}
     @build()
+    
+  children: -> ['block']
       
   build: ->
-    @builder.screens = []
-    @block.build @builder
+    @block.build()
+    
+  compileDOM: ->
+    builder = new TMLBuilder
+    
+    for name, variable of @variables
+      builder.vardcl name, variable.type, variable.value
+      
+    for name, method of @methods
+      method.compile(builder)
+      
+    builder
       
   compile: ->
-    @builder.toString()
+    @compileDOM().toString()
 
-exports.Block = class Block
-  constructor: (@nodes = []) ->
-
-  build: (builder) ->
-    # first, collect the `Method`s so we can do things like function calls by screen name
+exports.Block = class Block extends Base
+  constructor: (nodes) -> super(nodes...)
+  
+  build: ->
     for node in @nodes
-      if node instanceof Method
-        builder.root.screens.push node
-    
-    # now, build the block
+      node.build()
+  
+  compile: (builder) ->
     for node in @nodes
-      node.build builder
+      node.compile builder
       
   push: (node) ->
     @nodes.push node
@@ -34,43 +74,45 @@ exports.Block = class Block
     return nodes[0] if nodes.length is 1 and nodes[0] instanceof Block
     new Block nodes
 
-exports.Literal = class Literal
-  constructor: (@value) ->
+exports.Literal = class Literal extends Base
+  children: -> ['value']
   
-  build: (builder) ->
-    @value.toString()
+  build: -> @value.toString()
+  
+  compile: (builder) -> @value.toString()
 
-exports.Method = class Method
-  constructor: (@inner, @block) ->
+exports.Method = class Method extends Base
+  children: -> ['inner', 'params', 'block']
+  
+  after_initialize: ->
+    @next = "#__return__"
     if typeof(@inner) == 'string'
-      @inner = { build: -> @inner }
+      @inner = build: -> @inner
 
-  getID: (builder) ->
-    @id or= @inner.build(builder)
+  getID: -> @id or= @inner.build()
     
   tmltype: -> 'opaque'
 
-  build: (builder) ->
-    if id = @getID(builder)
+  build: ->
+    @root().methods[@getID()] = this
+    @block.build() if @block
+  
+  compile: (builder) ->
+    if id = @getID()
       screen = builder.screen id
     else
       throw new Error "Method needs a name"
+    screen.attrs.next = @next
+    @block.compile(screen) if @block
 
-    screen.attrs.next or= "#__return__"
-
-    if @block
-      @block.build(screen)
-
-exports.MethodCall = class MethodCall
-  constructor: (@method_name, @params) ->
-    
+exports.MethodCall = class MethodCall extends Base
+  children: -> ['method_name', 'params']
   tmltype: -> @_tmltype || 'integer'
-  
-  getMethodName: (screen) ->
-    @_method_name or= @method_name.build(screen)
+  getMethodName: ->
+    @_method_name or= @method_name.build()
     
-  build: (screen) ->
-    function_screen_id = @getMethodName(screen)
+  compile: (screen) ->
+    function_screen_id = @getMethodName()
     return_screen_id = "_#{screen.attrs['id']}_#{function_screen_id}"
     
     # console.log function_screen_id, screen.root.first('screen', id: function_screen_id)
@@ -88,7 +130,7 @@ exports.MethodCall = class MethodCall
     # subsequent ops will be performed transparently on the return screen
     screen.root.b 'screen', id: return_screen_id, next: "#__return__"
   
-class Type
+class Type extends Base
   tmltype: ->
     switch @type
       when 'string', 'integer', 'opaque', 'datetime' then @type
@@ -97,30 +139,30 @@ class Type
       else throw new Error "untranslatable type: #{@type}"
   
 exports.Assign = class Assign extends Type
-  constructor: (@lvalue, @rvalue) ->
-    @type = @rvalue.type
+  after_initialize: -> @type = @rvalue.type
   
-  build: (screen) ->
-    lval = @lvalue.build screen
-    rval = @rvalue.build screen
+  children: -> ['lvalue', 'rvalue']
+  
+  compile: (screen) ->
+    lval = @lvalue.compile screen
+    rval = @rvalue.compile screen
     
     throw new Error "Can't use assignment as left value" if lval instanceof Assign
     if rval instanceof Assign
-      rval = "tmlvar:#{rval.lvalue.build(screen)}"
+      rval = "tmlvar:#{rval.lvalue.compile(screen)}"
       
     if @rvalue instanceof Identifier
       # a local variable name or a screen name.
       # If it's a screen name then it's not by reference, and should be treated as
       # a method call.
-      for scr in screen.root.screens
-        if rval == scr.getID() # method call
+      for scrid, scr of @root().methods
+        if rval == scrid # method call
           @rvalue = new MethodCall(new Literal(rval), [])
-          rval = @rvalue.build screen
+          rval = @rvalue.compile screen
           break
     
     screen.root.vardcl lval, @rvalue.tmltype() || "string"
     
-    # if rval instanceof Builder
     if @rvalue instanceof MethodCall
       screen.attrs.next = "##{rval.attrs.id}"
       screen = rval
@@ -131,10 +173,10 @@ exports.Assign = class Assign extends Type
     this # this is so assigns can chain assigns
   
 exports.Value = class Value extends Type
-  constructor: (@type, @value) -> 
+  children: -> ['type', 'value']
     
-  build: (builder) ->
-    @value.build(builder)
+  compile: (builder) ->
+    @value.compile(builder)
     
 exports.NumberValue = class NumberValue extends Value
   constructor: (v) ->
@@ -155,12 +197,12 @@ exports.Identifier = class Identifier extends Value
 exports.ScreenReference = class ScreenReference extends Value
   constructor: (v) -> super('screenref', v)
   
-  build: (builder) ->
-    "##{@value.build(builder)}"
+  compile: (builder) ->
+    "##{@value.compile(builder)}"
 
-exports.Return = class Return
-  constructor: (@expression) ->
+exports.Return = class Return extends Base
+  children: -> ['expression']
     
-  build: (builder) ->
+  compile: (builder) ->
     screen_id = builder.attrs.id
-    new Assign(new Literal("#{screen_id}.return"), @expression).build(builder)
+    new Assign(new Literal("#{screen_id}.return"), @expression).compile(builder)

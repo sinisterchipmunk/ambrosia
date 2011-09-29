@@ -35,18 +35,16 @@ init:
 
 idle:
   main_menu if keypress 'menu'
-  
-  card_swipe:
-    next = :swipe_from_idle
-    error = :card_read_error
-  
-    # uses the 'idle' view for a prompt
-    # OR construct the prompt view programmatically:
-    prompt
-      img src="/images/SageCM.gif" alt="/images/SageCM.gif"; br
-      
-      p; `You have 1 unread message.`; br
-      p; `Please swipe card or press the "F" key.`; br
+  card_swipe :swipe_from_idle, :card_read_error, ->
+    print 'Beryl v3.0',        align: 'center', valign: 'middle', size: 'large'
+    print 'Please Swipe Card', align: 'center', valign: 'bottom'
+
+card_swipe: next, error, prompt_callback
+  begin
+    if card_swiped('magnetic', prompt_callback)
+      next()
+  rescue
+    error()
 
 main_menu:
   switch keypress
@@ -60,15 +58,4 @@ main_menu:
     when 'f1': help
   
   # render the 'main_menu' view
-  display
-  
-  # OR construct it programmatically
-  display
-    table width=100% height=100%
-      tr
-        td align=left
-          `1. `
-        td align=left
-          a href=:credit_menu
-            `Credit`
-      # ...
+  print "1. #{link_to :credit_menu, }"
