@@ -21,10 +21,9 @@ describe "methods", ->
   describe "a function call from main", ->
     sim = null
     beforeEach ->
-      doc = dom "main: result = other()\nother: return 1"
+      doc = dom "result = other()\nother: return 1"
       
-      # main:
-      #   result = other()
+      # result = other()
       #   
       # other:
       #   return 1

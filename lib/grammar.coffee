@@ -15,8 +15,19 @@ o = (patternString, action, options) ->
   
 grammar =
   Root: [
-    o '', -> new Document new Block
-    o 'Methods', -> new Document(Block.wrap $1)
+    o 'Methods', -> new Document Block.wrap $1
+    o '',        -> new Document new Block
+    o 'Body TERMINATOR',    -> new Document Block.wrap [new Method new Identifier('__main__'), [], $1]
+    o 'Body TERMINATOR Methods', ->
+      block = Block.wrap [new Method new Identifier('__main__'), [], $1]
+      doc = new Document block
+      block.push m for m in $3
+      doc
+    o 'Methods TERMINATOR Body TERMINATOR', ->
+      block = Block.wrap [new Method new Identifier('__main__'), [], $3]
+      doc = new Document block
+      block.push m for m in $1
+      doc
   ]
   
   Method: [
@@ -48,7 +59,7 @@ grammar =
   Body: [
     o 'Line',                                   -> Block.wrap [$1]
     o 'Body TERMINATOR Line',                   -> $1.push $3; $1
-    o 'Body TERMINATOR',                        -> new Block
+    # o 'Body TERMINATOR',                        -> new Block
   ]
   
   # An indented block of expressions. Note that the [Rewriter](rewriter.html)

@@ -27,6 +27,9 @@ exports.TMLBuilder = class TMLBuilder extends builder.Builder
       inner = attrs
       attrs = {}
     attrs.id = id if id
+    if attrs.id and scr = @first("screen", id: id)
+      # replace existing screens
+      @remove scr
     @insert('screen', attrs, inner, after: 'screen')
 
   # Manages a simple call stack in TML and helps return from method calls

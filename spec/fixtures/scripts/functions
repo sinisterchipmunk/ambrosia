@@ -1,12 +1,12 @@
 # replace the TML (screens) with traditional programming (methods)
 
-init: a, b, c
+init(a, b, c):
   one = a
   two = b
   return second c
 
-second: c
-  three = c
-  return c + 1
+second(a):
+  one = a
+  return one + 1
 
 result = init 1, 2, 3 #=> 4

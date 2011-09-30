@@ -14,6 +14,17 @@ exports.Builder = class Builder
       
     inner(this) if inner
   
+  remove: (node_or_name, attrs = {}) ->
+    if typeof(node_or_name) == 'object'
+      attrs = node_or_name.attrs
+      node_or_name = node_or_name.name
+      
+    for i in [0...@tags.length]
+      if @matches(@tags[i], node_or_name, attrs)
+        @tags.splice i, 1
+        @remove node_or_name, attrs
+        break
+        
   preamble: -> '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
   
   b: (name, attrs, inner) ->
@@ -49,17 +60,22 @@ exports.Builder = class Builder
   all: (name, attrs = null) ->
     result = []
     for tag in @tags
-      if !name || tag.name.toLowerCase() == name.toLowerCase()
-        if attrs
-          match = true
-          for k, v of attrs
-            if tag.attrs[k] != v
-              match = false
-              break
-          result.push tag if match
-        else
-          result.push tag
+      if @matches(tag, name, attrs)
+        result.push tag
     result
+    
+  matches: (tag, name, attrs) ->
+    if !name || tag.name.toLowerCase() == name.toLowerCase()
+      if attrs
+        match = true
+        for k, v of attrs
+          if tag.attrs[k] != v
+            match = false
+            break
+        return true if match
+      else
+        return true
+    false
     
   stringify: ->
     front = "<#{@name} "

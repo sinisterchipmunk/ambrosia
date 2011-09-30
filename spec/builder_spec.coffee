@@ -4,6 +4,18 @@ describe "Builder", ->
   builder = null
   
   beforeEach -> builder = build('tml')
+  
+  describe "removal", ->
+    beforeEach ->
+      builder.b 'one'
+    
+    it "should remove 'one'", ->
+      builder.remove 'one'
+      expect(builder.all('one').length).toEqual 0
+
+    it "should remove the node", ->
+      builder.remove builder.first('one')
+      expect(builder.all('one').length).toEqual 0
 
   describe "insertion", ->
     beforeEach ->

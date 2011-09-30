@@ -107,10 +107,12 @@ exports.Method = class Method extends Base
 
   prepare: ->
     id = @getID()
-    if id != 'main'
-      @scope = @current_scope().sub id
+    throw new Error "Duplicate method: #{id}" if @root().methods[id]
     @root().methods[id] = this
-    @current_scope().define 'return', null
+
+    if id != '__main__'
+      @scope = @current_scope().sub id
+      @current_scope().define 'return', null
     @current_scope().define param.compile(), null for param in @params
   
   compile: (builder) ->
@@ -147,6 +149,9 @@ exports.MethodCall = class MethodCall extends Base
     for i in [0...method.params.length]
       param_name = new Identifier method.params[i].compile(screen)
       param = @params[i]
+      # evaluate param variables in *current* scope, not in method's scope
+      if param instanceof Identifier
+        param = new StringValue("tmlvar:"+@current_scope().lookup(param.compile(screen)).name)
       method.create(Assign, param_name, param).compile screen
     
     # create and return the return screen
