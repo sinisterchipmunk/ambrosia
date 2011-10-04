@@ -24,7 +24,7 @@ exports.VariableScope = class Scope
 
   define: (name, type = null, method = false) ->
     qualified_name = @prefix + name
-    variable = @defs[name]
+    variable = @find(name)
     if variable
       if variable.type() == null
         variable.setType type
@@ -38,24 +38,28 @@ exports.VariableScope = class Scope
 
   type_of: (value) ->
     value.type()
-
-  lookup: (name, raiseError = true, downward = false) ->
-    throw new Error "No name given" if !name
     
+  find: (name, downward = false) ->
     for localname, def of @defs
       return def if def.name == name or localname == name
-      
     if @parent && !downward
-      v = @parent.lookup name, false
-    else if /\./.test name
-      v = null
-      for prefix, scope of @subscopes
-        v = scope.lookup name, false, true
-        break if v
+      return @parent.find name, false
     
-    if !v && raiseError
-      throw new Error "#{(if /\./.test name then name else @prefix+name)} is not defined"
-    return v
+    # check for qualified names relative to this scope, e.g. prefixed with one of child scope prefixes
+    #   root can find one.two.three,
+    #   root->one can find two.three,
+    #   root->one->two can find three
+    for prefix, scope of @subscopes
+      prefix = @prefix + prefix
+      if name.indexOf(prefix) == 0 # starts with prefix
+        return scope.find name, true
+
+    null
+
+  lookup: (name) ->
+    throw new Error "No name given" if !name
+    return v if v = @find(name)
+    throw new Error "#{(if /\./.test name then name else @prefix+name)} is not defined"
     
   sub: (prefix) ->
     throw new Error "Can't subscope without a prefix" if !prefix

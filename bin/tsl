@@ -1,0 +1,35 @@
+#!/usr/bin/env coffee
+
+path = require 'path'
+fs   = require 'fs'
+lib  = path.join path.dirname(fs.realpathSync(__filename)), '../lib'
+
+tml = require "#{lib}/tml"
+
+# require(lib + '/command').run()
+
+if process.argv.length > 2
+  results = {}
+  num = 0
+  
+  for i in [2...process.argv.length]
+    script = fs.readFileSync(process.argv[i], 'UTF-8')
+    code = tml.compile(script).toString()
+    results[process.argv[i]] = code
+    num++
+    
+  for filename, code of results
+    if num == 1
+      console.log code
+    else
+      if match = /^(.*)\.([^\.]*)$/.exec filename
+        filename = match[1]
+      filename += ".tml"
+      # console.log filename
+      fs.writeFile filename, code, (err) ->
+        if (err) then throw err
+        console.log "(Wrote file #{filename})"
+else
+  console.log "Usage: tsl filename1 ... filenameN"
+  console.log "   If only 1 filename is given, the result will be sent to stdout."
+  console.log "   Otherwise, results will be saved to [filenameN].tml."

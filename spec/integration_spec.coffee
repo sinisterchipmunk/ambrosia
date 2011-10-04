@@ -4,7 +4,7 @@ describe "complete scripts", ->
   doc = null
   beforeEach -> 
     doc = dom fs.readFileSync "./spec/fixtures/scripts/functions", 'UTF-8'
-    console.log doc.toString()
+    # console.log doc.toString()
 
   it "should set all variables as expected", ->
     # first iteration is when sim is started; second is when sim returns
@@ -32,5 +32,5 @@ describe "complete scripts", ->
     expect(sim.state.variables['second.a'].value).toEqual 3
     expect(sim.state.variables['second.one'].value).toEqual 3
     expect(sim.state.variables['result'].value).toEqual 4
-    console.log sim.state.variables
+    # console.log sim.state.variables
   

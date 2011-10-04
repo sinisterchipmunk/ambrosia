@@ -97,7 +97,8 @@ exports.Block = class Block extends Base
 exports.Literal = class Literal extends Base
   children: -> ['value']
   
-  compile: (builder) -> @value.toString()
+  compile: (builder) ->
+    @value.toString()
 
 exports.Method = class Method extends Base
   children: -> ['name', 'params', 'block']
@@ -115,7 +116,7 @@ exports.Method = class Method extends Base
       throw new Error "Method needs a name"
     
   type: (params) ->
-    @current_scope().define('return', 'integer').type()
+    @current_scope().define('return', null).type()
 
   current_scope: () ->
     return @scope if @scope
@@ -167,7 +168,9 @@ exports.MethodCall = class MethodCall extends Base
       param = @params[i]
       # evaluate param variables in *current* scope, not in method's scope
       if param instanceof Identifier
-        param = new StringValue("tmlvar:"+@current_scope().lookup(param.compile(screen)).name)
+        # use variable's fully qualified name to avoid scoping issues in method
+        param = new Identifier @current_scope().lookup(param.compile(screen)).name
+        
       method.create(Assign, param_name, param).compile screen
     
     # create and return the return screen
@@ -212,7 +215,7 @@ exports.Assign = class Assign extends Type
         @current_scope().lookup(lval).depends_upon rval
         rval = "tmlvar:#{rval.name}"
       else
-        @current_scope().lookup(lval).setType "integer"
+        @current_scope().define lval, @rvalue.type()
       screen.b 'setvar', name: lval, lo: rval
     
     this # this is so assigns can chain assigns

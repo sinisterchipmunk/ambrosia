@@ -79,7 +79,7 @@ grammar =
   Expression: [
     o 'Identifier', -> new Identifier($1)
     o 'NUMBER', -> new NumberValue(new Literal $1)
-    o 'STRING', -> new StringValue(new Literal $1)
+    o 'STRING', -> new StringValue(new Literal JSON.parse($1))
     o 'BOOL', -> new BoolValue(new Literal $1)
     o ': Identifier', -> new ScreenReference($2)
     o 'Assign'
