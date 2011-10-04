@@ -5,13 +5,13 @@ describe "tml variables", ->
   
   describe "assigning to a variable", ->
     beforeEach ->
-      doc = dom "init:\n\tone = 1\n\ttwo = one"
+      doc = dom "init:\n\tone = 1\n\ttwo = one\ninit()"
       
     it "should assign by variable reference", ->
       expect(doc.first("screen", id:"init").first("setvar", name:"init.two").attrs.lo).toEqual 'tmlvar:init.one'
   
   describe "assigning to expression result", ->
-    beforeEach -> doc = dom "init:\n\tone = 1 + 1"
+    beforeEach -> doc = dom "init:\n\tone = 1 + 1\ninit()"
     
     it "should define variable 'one'", ->
       expect(doc.first("vardcl", name: 'init.one', type: 'integer')).toBeTruthy()
@@ -23,7 +23,7 @@ describe "tml variables", ->
       expect(set.attrs.op).toEqual 'plus'
   
   describe "assigning a screen reference", ->
-    beforeEach -> doc = dom "init:\n\tone = :one"
+    beforeEach -> doc = dom "init:\n\tone = :one\ninit()"
     
     it "should define variable 'one'", ->
       expect(doc.first("vardcl", name: 'init.one')).toBeTruthy()
@@ -33,7 +33,7 @@ describe "tml variables", ->
       expect(screen.first("setvar", name: "init.one").attrs['lo']).toEqual '#one'
   
   describe "chaining variable assignments", ->
-    beforeEach -> doc = dom "init:\n\tone = two = three = 0"
+    beforeEach -> doc = dom "init:\n\tone = two = three = 0\ninit()"
     
     it "should define all 3 variables", ->
       expect(doc.first "vardcl", name: "init.three").toBeTruthy()
@@ -55,7 +55,7 @@ describe "tml variables", ->
       expect(screen.first("setvar", name: 'init.one').attrs.lo).toEqual 'tmlvar:init.two'
 
   describe "assigned within a screen", ->
-    beforeEach -> doc = dom "init:\n\tone = 1"
+    beforeEach -> doc = dom "init:\n\tone = 1\ninit()"
     
     describe "the resultant <vardcl> element", ->
       vardec = null

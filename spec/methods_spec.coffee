@@ -13,7 +13,7 @@ describe "methods", ->
       _two = two()
       """
       doc = dom code
-      console.log doc.toString()
+      # console.log doc.toString()
       count = 2
       sim = simulate doc, (sim) ->
         count -= 1 if sim.state.screen.id == '__main__'
@@ -35,13 +35,13 @@ describe "methods", ->
       expect(sim.state.variables._one.value).toEqual 'one'
   
   describe "a single empty method", ->
-    beforeEach -> doc = dom("init:")
+    beforeEach -> doc = dom("init:\ninit()")
 
     it "should produce a <screen> element with id 'init'", ->
       expect(doc.first "screen", id:'init').toBeTruthy()
       
   describe "a one-liner", ->
-    beforeEach -> doc = dom "init: something = 1"
+    beforeEach -> doc = dom "init: something = 1\ninit()"
     
     it "should set something to 1", ->
       sim = simulate doc

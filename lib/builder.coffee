@@ -12,6 +12,8 @@ exports.Builder = class Builder
       inner = @attrs
       @attrs = {}
       
+    @after_initialize() if @after_initialize
+    
     inner(this) if inner
   
   remove: (node_or_name, attrs = {}) ->
@@ -27,8 +29,12 @@ exports.Builder = class Builder
         
   preamble: -> '<?xml version="1.0" encoding="ISO-8859-1"?>\n'
   
+  newInstance: (name, attrs, inner) ->
+    klass = (if Builder[name] then Builder[name] else Builder)
+    new klass name, attrs, inner, @depth + 1, this
+  
   b: (name, attrs, inner) ->
-    child = new Builder name, attrs, inner, @depth + 1, this
+    child = @newInstance(name, attrs, inner)
     @tags.push(child)
     child
     
@@ -41,7 +47,7 @@ exports.Builder = class Builder
       sort = inner
       inner = null
       
-    child = new Builder(name, attrs, inner, @depth + 1, this)
+    child = @newInstance(name, attrs, inner)
     if sort.before
       if (index = @tags.indexOf @first(sort.before)) != -1
         @tags.splice index, 0, child

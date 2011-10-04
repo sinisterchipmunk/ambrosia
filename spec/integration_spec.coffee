@@ -23,7 +23,7 @@ describe "complete scripts", ->
     #   return one + 1      #=> 3+1 => 4
     # 
     # result = init 1, 2, 3 #=> 4
-      
+    
     expect(sim.state.variables['init.a'].value).toEqual 1
     expect(sim.state.variables['init.b'].value).toEqual 2
     expect(sim.state.variables['init.c'].value).toEqual 3

@@ -1,6 +1,32 @@
-builder = require './builder'
+{Builder} = require './builder'
 
-exports.TMLBuilder = class TMLBuilder extends builder.Builder 
+# Names are registered here so that they can be converted into unique integer IDs.
+# This requires fewer characters as a string (as the max ID length is 32).
+#
+# Method names and __main__ are left unchanged, but screens inserted in between
+# (for instance, after a function call returns) will be mangled appropriately.
+# 
+# Usage:
+#    NameRegistry.register('name') #=> a unique integer ID
+exports.NameRegistry = class NameRegistry
+  @unique_id: 0
+  @registry: {}
+  @register: (name) ->
+    NameRegistry.registry[name] or= NameRegistry.unique_id++
+
+Builder.screen = class Screen extends Builder
+  call_method: (name, return_target) ->
+    # create the call stack if it doesn't exist already
+    @root.add_return_screen()
+    # insert the destination _following_ the method call into the call stack
+    @b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
+    @b 'setvar', name: 'call.stack', lo: "##{return_target}", op: "plus", ro: "tmlvar:call.stack"
+    # direct the current screen into the method screen
+    @b 'next', uri: "##{name}"
+    # build the screen that will take over operation after the method call returns
+    @root.screen return_target
+
+exports.TMLBuilder = class TMLBuilder extends Builder 
   constructor: ->
     super('tml', xmlns: "http://www.ingenico.co.uk/tml", cache: "deny")
     @b 'head', (b) ->
@@ -26,11 +52,30 @@ exports.TMLBuilder = class TMLBuilder extends builder.Builder
     if typeof(attrs) == "function"
       inner = attrs
       attrs = {}
-    attrs.id = id if id
+    if id
+      if id.length > 32
+        throw new Error "ID '#{id}' exceeds 32 characters"
+      attrs.id = id
+      @_current_screen = id
+    attrs.next or= "#__return__"
+      
+    # merge existing screens
     if attrs.id and scr = @first("screen", id: id)
-      # replace existing screens
-      @remove scr
-    @insert('screen', attrs, inner, after: 'screen')
+      for i in attrs
+        scr.attrs[i] or= attrs[i]
+      return scr
+    else
+      @insert 'screen', attrs, inner, after: 'screen'
+    
+    # if attrs.id and scr = @first("screen", id: id)
+    #   # replace existing screens
+    #   @remove scr
+    # attrs.next or= "#__return__"
+    # @insert('screen', attrs, inner, after: 'screen')
+    
+  current_screen: -> @root.first 'screen', id: @_current_screen
+  
+  goto: (screen_id) -> @_current_screen = screen_id
 
   # Manages a simple call stack in TML and helps return from method calls
   add_return_screen: ->

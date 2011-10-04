@@ -1,5 +1,5 @@
-TMLBuilder = require('./tml_builder').TMLBuilder
-{VariableScope, Variable} = require('./variable_scope')
+{TMLBuilder, NameRegistry} = require './tml_builder'
+{VariableScope, Variable}  = require './variable_scope'
 
 exports.Base = class Base
   constructor: (@nodes...) ->
@@ -66,8 +66,15 @@ exports.Document = class Document extends Base
       
   compileDOM: ->
     builder = new TMLBuilder
+    
+    # if @methods['__main__']
+    #   @methods['__main__'].compile builder
+    # else
+    #   throw new Error 'No main program to compile!'
+      
     for name, method of @methods
       method.compile builder
+    
     # important to compile scopes last, because method nodes are still building them until now
     @current_scope().compile builder
     
@@ -151,16 +158,8 @@ exports.MethodCall = class MethodCall extends Base
     
   compile: (screen) ->
     function_screen_id = @getMethodName()
-    return_screen_id = "_#{screen.attrs['id']}_#{function_screen_id}"
+    return_screen_id = "#{screen.attrs['id']}_#{NameRegistry.register function_screen_id}"
     
-    # create the call stack if it doesn't exist already
-    screen.root.add_return_screen()
-    # insert the destination _following_ the method call into the call stack
-    screen.b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
-    screen.b 'setvar', name: 'call.stack', lo: "##{return_screen_id}", op: "plus", ro: "tmlvar:call.stack"
-    # direct the current screen into the method screen
-    screen.b 'next', uri: "##{function_screen_id}"
-
     method = @root().find_method function_screen_id
     throw new Error "Invalid parameter count: #{@params.length} for #{method.params.length}" if @params.length != method.params.length
     for i in [0...method.params.length]
@@ -173,9 +172,12 @@ exports.MethodCall = class MethodCall extends Base
         
       method.create(Assign, param_name, param).compile screen
     
+    screen.root.current_screen().call_method function_screen_id, return_screen_id
+
     # create and return the return screen
     # subsequent ops will be performed transparently on the return screen
-    screen.root.b 'screen', id: return_screen_id, next: "#__return__"
+    screen.root.screen return_screen_id
+    # screen.root.b 'screen', id: return_screen_id, next: "#__return__"
   
 class Type extends Base
   type: ->
@@ -191,6 +193,7 @@ exports.Assign = class Assign extends Type
   children: -> ['lvalue', 'rvalue']
   
   compile: (screen) ->
+    screen = screen.root.current_screen()
     throw new Error "Can't use assignment as left value" if @lvalue instanceof Assign
 
     rval = @rvalue.compile screen
