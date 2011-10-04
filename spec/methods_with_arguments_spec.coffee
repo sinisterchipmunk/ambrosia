@@ -21,21 +21,21 @@ describe "a method which sets variable to value of argument", ->
 # variants to test grammar
 describe "a single empty method with a single argument, parenthetical", ->
   beforeEach -> 
-    doc = dom "init(a):"
+    doc = dom "init(1); init(a):"
 
   it "should produce a <screen> element with id 'init'", ->
     expect(doc.first "screen", id:'init').toBeTruthy()
 
 describe "a single empty method with two arguments, parenthetical", ->
   beforeEach ->
-    doc = dom "init(a,b):"
+    doc = dom "init(1,2); init(a,b):"
 
   it "should produce a <screen> element with id 'init'", ->
     expect(doc.first "screen", id:'init').toBeTruthy()
 
 describe "a single empty method with two arguments, spaced, parenthetical", ->
   beforeEach ->
-    doc = dom "init (a, b):"
+    doc = dom "init(1,2); init (a, b):"
 
   it "should produce a <screen> element with id 'init'", ->
     expect(doc.first "screen", id:'init').toBeTruthy()
