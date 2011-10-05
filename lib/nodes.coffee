@@ -196,22 +196,15 @@ exports.MethodCall = class MethodCall extends Base
   
 exports.Parens = class Parens extends Base
   prepare: ->
-    op = @create Operation, @nodes...
-    id = @create Identifier, '__tmpvar'
-    @assign = @create Assign, id, op
+    @op = @create Operation, @nodes...
+    @id = @create Identifier, '__tmpvar'
+    @assign = @create Assign, @id, @op
     
   type: -> @assign.type()
     
   compile: (b) ->
     @assign.compile(b)
-    return "__tmpvar"
-    # r = @create(Operation, @nodes...).compile(b)[0]
-    # if typeof(r) == 'object'
-    #   r.name = '__tmpvar'
-    #   @current_scope().define '__tmpvar'
-    #   b.b 'setvar', r
-    #   return new Identifier '__tmpvar'
-    # r
+    return @tml_variable @id, b
 
 exports.Assign = class Assign extends Base
   type: -> @rvalue.type()

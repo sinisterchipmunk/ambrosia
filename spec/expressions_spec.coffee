@@ -16,3 +16,5 @@ describe "expressions", ->
       expect(setvar.attrs.ro).toEqual '3'
       expect(setvar.attrs.op).toEqual 'plus'
     
+    it "should set right operand to a string starting with tmlvar:", ->
+      expect(doc.first('screen').first('setvar', name:'one').attrs.ro).toMatch(/^tmlvar:/)
