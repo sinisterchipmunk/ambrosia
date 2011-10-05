@@ -39,10 +39,6 @@ grammar =
     o 'Identifier CALL_START ParamList CALL_END :', -> new Method $1, $3, new Block
     o 'Identifier CALL_START ParamList CALL_END : Block', -> new Method $1, $3, $6
     o 'Identifier CALL_START ParamList CALL_END : Line', -> new Method $1, $3, Block.wrap [$6]
-    # init (a, b):
-    o 'Identifier CALL_START ( ParamList ) : CALL_END', -> new Method $1, $4, new Block
-    o 'Identifier CALL_START ( ParamList ) : CALL_END Block', -> new Method $1, $4, $8
-    o 'Identifier CALL_START ( ParamList ) : CALL_END Line', -> new Method $1, $4, Block.wrap [$8]
   ]
 
   Methods: [
@@ -84,7 +80,7 @@ grammar =
   
   Value: [
     o 'Literal', -> $1
-    # o 'Parenthetical', -> new Value $1
+    o 'Parenthetical', -> $1
   ]
   
   Expression: [
@@ -97,8 +93,8 @@ grammar =
   ]
   
   Parenthetical: [
-    o '( Body )', -> new Parens $2
-    o '( INDENT Body OUTDENT )', -> new Parens $3
+    o '( Expression )', -> new Parens $2
+    o '( INDENT Expression OUTDENT )', -> new Parens $3
   ]
   
   Statement: [

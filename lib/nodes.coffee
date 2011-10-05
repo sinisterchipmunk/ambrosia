@@ -117,6 +117,7 @@ exports.Method = class Method extends Base
   children: -> ['name', 'params', 'block']
   
   after_initialize: ->
+    @params or= []
     @next = "#__return__"
     if typeof(@name) == 'string'
       @name = compile: -> @name
@@ -149,9 +150,18 @@ exports.Method = class Method extends Base
     @current_scope().define param.compile(), null for param in @params
   
   compile: (builder) ->
-    screen = builder.screen @getID()
+    screen = builder.root.screen @getID()
     screen.attrs.next = @next
     @block.compile screen if @block
+
+# exports.Parens = class Parens extends Method
+#   children: -> ['block']
+#   getID: () -> @id or= "__tmp_method__"
+#   prepare: ->
+#     last = @block.nodes[@block.nodes.length-1]
+#     if !(last instanceof Return)
+#       @block.nodes[@block.nodes.length-1] = new Return(last)
+#     super
 
 exports.MethodCall = class MethodCall extends Base
   children: -> ['method_name', 'params']
@@ -184,6 +194,25 @@ exports.MethodCall = class MethodCall extends Base
     # subsequent ops will be performed transparently on the return screen
     screen.root.screen return_screen_id
   
+exports.Parens = class Parens extends Base
+  prepare: ->
+    op = @create Operation, @nodes...
+    id = @create Identifier, '__tmpvar'
+    @assign = @create Assign, id, op
+    
+  type: -> @assign.type()
+    
+  compile: (b) ->
+    @assign.compile(b)
+    return "__tmpvar"
+    # r = @create(Operation, @nodes...).compile(b)[0]
+    # if typeof(r) == 'object'
+    #   r.name = '__tmpvar'
+    #   @current_scope().define '__tmpvar'
+    #   b.b 'setvar', r
+    #   return new Identifier '__tmpvar'
+    # r
+
 exports.Assign = class Assign extends Base
   type: -> @rvalue.type()
   
@@ -227,6 +256,7 @@ exports.Operation = class Operation extends Base
   
   compile: (screen) ->
     lval = @tml_variable @lvalue, screen
+    return lval unless @rvalue
     rval = @tml_variable @rvalue, screen
 
     lo: lval

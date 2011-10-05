@@ -1,0 +1,2 @@
+push_stack(stack, item): stack = item + ";" + stack
+pop_stack(stack): stack = stack - (stack_length(stack[0])+1)

@@ -43,10 +43,3 @@ describe "a single empty method with two arguments, parenthetical", ->
 
   it "should produce a <screen> element with id 'init'", ->
     expect(doc.first "screen", id:'init').toBeTruthy()
-
-describe "a single empty method with two arguments, spaced, parenthetical", ->
-  beforeEach ->
-    doc = dom "init(1,2); init (a, b):"
-
-  it "should produce a <screen> element with id 'init'", ->
-    expect(doc.first "screen", id:'init').toBeTruthy()
