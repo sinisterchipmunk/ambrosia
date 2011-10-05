@@ -2,6 +2,17 @@ require './spec_helper'
 
 doc = null
 
+describe "an unused method", ->
+  beforeEach ->
+    doc = dom "init(a, b):"
+  
+  it "should produce a string init.a", ->
+    expect(doc.first("vardcl", name: "init.a").attrs.type).toEqual 'string'
+    
+  it "should produce a string init.b", ->
+    expect(doc.first("vardcl", name: "init.b").attrs.type).toEqual 'string'
+    
+
 describe "calling a single empty method with a single argument", ->
   beforeEach -> 
     doc = dom "init(a):\nmain: init 1"

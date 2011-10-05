@@ -76,15 +76,29 @@ grammar =
     o 'Statement'
   ]
   
+  Literal: [
+    o 'NUMBER', -> new Literal JSON.parse($1)
+    o 'STRING', -> new Literal JSON.parse($1)
+    o 'BOOL', -> new Literal JSON.parse($1)
+  ]
+  
+  Value: [
+    o 'Literal', -> $1
+    # o 'Parenthetical', -> new Value $1
+  ]
+  
   Expression: [
     o 'Identifier', -> new Identifier($1)
-    o 'NUMBER', -> new NumberValue(new Literal $1)
-    o 'STRING', -> new StringValue(new Literal JSON.parse($1))
-    o 'BOOL', -> new BoolValue(new Literal $1)
+    o 'Value', -> $1
     o ': Identifier', -> new ScreenReference($2)
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
+  ]
+  
+  Parenthetical: [
+    o '( Body )', -> new Parens $2
+    o '( INDENT Body OUTDENT )', -> new Parens $3
   ]
   
   Statement: [

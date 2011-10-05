@@ -104,6 +104,12 @@ exports.Block = class Block extends Base
 exports.Literal = class Literal extends Base
   children: -> ['value']
   
+  type: ->
+    switch typeof @value
+      when 'string' then 'string'
+      when 'boolean', 'number' then 'integer'
+      else throw new Error "Untranslateable literal: #{JSON.stringify @value}"
+  
   compile: (builder) ->
     @value.toString()
 
@@ -177,17 +183,8 @@ exports.MethodCall = class MethodCall extends Base
     # create and return the return screen
     # subsequent ops will be performed transparently on the return screen
     screen.root.screen return_screen_id
-    # screen.root.b 'screen', id: return_screen_id, next: "#__return__"
   
-class Type extends Base
-  type: ->
-    switch type = super
-      when 'string', 'integer', 'opaque', 'datetime' then type
-      when 'boolean', 'number' then 'integer'
-      when 'screenref' then 'string'
-      else throw new Error "untranslatable type: #{type}"
-  
-exports.Assign = class Assign extends Type
+exports.Assign = class Assign extends Base
   type: -> @rvalue.type()
   
   children: -> ['lvalue', 'rvalue']
@@ -223,7 +220,7 @@ exports.Assign = class Assign extends Type
     
     this # this is so assigns can chain assigns
 
-exports.Operation = class Operation extends Type
+exports.Operation = class Operation extends Base
   children: -> ['lvalue', 'operator', 'rvalue']
   
   type: -> @lvalue.type()
@@ -239,32 +236,13 @@ exports.Operation = class Operation extends Type
       when '-' then 'minus'
       else @operator
   
-exports.Value = class Value extends Type
-  children: -> ['_type', 'value']
-  
-  type: -> @_type
-    
-  compile: (builder) ->
-    if typeof(@value) == 'string' then @value else @value.compile builder
-    
-exports.NumberValue = class NumberValue extends Value
-  constructor: (v) ->
-    v.value = parseInt v.value
-    v.value = 0 if isNaN(v.value) or !isFinite(v.value)
-    super('integer', v)
-  
-exports.StringValue = class StringValue extends Value
-  constructor: (v) -> super('string', v)
-
-exports.BoolValue = class BoolValue extends Value
-  constructor: (v) -> super('boolean', (if v.toString().toLowerCase() == 'true' then 1 else 0))
-  
-exports.Identifier = class Identifier extends Value
-  constructor: (v) -> super('string', v)
+exports.Identifier = class Identifier extends Base
   type: -> @current_scope().lookup(@compile()).type()
+  compile: (b) -> if typeof(@nodes[0]) == 'string' then @nodes[0] else @nodes[0].compile(b)
   
-exports.ScreenReference = class ScreenReference extends Value
-  constructor: (v) -> super('screenref', v)
+exports.ScreenReference = class ScreenReference extends Base
+  children: -> ['value']
+  type: -> "string"
   
   compile: (builder) ->
     "##{@value.compile builder}"

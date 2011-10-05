@@ -20,7 +20,7 @@ This simple example compiles into the following TML document:
       </screen>
     </tml>
 
-## Defining Methods
+## Methods and Return Values
 
 Methods are defined in one of two ways: with and without method arguments. A method without arguments can simply be the name of the method, followed by a colon, as the following example demonstrates:
 

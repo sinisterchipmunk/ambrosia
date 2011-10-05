@@ -8,6 +8,7 @@
 # 
 # Usage:
 #    NameRegistry.register('name') #=> a unique integer ID
+#
 exports.NameRegistry = class NameRegistry
   @unique_id: 0
   @registry: {}
@@ -66,12 +67,6 @@ exports.TMLBuilder = class TMLBuilder extends Builder
       return scr
     else
       @insert 'screen', attrs, inner, after: 'screen'
-    
-    # if attrs.id and scr = @first("screen", id: id)
-    #   # replace existing screens
-    #   @remove scr
-    # attrs.next or= "#__return__"
-    # @insert('screen', attrs, inner, after: 'screen')
     
   current_screen: -> @root.first 'screen', id: @_current_screen
   

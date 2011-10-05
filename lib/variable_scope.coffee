@@ -68,8 +68,8 @@ exports.VariableScope = class Scope
   compile: (builder) ->
     builder = builder.root if builder.root
     for name, variable of @defs
-      throw new Error "No type for variable #{name}" if !variable.type()
-      builder.vardcl variable.name, variable.type()
+      # throw new Error "No type for variable #{name}" if !variable.type()
+      builder.vardcl variable.name, variable.type() || "string"
     for prefix, scope of @subscopes
       scope.compile builder
     builder
