@@ -58,4 +58,69 @@ If you wish to give a particular variable global scope, simply initialize it wit
 
     a = 0
     a_integer: a = 1
+    
+## Method References
 
+You can create a dynamic reference to any method by assigning the method name, prefixed with a colon, to a variable. Later, you can call a method represented by the variable it was assigned to simply by treating the variable itself as a method. Example:
+
+    greeter = :say_hello
+    greeter() #=> "Hello, World!"
+
+## Closures
+
+A closure is an anonymous method created on-the-fly. You can assign a closure to a variable and pass it into a method as an argument, or simply call it directly. Here's how to create a closure:
+
+    closure = (count) -> return count + 1
+    
+Spanning multiple lines in a closure is allowed -- just indent the closure body like so:
+
+    closure = (count) ->
+      count++
+      return count
+
+Once created, a closure is no different from a method reference. To call the closure, simply call it as if it were a method (because it is!):
+
+    closure 1 #=> 2
+    
+You can call a closure any number of times:
+
+    closure = (count) -> return count + 1
+    closure 1 #=> 2
+    closure 2 #=> 3
+    closure closure closure 3 #=> 6
+    
+All of the examples above show a closure that accepts a single argument, *count*. However, closures can also be created without arguments. As a shortcut, if a closure doesn't accept any arguments, you can omit the parenthetical entirely:
+
+    closure = -> return 1 + 1
+    closure()  #=> 2
+    
+Note that the parentheses are still required to actually _call_ the closure, however.
+
+## Iteration
+
+Iterators have been added to simplify handling data incrementally. The body of an iterator is just a closure, so each iterator has its own private scope. That is, a variable defined for the first time in an iterator block is local to that block.
+
+You can iterate through characters in a string using ForIn:
+
+    i = 0
+    for ch in "hello"
+      i++
+    return i #=> 5
+    
+You can also iterate through list items using ForOf:
+
+    i = 0
+    for item in "one;two;three"
+      i++
+    return i #=> 3
+    
+Iterating through a range of numbers is easy too:
+
+    for i in [0..3]
+      # i == 0, i == 1, i == 2, i == 3
+      
+To iterate through a range exclusively (that is, stopping with i < 3), do this:
+
+    for i in [0...3]
+      # i == 0, i == 1, i == 2
+  
