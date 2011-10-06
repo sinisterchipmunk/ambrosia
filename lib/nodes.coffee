@@ -205,6 +205,15 @@ exports.Parens = class Parens extends Base
   compile: (b) ->
     @assign.compile(b)
     return @tml_variable @id, b
+    
+exports.ListIndex = class ListIndex extends Base
+  type: -> 'string'
+  
+  children: -> ['list', 'index']
+  
+  compile: (screen) ->
+    # screen = screen.root.current_screen()
+    @create(Operation, @list, 'item', @index).compile screen
 
 exports.Assign = class Assign extends Base
   type: -> @rvalue.type()
@@ -230,7 +239,7 @@ exports.Assign = class Assign extends Base
       screen = rval
       rval = @root().find_method(@rvalue.getMethodName()).getReturnVariable()
 
-    if @rvalue instanceof Operation
+    if typeof(rval) == 'object' and rval.lo
       screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
     else
       if typeof(rval) == "object" and rval instanceof Variable
