@@ -8,7 +8,15 @@
 
 require 'tsl/format'
 
-for_in(ch, str1, yield):
-  ch = format str1, "c"
-  # if ch == "" then return
-  # else yield ch
+# the intuitive syntax is prepared by the compiler. After compilation,
+# the logic resembles the following (in TML, of course):
+#
+#     tmp(ch): ...
+#     for_in str, :tmp
+#
+for_in(str, yield):
+  ch = format str, "c"
+  if ch == "" then return
+  else
+    yield ch
+    for_in str - -1, yield

@@ -25,6 +25,20 @@ describe "expressions", ->
     
     it "should set copy to 'one'", ->
       expect(sim.state.variables.copy).toEqual 'one'
+      
+  describe "unary -", ->
+    it "should set one to -1", ->
+      doc = dom 'one = -1'
+      c = 1
+      sim = simulate doc, (sim) -> return c-- == 0
+      expect(sim.state.variables.one.value).toEqual -1
+      
+    it "should set one to 2", ->
+      doc = dom 'one = 1 - -1'
+      console.log doc.toString()
+      c = 1
+      sim = simulate doc, (sim) -> return c-- == 0
+      expect(sim.state.variables.one.value).toEqual 2
     
   describe "list index", ->
     beforeEach -> doc = dom 'list = "one;two"; one = list[0]'

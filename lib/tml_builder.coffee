@@ -16,6 +16,31 @@ exports.NameRegistry = class NameRegistry
     NameRegistry.registry[name] or= NameRegistry.unique_id++
 
 Builder.screen = class Screen extends Builder
+  variants: () ->
+    if next = @first 'next'
+      next.all 'variant'
+    else
+      []
+      
+  next: () ->
+    return @first('next') or {attrs:uri:@attrs.next}
+  
+  branch: (operation) ->
+    new_screen_id = @attrs.id + NameRegistry.register @attrs.id
+    next = @b 'next', uri: @attrs.next unless next = @first 'next'
+    delete @attrs.next # cleanliness is next to godliness!
+    operation.uri = "##{new_screen_id}"
+    next.b 'variant', operation
+    scr = @root.screen new_screen_id, next: next.attrs.uri
+    scr._branched_from = this
+    scr
+  
+  branch_else: ->
+    new_screen_id = @_branched_from.attrs.id + "_else"
+    scr = @root.screen new_screen_id, next: @_branched_from.next().attrs.uri
+    @_branched_from.next().attrs.uri = "#" + new_screen_id
+    scr
+  
   call_method: (name, return_target) ->
     # create the call stack if it doesn't exist already
     @root.add_return_screen()

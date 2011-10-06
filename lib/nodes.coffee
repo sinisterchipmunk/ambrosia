@@ -282,27 +282,46 @@ exports.Assign = class Assign extends Base
     this # this is so assigns can chain assigns
 
 exports.Operation = class Operation extends Base
-  children: -> ['lvalue', 'operator', 'rvalue']
+  children: -> ['lvalue', 'op', 'rvalue']
   
   type: -> @lvalue.type()
   
+  prepare: ->
+    # if op is > or >= then TML doesn't support that, so reverse the operands and the op
+    if @op && @op.indexOf(">") != -1
+      [@lvalue, @rvalue] = [@lvalue, @rvalue]
+      if @op.indexOf '=' != -1 then @op = '<'
+      else                          @op = '<='
+    
   compile: (screen) ->
-    lval = @tml_variable @lvalue, screen
+    self = this
+    proc = (w, val) ->
+      if val instanceof Operation
+        id = self.create Identifier, "__tmp#{w}"
+        self.create(Assign, id, val).compile(screen)
+        return id
+      else val
+    
+    lval = @tml_variable proc('l', @lvalue), screen
     return lval unless @rvalue
-    rval = @tml_variable @rvalue, screen
+    rval = @tml_variable proc('r', @rvalue), screen
 
     lo: lval
     ro: rval
-    op: switch @operator
+    op: switch @op
       when '+' then 'plus'
       when '-' then 'minus'
-      else @operator
+      when '==' then 'equal'
+      when '!=' then 'not_equal'
+      when '<=' then 'less_or_equal'
+      when '<' then 'less'
+      else @op
   
 exports.Identifier = class Identifier extends Base
   type: -> @current_scope().lookup(@compile()).type()
   compile: (b) -> if typeof(@nodes[0]) == 'string' then @nodes[0] else @nodes[0].compile(b)
   
-exports.ScreenReference = class ScreenReference extends Base
+exports.MethodReference = class MethodReference extends Base
   children: -> ['value']
   type: -> "string"
   
@@ -312,12 +331,41 @@ exports.ScreenReference = class ScreenReference extends Base
 exports.Return = class Return extends Base
   children: -> ['expression']
   
-  type: -> @expression.type()
-    
+  type: -> if @expression then @expression.type() else null
+  
+  with: (expr) ->
+    @expression = expr
+    @expression.parent = this
+    this
+
   compile: (builder) ->
     screen_id = builder.attrs.id
-    @create(Assign, new Identifier("return"), @expression).compile builder
-    
+    @create(Assign, new Identifier("return"), @expression || new Literal "").compile builder
+
+exports.If = class If extends Base
+  # @if_type is either 'if' or 'unless'.
+  children: -> ['expression', 'block', 'if_type']
+  
+  addElse: (block) ->
+    @else_exp = block
+    @else_exp.parent = this
+    this
+  
+  compile: (builder) ->
+    if @expression instanceof Operation
+      op = @expression
+    else
+      if @expression.type() == 'integer'
+        op = @create Operation, @expression, "not_equal", "0"
+      else
+        op = @create Operation, @expression, "not_equal", ""
+  
+    screen = builder.root.current_screen()
+    screen = screen.branch op.compile screen
+    @block.compile screen
+    screen = @else_exp.compile screen.branch_else() if @else_exp
+    screen
+  
 # Iterates through a string, yielding each character in the string.
 # Example:
 #

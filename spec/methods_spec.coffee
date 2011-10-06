@@ -3,6 +3,25 @@ require './spec_helper'
 describe "methods", ->
   doc = sim = null
   
+  describe "with void return", ->
+    beforeEach ->
+      code = """
+      two = 0
+      one()
+
+      one:
+        return
+        two = 1
+      """
+      doc = dom code
+      count = 2
+      sim = simulate doc, (sim) ->
+        count -= 1 if sim.state.screen.id == '__main__'
+        return count > 0
+
+    it "should set two to 0", ->
+      expect(sim.state.variables.two.value).toEqual 0
+  
   describe "multiple calls from main", ->
     beforeEach ->
       code = """

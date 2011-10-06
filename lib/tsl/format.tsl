@@ -1,2 +1,2 @@
-format(str2, fmt):
+format(str, fmt):
   

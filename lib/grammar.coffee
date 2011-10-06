@@ -65,6 +65,23 @@ grammar =
     o 'INDENT OUTDENT',                         -> new Block
     o 'INDENT Body OUTDENT',                    -> $2
   ]
+  
+  # The most basic form of *if* is a condition and an action. The following
+  # if-related rules are broken up along these lines in order to avoid
+  # ambiguity.
+  IfBlock: [
+    o 'IF Expression Block',                    -> new If $2, $3, $1
+    o 'IfBlock ELSE IF Expression Block',       -> $1.addElse new If $4, $5, $3
+  ]
+
+  # The full complement of *if* expressions, including postfix one-liner
+  # *if* and *unless*.
+  If: [
+    o 'IfBlock'
+    o 'IfBlock ELSE Block',                     -> $1.addElse $3
+    o 'Statement  POST_IF Expression',          -> new If $3, Block.wrap([$1]), $2
+    o 'Expression POST_IF Expression',          -> new If $3, Block.wrap([$1]), $2
+  ]
 
   # Block and statements, which make up a line in a body.
   Line: [
@@ -87,11 +104,23 @@ grammar =
     o 'Identifier', -> new Identifier $1
     o 'Identifier INDEX_START Expression INDEX_END', -> new ListIndex $1, $3
     o 'Value', -> $1
-    o ': Identifier', -> new ScreenReference $2
+    o ': Identifier', -> new MethodReference $2
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
     o 'ForIn', -> $1
+  ]
+  
+  Statement: [
+    o 'If', -> $1
+    o 'Return', -> $1
+  ]
+  
+  Return: [
+    o 'RETURN Expression', -> new Return $2
+    o 'RETURN', -> new Return
+    # o 'RETURN', -> new Return
+    # o 'Return Expression', -> $1.with $2
   ]
   
   ForIn: [
@@ -103,22 +132,20 @@ grammar =
     o '( INDENT Expression OUTDENT )', -> new Parens $3
   ]
   
-  Statement: [
-    o 'RETURN Expression', -> new Return $2
-  ]
-  
   MethodCall: [
     o 'Identifier CALL_START ParamList CALL_END', -> new MethodCall $1, $3
     o 'Identifier CALL_START CALL_END', -> new MethodCall $1, []
   ]
   
   Operation: [
+    o '- Expression', -> new Operation new Literal(0), '-', $2
     o 'Expression ++', -> new Operation $1, '+', new Literal 1
     o 'Expression --', -> new Operation $1, '-', new Literal 1
     o 'Identifier COMPOUND_ASSIGN Expression', -> new Assign $1, new Operation $1, $2[0], $3
     o 'Expression MATH Expression', -> new Operation $1, $2, $3
     o 'Expression + Expression', -> new Operation $1, $2, $3
     o 'Expression - Expression', -> new Operation $1, $2, $3
+    o 'Expression COMPARE Expression', -> new Operation $1, $2, $3
   ]
   
   Assign: [
