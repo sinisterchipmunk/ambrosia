@@ -33,6 +33,9 @@ Expression.register_type 'string', class StringExpression extends Expression
       when 'format'
         new Format('string', @rvalue.toString(), @lvalue.toString()).process()
       else
-        if @op then throw new Error "Invalid string operation: #{@op}"
+        if @format
+          new Format('string', @format, @lvalue.toString()).process()
         else
-          @lvalue.toString()
+          if @op then throw new Error "Invalid string operation: #{@op}"
+          else
+            @lvalue.toString()

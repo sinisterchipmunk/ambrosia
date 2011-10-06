@@ -38,6 +38,8 @@ exports.Simulator = class Simulator
         value: DefaultVariableValue(variable)
     
   goto: (id) ->
+    if match = /^tmlvar:(.*)$/.exec id
+      id = id.replace match[0], @state.variables[match[1]].value
     id = id[1..-1] if id[0] == '#'
     screen = @dom.first("screen", id: id)
     throw new Error "Screen '#{id}' not found!" unless screen
@@ -48,8 +50,13 @@ exports.Simulator = class Simulator
   process_variable_assignments: ->
     for assign in @state.screen.element.all('setvar')
       variable = @state.variables[assign.attrs.name]
-      variable.value = Expression.evaluate variable.type, assign.attrs, @state.variables
-    
+      type = variable.type
+      if assign.attrs.lo and match = /^tmlvar:(.*)$/.exec(assign.attrs.lo.toString())
+        if @state.variables[match[1]]
+          type = @state.variables[match[1]].type
+      variable.value = Expression.evaluate type, assign.attrs, @state.variables
+      variable.value = parseInt(variable.value) if variable.type == 'integer'
+
   step: ->
     @process_variants() # also triggers variable assigns
     

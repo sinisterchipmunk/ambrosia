@@ -139,8 +139,8 @@ grammar =
   
   Operation: [
     o '- Expression', -> new Operation new Literal(0), '-', $2
-    o 'Expression ++', -> new Operation $1, '+', new Literal 1
-    o 'Expression --', -> new Operation $1, '-', new Literal 1
+    o 'Identifier ++', -> new Assign $1, new Operation $1, '+', new Literal 1
+    o 'Identifier --', -> new Assign $1, new Operation $1, '-', new Literal 1
     o 'Identifier COMPOUND_ASSIGN Expression', -> new Assign $1, new Operation $1, $2[0], $3
     o 'Expression MATH Expression', -> new Operation $1, $2, $3
     o 'Expression + Expression', -> new Operation $1, $2, $3

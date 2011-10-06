@@ -1,5 +1,8 @@
 {Builder} = require './builder'
 
+uri_for = (path) ->
+  if /^tmlvar:/.test path then path else "##{path}"
+
 # Names are registered here so that they can be converted into unique integer IDs.
 # This requires fewer characters as a string (as the max ID length is 32).
 #
@@ -27,9 +30,10 @@ Builder.screen = class Screen extends Builder
   
   branch: (operation) ->
     new_screen_id = @attrs.id + NameRegistry.register @attrs.id
+    new_screen_uri = uri_for new_screen_id
     next = @b 'next', uri: @attrs.next unless next = @first 'next'
     delete @attrs.next # cleanliness is next to godliness!
-    operation.uri = "##{new_screen_id}"
+    operation.uri = new_screen_uri
     next.b 'variant', operation
     scr = @root.screen new_screen_id, next: next.attrs.uri
     scr._branched_from = this
@@ -42,13 +46,16 @@ Builder.screen = class Screen extends Builder
     scr
   
   call_method: (name, return_target) ->
+    return_target_uri = uri_for return_target
+    method_uri = uri_for name
+    
     # create the call stack if it doesn't exist already
     @root.add_return_screen()
     # insert the destination _following_ the method call into the call stack
     @b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
-    @b 'setvar', name: 'call.stack', lo: "##{return_target}", op: "plus", ro: "tmlvar:call.stack"
+    @b 'setvar', name: 'call.stack', lo: "#{return_target_uri}", op: "plus", ro: "tmlvar:call.stack"
     # direct the current screen into the method screen
-    @b 'next', uri: "##{name}"
+    @b 'next', uri: method_uri
     # build the screen that will take over operation after the method call returns
     @root.screen return_target
 

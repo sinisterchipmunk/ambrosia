@@ -61,6 +61,10 @@ describe "scope", ->
         three = one.sub 'three'
         three.define 'varname2'
         
+      it "should go to root if prefixed with a period", ->
+        scope.define("heyo")
+        expect(three.lookup(".heyo")).toBeTruthy()
+        
       it 'should have prefix one.three', ->
         expect(three.prefix()).toEqual 'one.three.'
       

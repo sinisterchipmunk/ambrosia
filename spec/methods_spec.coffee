@@ -21,6 +21,23 @@ describe "methods", ->
 
     it "should set two to 0", ->
       expect(sim.state.variables.two.value).toEqual 0
+      
+  describe "called from method reference", ->
+    beforeEach ->
+      code = """
+      _method = :meth
+      _method()
+      
+      meth:
+        two = 2
+      """
+      doc = dom code
+      sim = simulate doc, (sim) ->
+        return false if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
+        true
+
+    it "should set two to 2", ->
+      expect(sim.state.variables['meth.two'].value).toEqual 2
   
   describe "multiple calls from main", ->
     beforeEach ->

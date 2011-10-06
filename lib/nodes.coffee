@@ -34,17 +34,26 @@ exports.Base = class Base
   
   type: -> throw new Error "node has no type"
   
+  node_tree: ->
+    if @parent then @parent.node_tree() + "::" + @__name
+    else @__name
+  
   current_scope: ->
     return @scope if @scope
-    return @parent.current_scope() if @parent
-    throw new Error "BUG: No scope!"
+    try
+      return @parent.current_scope() if @parent
+    catch e
+      if match = /BUG: No scope! \(in (.*)\)$/.exec(e.toString())
+        throw new Error "BUG: No scope in parent<#{match[1]}> (reraised by #{@node_tree()})"
+      else throw e
+    throw new Error "BUG: No scope! (in #{@node_tree()})"
     
   # if the reference is the name of a TML variable, the reference tag "tmlvar:" is prepended
   # to the return value.
   tml_variable: (field, builder) ->
     val = field.compile builder
     if field instanceof Identifier
-      val = "tmlvar:#{@current_scope().lookup(val).name}"
+      val = "tmlvar:#{field.current_scope().lookup(val).name}"
     val
     
   root: ->
@@ -98,13 +107,6 @@ exports.Document = class Document extends Base
   children: -> ['block']
       
   compileDOM: (builder = new TMLBuilder) ->
-    # builder = new TMLBuilder
-    
-    # if @methods['__main__']
-    #   @methods['__main__'].compile builder
-    # else
-    #   throw new Error 'No main program to compile!'
-      
     for name, method of @methods
       method.compile builder
     
@@ -174,17 +176,22 @@ exports.Method = class Method extends Base
     @scope
     
   getReturnVariable: ->
-    @current_scope().define("return")
+    @current_scope().define "return"
 
   prepare: ->
     id = @getID()
     throw new Error "Duplicate method: #{id}" if @root().methods[id]
     @root().methods[id] = this
+    @current_scope().define ".__method_params", 'string'
     @current_scope().define param.compile(), null for param in @params
   
   compile: (builder) ->
     screen = builder.root.screen @getID()
     screen.attrs.next = @next
+    for index in [0...@params.length]
+      param = @params[index]
+      asgn = @create Assign, @create(Identifier, param), @create(Operation, @create(Identifier, ".__method_params"), 'item', @create(Literal, index))
+      asgn.compile screen
     @block.compile screen if @block
 
 exports.MethodCall = class MethodCall extends Base
@@ -194,7 +201,8 @@ exports.MethodCall = class MethodCall extends Base
     @root().find_method(@getMethodName()).type(@params)
     
   getMethodName: ->
-    @_method_name or= @method_name.compile()
+    return @_method_name if @_method_name
+    @_method_name = @method_name.compile()
     
   prepare: ->
     # if it's a precompile method, wipe out this instance's compile method so it can do
@@ -206,17 +214,34 @@ exports.MethodCall = class MethodCall extends Base
   compile: (screen) ->
     function_screen_id = @getMethodName()
     return_screen_id = "#{screen.attrs['id']}_#{NameRegistry.register function_screen_id}"
-    
-    method = @root().find_method function_screen_id
-    throw new Error "Invalid parameter count: #{@params.length} for #{method.params.length}" if @params.length != method.params.length
-    for i in [0...method.params.length]
-      param_name = new Identifier method.params[i].compile(screen)
+
+    # see if it's a local variable *referencing* a method; if so, get the reference instead
+    # note we do this *after* calculating return_screen_id; this is so we can reuse the
+    # return screen, since it's common code.
+    if variable = @current_scope().find(function_screen_id)
+      function_screen_id = "tmlvar:#{variable.name}"
+    else
+      method = @root().find_method function_screen_id
+      throw new Error "Invalid parameter count: #{@params.length} for #{method.params.length}" if @params.length != method.params.length
+      
+    param_list = []
+    for i in [0...@params.length]
       param = @params[i]
-      # evaluate param variables in *current* scope, not in method's scope
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
-        param = new Identifier @current_scope().lookup(param.compile(screen)).name
-      method.create(Assign, param_name, param).compile screen
+        variable = @current_scope().lookup param.compile screen
+        param_type = variable.type()
+        param_list.push "tmlvar:#{variable.name}"
+      else
+        param_list.push param.compile screen
+        param_type = param.type()
+
+      if method
+        param_name = method.params[i].compile(screen)
+        method.current_scope().define param_name, param_type
+
+    @current_scope().define ".__method_params", 'string'
+    @create(Assign, @create(Identifier, ".__method_params"), @create(Literal, param_list.join ";")).compile(screen)
     
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
@@ -242,7 +267,6 @@ exports.ListIndex = class ListIndex extends Base
   children: -> ['list', 'index']
   
   compile: (screen) ->
-    # screen = screen.root.current_screen()
     @create(Operation, @list, 'item', @index).compile screen
 
 exports.Assign = class Assign extends Base
@@ -262,7 +286,7 @@ exports.Assign = class Assign extends Base
     
     lval = @lvalue.compile screen
     type = @rvalue.type()
-    lval = @current_scope().define(lval, type).name
+    lval = @current_scope().silently_define(lval, type).name
     
     if @rvalue instanceof MethodCall
       screen.attrs.next = "##{rval.attrs.id}"
@@ -270,7 +294,10 @@ exports.Assign = class Assign extends Base
       rval = @root().find_method(@rvalue.getMethodName()).getReturnVariable()
 
     if typeof(rval) == 'object' and rval.lo
-      screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
+      if rval.format
+        screen.b 'setvar', name: lval, lo: rval.lo, format: rval.format
+      else
+        screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
     else
       if typeof(rval) == "object" and rval instanceof Variable
         @current_scope().lookup(lval).depends_upon rval
@@ -306,16 +333,23 @@ exports.Operation = class Operation extends Base
     return lval unless @rvalue
     rval = @tml_variable proc('r', @rvalue), screen
 
-    lo: lval
-    ro: rval
-    op: switch @op
-      when '+' then 'plus'
-      when '-' then 'minus'
-      when '==' then 'equal'
-      when '!=' then 'not_equal'
-      when '<=' then 'less_or_equal'
-      when '<' then 'less'
-      else @op
+    result = 
+      lo: lval
+      ro: rval
+      op: switch @op
+        when '+' then 'plus'
+        when '-' then 'minus'
+        when '==' then 'equal'
+        when '!=' then 'not_equal'
+        when '<=' then 'less_or_equal'
+        when '<' then 'less'
+        else @op
+        
+    if @op == '%'
+      result.format = result.ro
+      delete result.ro
+      delete result.op
+    result
   
 exports.Identifier = class Identifier extends Base
   type: -> @current_scope().lookup(@compile()).type()
@@ -340,8 +374,28 @@ exports.Return = class Return extends Base
 
   compile: (builder) ->
     screen_id = builder.attrs.id
-    @create(Assign, new Identifier("return"), @expression || new Literal "").compile builder
+    @expression or= @create(Literal, "")
+    @current_scope().define "return", @expression.type()
+    @create(Assign, @create(Identifier, "return"), @expression).compile builder
 
+# Supported conditional variants include any combination of the following:
+#
+#     if i == 1
+#       doSomething()
+#     else if i == 2
+#       whatever()
+#     else
+#       doSomethingElse()
+#
+#     if i == 1 then doSomething() else if i == 2 then whatever() else doSomethingElse()
+#
+#     if i == 1 then doSomething()
+#     else if i == 2 then whatever()
+#     else doSomethingElse()
+#
+#     doSomething() if i == 1
+#     doSomething() unless i == 1
+#
 exports.If = class If extends Base
   # @if_type is either 'if' or 'unless'.
   children: -> ['expression', 'block', 'if_type']
@@ -365,6 +419,14 @@ exports.If = class If extends Base
     @block.compile screen
     screen = @else_exp.compile screen.branch_else() if @else_exp
     screen
+    
+exports.Closure = class Closure extends Method
+  Closure.__closure_id or= 0
+  # constructor: (nodes...) ->
+  #   super new Identifier("_closure_" + ++Closure.__closure_id), nodes...
+  
+  getID: -> @id or= "_closure_" + ++Closure.__closure_id
+  children: -> ['params', 'block']
   
 # Iterates through a string, yielding each character in the string.
 # Example:
@@ -377,7 +439,14 @@ exports.ForIn = class ForIn extends Base
   children: -> ['varid', 'expression', 'block']
   type: -> 'string'
   compile: (b) ->
+    current_screen = b.root.current_screen().attrs.id
+    
     @create(Require, "tsl/for_in").compile b
+    closure = (@create Closure, [@varid], @block)
+    closure.compile b
+    
+    b.root.goto current_screen
+    (@create MethodCall, new Identifier("for_in"), [@expression, new MethodReference(new Literal(closure.getID()))]).compile b
     
 
 for i, klass of exports

@@ -3,7 +3,7 @@ require './spec_helper'
 describe "expressions", ->
   doc = sim = null
   
-  describe "for in (indented)", ->
+  describe "ForIn (indented)", ->
     beforeEach ->
       code = """
       str = "one"
@@ -13,19 +13,36 @@ describe "expressions", ->
         i++
         copy += j
       """
-      # dump_tree code
       doc = dom code
-      c = 2
-      sim = simulate doc, (sim) -> c-- if sim.state.screen.id == '__main__'; c > 0
+      sim = simulate doc, (sim) ->
+        if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
+          return false
+        true
     
     it "should set i to 3", ->
-      console.log doc.toString()
-      console.log sim.state.variables
-      expect(sim.state.variables.i).toEqual 3
+      # console.log doc.toString()
+      # console.log sim.state.variables
+      expect(sim.state.variables.i.value).toEqual 3
     
     it "should set copy to 'one'", ->
-      expect(sim.state.variables.copy).toEqual 'one'
+      expect(sim.state.variables.copy.value).toEqual 'one'
       
+  describe "increment", ->
+    beforeEach ->
+      doc = dom 'i = 0; i++'
+      sim = simulate doc, (sim) -> false
+
+    it "should set i to 1", ->
+      expect(sim.state.variables.i.value).toEqual 1
+
+  describe "decrement", ->
+    beforeEach ->
+      doc = dom 'i = 0; i--'
+      sim = simulate doc, (sim) -> false
+
+    it "should set i to -1", ->
+      expect(sim.state.variables.i.value).toEqual -1
+
   describe "unary -", ->
     it "should set one to -1", ->
       doc = dom 'one = -1'
@@ -35,7 +52,6 @@ describe "expressions", ->
       
     it "should set one to 2", ->
       doc = dom 'one = 1 - -1'
-      console.log doc.toString()
       c = 1
       sim = simulate doc, (sim) -> return c-- == 0
       expect(sim.state.variables.one.value).toEqual 2

@@ -6,8 +6,6 @@
 #
 # Note that for iterating through a string list, you want ForOf instead.
 
-require 'tsl/format'
-
 # the intuitive syntax is prepared by the compiler. After compilation,
 # the logic resembles the following (in TML, of course):
 #
@@ -15,8 +13,12 @@ require 'tsl/format'
 #     for_in str, :tmp
 #
 for_in(str, yield):
-  ch = format str, "c"
+  ch = str % "c"
   if ch == "" then return
   else
     yield ch
-    for_in str - -1, yield
+    str = str - -1
+    for_in str, yield
+    
+    # FIXME should be able to do this:
+    # for_in str - -1, yield

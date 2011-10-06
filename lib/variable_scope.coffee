@@ -26,7 +26,13 @@ exports.VariableScope = class Scope
     if @parent then @parent.prefix() + @_prefix
     else @_prefix
 
+  # defines the named variable if it doesn't exist; sets its type if its type is null; raises
+  # an error if the new type would conflict with the previous (non-null) type; returns the
+  # named variable.
   define: (name, type = null, method = false) ->
+    if name.indexOf(".") == 0
+      return @root().define name[1..-1], type, method
+    
     qualified_name = @prefix() + name
     variable = @find(name)
     if variable
@@ -38,6 +44,20 @@ exports.VariableScope = class Scope
     else
       @defs[name] = variable = new Variable(qualified_name, type, method)
       
+    variable
+    
+  # defines the named variable if it doesn't exist; sets its type if its type is null; otherwise
+  # doesn't do anything. Returns the named variable.
+  silently_define: (name, type = null, method = false) ->
+    if name.indexOf(".") == 0
+      return @root().silently_define name[1..-1], type, method
+
+    variable = @find name
+    if variable
+      if variable.type == null
+        variable.setType type
+    else
+      @defs[name] = variable = new Variable(@prefix() + name, type, method)
     variable
 
   type_of: (value) ->
@@ -52,6 +72,9 @@ exports.VariableScope = class Scope
       subscope.recalculate()
     
   find: (name, downward = false) ->
+    if name.indexOf(".") == 0
+      return @root().find name[1..-1], downward
+
     for localname, def of @defs
       return def if def.name == name or localname == name
     if @parent && !downward
@@ -67,15 +90,17 @@ exports.VariableScope = class Scope
         return scope.find name, true
 
     null
-  
-  tree: () ->
+    
+  root: () ->
     p = this
     _p = p.parent
     while _p
       p = _p
       _p = p.parent
-    
-    p.dump()
+    p
+  
+  tree: () ->
+    @root().dump()
   
   dump: ->
     for localname, variable of @defs
