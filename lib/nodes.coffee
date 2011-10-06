@@ -58,22 +58,29 @@ exports.Require = class Require extends Base
   children: -> ['path']
   
   prepare: ->
-    @root().__requires or= {}
+    @root().__dependencies or= {}
     @namespace = @path
     @namespace = @namespace.replace match[0], '.' while match = /[\/\\]/.exec @namespace
     @path = @path + ".tsl" if path.extname(@path) == ""
     @path = path.join(__dirname, @path) unless @path[0] == '/' or @path[0] == '\\'
 
-    return if @root().__requires[@path]
-    console.log @namespace, @path
+    return if @root().__dependencies[@path]
     @code = fs.readFileSync @path, 'UTF-8'
     @doc = TML.parse @code
     
   compile: (builder) ->
-    return if @root().__requires[@path]
-    @root().__requires[@path] = 1
-    @doc.current_scope().prefix = @namespace + "."
+    return if @root().__dependencies[@path]
+    # link our scope into dep's scope so that dep can reference its own variables
+    # @doc.scope = @current_scope().sub @namespace
+    
+    # HACK
+    @doc.scope._prefix = @namespace+"."
+    @doc.scope.parent = @current_scope()
+    @current_scope().subscopes[@namespace] = @doc.scope
+    @current_scope().recalculate()
+    
     @doc.compileDOM builder
+    @root().__dependencies[@path] = @doc
   
 exports.Document = class Document extends Base
   after_initialize: ->
@@ -82,9 +89,11 @@ exports.Document = class Document extends Base
     @run_prepare_blocks()
   
   find_method: (name) ->
-    method = @methods[name]
-    throw new Error "No method named #{name}" if !method
-    method
+    return @methods[name] if @methods[name]
+    if @__dependencies
+      for dep, doc of @__dependencies
+        return doc.methods[name] if doc.methods[name]
+    throw new Error "No method named #{name}"
     
   children: -> ['block']
       
@@ -178,15 +187,6 @@ exports.Method = class Method extends Base
     screen.attrs.next = @next
     @block.compile screen if @block
 
-# exports.Parens = class Parens extends Method
-#   children: -> ['block']
-#   getID: () -> @id or= "__tmp_method__"
-#   prepare: ->
-#     last = @block.nodes[@block.nodes.length-1]
-#     if !(last instanceof Return)
-#       @block.nodes[@block.nodes.length-1] = new Return(last)
-#     super
-
 exports.MethodCall = class MethodCall extends Base
   children: -> ['method_name', 'params']
   
@@ -195,6 +195,13 @@ exports.MethodCall = class MethodCall extends Base
     
   getMethodName: ->
     @_method_name or= @method_name.compile()
+    
+  prepare: ->
+    # if it's a precompile method, wipe out this instance's compile method so it can do
+    # no harm. TODO make this more flexible.
+    if @getMethodName() == 'require'
+      @require = @create Require, (param.compile() for param in @params)...
+      @compile = (screen) -> @require.compile screen.root
     
   compile: (screen) ->
     function_screen_id = @getMethodName()
@@ -209,7 +216,6 @@ exports.MethodCall = class MethodCall extends Base
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
         param = new Identifier @current_scope().lookup(param.compile(screen)).name
-        
       method.create(Assign, param_name, param).compile screen
     
     screen.root.current_screen().call_method function_screen_id, return_screen_id

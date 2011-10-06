@@ -53,6 +53,22 @@ describe "scope", ->
       two = scope.sub 'two'
       
       one.define 'varname'
+      
+    describe "a third level of scope", ->
+      three = null
+      
+      beforeEach ->
+        three = one.sub 'three'
+        three.define 'varname2'
+        
+      it 'should have prefix one.three', ->
+        expect(three.prefix()).toEqual 'one.three.'
+      
+      it "should find varname in three", ->
+        expect(three.lookup("varname2").name).toEqual 'one.three.varname2'
+        
+      it "should find one.varname", ->
+        expect(three.lookup("one.varname").name).toEqual 'one.varname'
   
     it "should resolve qualified name from sibling scope", ->
       expect(two.lookup 'one.varname').toBeTruthy()

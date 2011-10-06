@@ -73,9 +73,9 @@ grammar =
   ]
   
   Literal: [
-    o 'NUMBER', -> new Literal JSON.parse($1)
-    o 'STRING', -> new Literal JSON.parse($1)
-    o 'BOOL', -> new Literal JSON.parse($1)
+    o 'NUMBER', -> new Literal eval($1)
+    o 'STRING', -> new Literal eval($1)
+    o 'BOOL', -> new Literal eval($1)
   ]
   
   Value: [

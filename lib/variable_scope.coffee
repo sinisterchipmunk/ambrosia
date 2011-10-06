@@ -17,13 +17,17 @@ exports.Variable = class Variable
 
 exports.VariableScope = class Scope
   constructor: (prefix = null, @parent = null) ->
-    @prefix = (if parent then parent.prefix else "") + (if prefix then "#{prefix}." else "")
+    @_prefix = (if prefix then "#{prefix}." else "")
     @defs = {}
     @builtin = Builtins(this)
     @subscopes = {}
+    
+  prefix: ->
+    if @parent then @parent.prefix() + @_prefix
+    else @_prefix
 
   define: (name, type = null, method = false) ->
-    qualified_name = @prefix + name
+    qualified_name = @prefix() + name
     variable = @find(name)
     if variable
       if variable.type() == null
@@ -39,6 +43,14 @@ exports.VariableScope = class Scope
   type_of: (value) ->
     value.type()
     
+  # recalculates the fully-qualified variable names of all variables from this scope downward
+  # call this when a prefix changes somewhere in the tree at or above this scope
+  recalculate: ->
+    for localname, def of @defs
+      def.name = @prefix()+localname
+    for prefix, subscope of @subscopes
+      subscope.recalculate()
+    
   find: (name, downward = false) ->
     for localname, def of @defs
       return def if def.name == name or localname == name
@@ -50,20 +62,37 @@ exports.VariableScope = class Scope
     #   root->one can find two.three,
     #   root->one->two can find three
     for prefix, scope of @subscopes
-      prefix = @prefix + prefix
+      prefix = @prefix() + prefix
       if name.indexOf(prefix) == 0 # starts with prefix
         return scope.find name, true
 
     null
+  
+  tree: () ->
+    p = this
+    _p = p.parent
+    while _p
+      p = _p
+      _p = p.parent
+    
+    p.dump()
+  
+  dump: ->
+    for localname, variable of @defs
+      console.log @prefix()+localname+" => "+variable.name
+      
+    for prefix, subscope of @subscopes
+      subscope.dump()
 
   lookup: (name) ->
     throw new Error "No name given" if !name
     return v if v = @find(name)
-    throw new Error "#{(if /\./.test name then name else @prefix+name)} is not defined"
+    throw new Error "#{(if /\./.test name then name else @prefix()+name)} is not defined"
     
   sub: (prefix) ->
     throw new Error "Can't subscope without a prefix" if !prefix
-    @subscopes[@prefix+prefix] = new Scope(@prefix+prefix, this)
+    scope = new Scope(prefix, this)
+    @subscopes[scope.prefix()] = scope
 
   compile: (builder) ->
     builder = builder.root if builder.root

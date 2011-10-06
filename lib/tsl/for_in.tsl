@@ -1,1 +1,14 @@
-one = 1
+# Iterates through a string, yielding each character in the string.
+# Example:
+#
+#     for ch in "hello"
+#       ch   #=> 'h', 'e', 'l', 'l', 'o'
+#
+# Note that for iterating through a string list, you want ForOf instead.
+
+require 'tsl/format'
+
+for_in(ch, str1, yield):
+  ch = format str1, "c"
+  # if ch == "" then return
+  # else yield ch
