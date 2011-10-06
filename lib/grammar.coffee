@@ -91,6 +91,11 @@ grammar =
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
+    o 'ForIn', -> $1
+  ]
+  
+  ForIn: [
+    o 'FOR Identifier FORIN Expression Block', -> new ForIn $2, $4, $5
   ]
   
   Parenthetical: [
@@ -108,6 +113,9 @@ grammar =
   ]
   
   Operation: [
+    o 'Expression ++', -> new Operation $1, '+', new Literal 1
+    o 'Expression --', -> new Operation $1, '-', new Literal 1
+    o 'Identifier COMPOUND_ASSIGN Expression', -> new Assign $1, new Operation $1, $2[0], $3
     o 'Expression MATH Expression', -> new Operation $1, $2, $3
     o 'Expression + Expression', -> new Operation $1, $2, $3
     o 'Expression - Expression', -> new Operation $1, $2, $3

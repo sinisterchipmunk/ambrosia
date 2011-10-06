@@ -1,5 +1,8 @@
 {TMLBuilder, NameRegistry} = require './tml_builder'
 {VariableScope, Variable}  = require './variable_scope'
+TML = require './tml'
+path = require 'path'
+fs = require 'fs'
 
 exports.Base = class Base
   constructor: (@nodes...) ->
@@ -50,6 +53,27 @@ exports.Base = class Base
       parent = p
       p = p.parent
     parent
+    
+exports.Require = class Require extends Base
+  children: -> ['path']
+  
+  prepare: ->
+    @root().__requires or= {}
+    @namespace = @path
+    @namespace = @namespace.replace match[0], '.' while match = /[\/\\]/.exec @namespace
+    @path = @path + ".tsl" if path.extname(@path) == ""
+    @path = path.join(__dirname, @path) unless @path[0] == '/' or @path[0] == '\\'
+
+    return if @root().__requires[@path]
+    console.log @namespace, @path
+    @code = fs.readFileSync @path, 'UTF-8'
+    @doc = TML.parse @code
+    
+  compile: (builder) ->
+    return if @root().__requires[@path]
+    @root().__requires[@path] = 1
+    @doc.current_scope().prefix = @namespace + "."
+    @doc.compileDOM builder
   
 exports.Document = class Document extends Base
   after_initialize: ->
@@ -64,8 +88,8 @@ exports.Document = class Document extends Base
     
   children: -> ['block']
       
-  compileDOM: ->
-    builder = new TMLBuilder
+  compileDOM: (builder = new TMLBuilder) ->
+    # builder = new TMLBuilder
     
     # if @methods['__main__']
     #   @methods['__main__'].compile builder
@@ -287,6 +311,20 @@ exports.Return = class Return extends Base
   compile: (builder) ->
     screen_id = builder.attrs.id
     @create(Assign, new Identifier("return"), @expression).compile builder
+    
+# Iterates through a string, yielding each character in the string.
+# Example:
+#
+#     for ch in "hello"
+#       ch   #=> 'h', 'e', 'l', 'l', 'o'
+#
+# Note that for iterating through a string list, you want ForOf instead.
+exports.ForIn = class ForIn extends Base
+  children: -> ['varid', 'expression', 'block']
+  type: -> 'string'
+  compile: (b) ->
+    @create(Require, "tsl/for_in").compile b
+    
 
 for i, klass of exports
   if klass.prototype instanceof Base

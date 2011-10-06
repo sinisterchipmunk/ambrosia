@@ -1,2 +1,8 @@
+length(str):
+  i = 0
+  for j in str
+    i++
+  return i
+
 push_stack(stack, item): stack = item + ";" + stack
-pop_stack(stack): stack = stack - (stack_length(stack[0])+1)
+pop_stack(stack): stack = stack - -(length(stack[0])+1)

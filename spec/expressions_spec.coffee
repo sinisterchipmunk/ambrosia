@@ -1,8 +1,31 @@
 require './spec_helper'
 
 describe "expressions", ->
-  doc = null
-
+  doc = sim = null
+  
+  describe "for in (indented)", ->
+    beforeEach ->
+      code = """
+      str = "one"
+      copy = ""
+      i = 0
+      for j in str
+        i++
+        copy += j
+      """
+      # dump_tree code
+      doc = dom code
+      c = 2
+      sim = simulate doc, (sim) -> c-- if sim.state.screen.id == '__main__'; c > 0
+    
+    it "should set i to 3", ->
+      console.log doc.toString()
+      console.log sim.state.variables
+      expect(sim.state.variables.i).toEqual 3
+    
+    it "should set copy to 'one'", ->
+      expect(sim.state.variables.copy).toEqual 'one'
+    
   describe "list index", ->
     beforeEach -> doc = dom 'list = "one;two"; one = list[0]'
     
