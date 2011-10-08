@@ -15,19 +15,8 @@ o = (patternString, action, options) ->
   
 grammar =
   Root: [
-    o 'Methods', -> new Document Block.wrap $1
-    o '',        -> new Document new Block
-    o 'Body TERMINATOR',    -> new Document Block.wrap [new Method new Identifier('__main__'), [], $1]
-    o 'Body TERMINATOR Methods', ->
-      block = Block.wrap [new Method new Identifier('__main__'), [], $1]
-      doc = new Document block
-      block.push m for m in $3
-      doc
-    o 'Methods TERMINATOR Body TERMINATOR', ->
-      block = Block.wrap [new Method new Identifier('__main__'), [], $3]
-      doc = new Document block
-      block.push m for m in $1
-      doc
+    o 'Body',    -> new Document Block.wrap [new Method new Identifier('__main__'), [], $1]
+    o '',        -> new Document Block.wrap [new Method new Identifier('__main__'), [], Block.wrap []]
   ]
   
   Method: [
@@ -41,21 +30,22 @@ grammar =
     o 'Identifier CALL_START ParamList CALL_END : Line', -> new Method $1, $3, Block.wrap [$6]
   ]
 
-  Methods: [
-    o 'Method', -> [$1]
-    o 'Methods TERMINATOR Method', -> $1.concat [$3]
-    o 'Methods TERMINATOR', -> $1
-  ]
-  
   Identifier: [
-    o 'IDENTIFIER',                             -> new Identifier new Literal $1
+    o 'IDENTIFIER',                             -> new Identifier $1
   ]
 
+  # Block and statements, which make up a line in a body.
+  Line: [
+    o 'Method'
+    o 'Expression'
+    o 'Statement'
+  ]
+  
   # Any list of statements and expressions, separated by line breaks or semicolons.
   Body: [
     o 'Line',                                   -> Block.wrap [$1]
     o 'Body TERMINATOR Line',                   -> $1.push $3; $1
-    # o 'Body TERMINATOR',                        -> new Block
+    o 'Body TERMINATOR',                        -> $1
   ]
   
   # An indented block of expressions. Note that the [Rewriter](rewriter.html)
@@ -83,16 +73,10 @@ grammar =
     o 'Expression POST_IF Expression',          -> new If $3, Block.wrap([$1]), $2
   ]
 
-  # Block and statements, which make up a line in a body.
-  Line: [
-    o 'Expression'
-    o 'Statement'
-  ]
-  
   Literal: [
     o 'NUMBER', -> new Literal eval($1)
     o 'STRING', -> new Literal eval($1)
-    o 'BOOL', -> new Literal eval($1)
+    o 'BOOL',   -> new Literal eval($1)
   ]
   
   Value: [
@@ -109,6 +93,13 @@ grammar =
     o 'MethodCall'
     o 'Operation'
     o 'ForIn', -> $1
+    o 'Closure', -> $1
+  ]
+  
+  Closure: [
+    o '-> Block', -> new Closure [], $2
+    o 'PARAM_START ParamList PARAM_END -> Block', -> new Closure $2, $5
+    o 'PARAM_START PARAM_END -> Block', -> new Closure [], $4
   ]
   
   Statement: [
@@ -119,8 +110,6 @@ grammar =
   Return: [
     o 'RETURN Expression', -> new Return $2
     o 'RETURN', -> new Return
-    # o 'RETURN', -> new Return
-    # o 'Return Expression', -> $1.with $2
   ]
   
   ForIn: [

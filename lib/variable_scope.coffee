@@ -3,13 +3,21 @@ Builtins = (scope) ->
   key for key of scope.defs
 
 exports.Variable = class Variable
-  constructor: (@name, @_type = null, @method = false) ->
+  constructor: (@name, @_type = null, @method = false) -> @dependents = []
     
-  depends_upon: (@other_variable) ->
+  depends_upon: (other_variable) ->
+    @dependents.push other_variable unless other_variable == this
     
   type: ->
-    if @_type == null && @other_variable
-      @other_variable.type()
+    if @_type == null && @dependents.length > 0
+      type = null
+      for dep in @dependents
+        if type
+          other = dep.type()
+          throw new Error "#{@name} (a #{type}) depends upon #{dep.name}, but it is a #{other}" if type != other
+        else
+          type = dep.type()
+      type
     else
       @_type
       

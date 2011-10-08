@@ -27,6 +27,12 @@ Builder.screen = class Screen extends Builder
       
   next: () ->
     return @first('next') or {attrs:uri:@attrs.next}
+    
+  b: ->
+    result = super
+    if @first 'next'
+      delete @attrs.next # for readability
+    result
   
   branch: (operation) ->
     new_screen_id = @attrs.id + NameRegistry.register @attrs.id

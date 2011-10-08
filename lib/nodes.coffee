@@ -8,11 +8,11 @@ exports.Base = class Base
   constructor: (@nodes...) ->
     nodes = @nodes
     self = this
-    children = @children()
+    children = @children() if @children
     for index in [0...nodes.length]
       node = nodes[index]
       node.parent = self
-      if children
+      if children && children[index] != undefined
         self[children[index]] = node
     @after_initialize() if @after_initialize
   
@@ -24,6 +24,8 @@ exports.Base = class Base
     child
     
   run_prepare_blocks: ->
+    return if @prepared
+    @prepared = true
     @prepare() if @prepare
     for node in @nodes
       node.run_prepare_blocks() if node instanceof Base
@@ -34,9 +36,12 @@ exports.Base = class Base
   
   type: -> throw new Error "node has no type"
   
+  instance_name: ->
+    @__proto__.constructor.name
+  
   node_tree: ->
-    if @parent then @parent.node_tree() + "::" + @__name
-    else @__name
+    if @parent then @parent.node_tree() + "::" + @instance_name()
+    else @instance_name()
   
   current_scope: ->
     return @scope if @scope
@@ -62,12 +67,11 @@ exports.Base = class Base
       parent = p
       p = p.parent
     parent
-    
+ 
 exports.Require = class Require extends Base
   children: -> ['path']
   
   prepare: ->
-    @root().__dependencies or= {}
     @namespace = @path
     @namespace = @namespace.replace match[0], '.' while match = /[\/\\]/.exec @namespace
     @path = @path + ".tsl" if path.extname(@path) == ""
@@ -76,47 +80,57 @@ exports.Require = class Require extends Base
     return if @root().__dependencies[@path]
     @code = fs.readFileSync @path, 'UTF-8'
     @doc = TML.parse @code
+    @doc.scope = @current_scope().sub @namespace
+
+    @root().__dependencies[@path] = @doc
+
+    @doc.run_prepare_blocks()
     
   compile: (builder) ->
-    return if @root().__dependencies[@path]
-    # link our scope into dep's scope so that dep can reference its own variables
-    # @doc.scope = @current_scope().sub @namespace
-    
-    # HACK
-    @doc.scope._prefix = @namespace+"."
-    @doc.scope.parent = @current_scope()
-    @current_scope().subscopes[@namespace] = @doc.scope
-    @current_scope().recalculate()
-    
-    @doc.compileDOM builder
-    @root().__dependencies[@path] = @doc
+    @doc.compile builder
+    # return if @root().__dependencies[@path]
   
 exports.Document = class Document extends Base
-  after_initialize: ->
+  constructor: (nodes...) ->
     @scope = new VariableScope
     @methods = {}
-    @run_prepare_blocks()
+    @__dependencies = {}
+    super
+    
+  instance_name: ->
+    @current_scope().prefix() + super
+  
+  silently_find_method: (name) ->
+    return @methods[name] if @methods[name]
+    retval = null
+    @each_dependency (dep) -> 
+      retval or= method if method = dep.silently_find_method name
+    retval
+    
+  each_dependency: (callback) ->
+    for dep, doc of @__dependencies
+      callback doc
   
   find_method: (name) ->
-    return @methods[name] if @methods[name]
-    if @__dependencies
-      for dep, doc of @__dependencies
-        return doc.methods[name] if doc.methods[name]
+    return method if method = @silently_find_method name
     throw new Error "No method named #{name}"
     
   children: -> ['block']
+  
+  prepare: ->
+    @each_dependency (dep) ->
+      dep.run_prepare_blocks()
       
   compileDOM: (builder = new TMLBuilder) ->
-    for name, method of @methods
-      method.compile builder
-    
+    # it's safe to call this repeatedly because `Base` will ignore subsequent calls
+    @run_prepare_blocks()
+    @find_method('__main__').compile builder
     # important to compile scopes last, because method nodes are still building them until now
-    @current_scope().compile builder
-    
+    @current_scope().compile builder    
     builder
       
-  compile: ->
-    @compileDOM().toString()
+  compile: (builder) ->
+    @compileDOM(builder).toString()
 
 exports.Block = class Block extends Base
   constructor: (nodes) -> super(nodes...)
@@ -128,7 +142,17 @@ exports.Block = class Block extends Base
   push: (node) ->
     node.parent = this
     @nodes.push node
-    node.run_prepare_blocks()
+    node.run_prepare_blocks() if @root() instanceof Document # is doc construction complete?
+    
+  concat: (ary) ->
+    for node in ary
+      @push node
+      
+  nodes_matching: (name) ->
+    ary = []
+    for node in @nodes
+      ary.push node if node.__proto__.constructor.name == name
+    ary
   
   # Wrap up the given nodes as a **Block**, unless it already happens
   # to be one.
@@ -151,6 +175,9 @@ exports.Literal = class Literal extends Base
 exports.Method = class Method extends Base
   children: -> ['name', 'params', 'block']
   
+  instance_name: ->
+    super + "<#{@getID()}>"
+    
   after_initialize: ->
     @params or= []
     @next = "#__return__"
@@ -186,6 +213,11 @@ exports.Method = class Method extends Base
     @current_scope().define param.compile(), null for param in @params
   
   compile: (builder) ->
+    # this is to counter an error where method bodies are compiled twice. Remove this when
+    # the compile phase solidifies.
+    if @compiled then throw new Error "Already compiled method #{@getID()} (#{@node_tree()})"
+    else @compiled = true
+    previous = builder.root.current_screen() || {attrs:id:"__main__"}
     screen = builder.root.screen @getID()
     screen.attrs.next = @next
     for index in [0...@params.length]
@@ -193,6 +225,11 @@ exports.Method = class Method extends Base
       asgn = @create Assign, @create(Identifier, param), @create(Operation, @create(Identifier, ".__method_params"), 'item', @create(Literal, index))
       asgn.compile screen
     @block.compile screen if @block
+    builder.root.goto previous.attrs.id
+    
+    # Build, but don't compile, a method reference as a return value.
+    # This can be used by Assigns.
+    @create MethodReference, new Literal @getID()
 
 exports.MethodCall = class MethodCall extends Base
   children: -> ['method_name', 'params']
@@ -210,8 +247,18 @@ exports.MethodCall = class MethodCall extends Base
     if @getMethodName() == 'require'
       @require = @create Require, (param.compile() for param in @params)...
       @compile = (screen) -> @require.compile screen.root
+  
+  get_dependent_variable: ->
+    function_screen_id = @getMethodName()
+    if variable = @current_scope().find(function_screen_id)
+      # no way to guesstimate result because it's defined at runtime
+      return null
+    else
+      method = @root().find_method function_screen_id
+      return method.getReturnVariable()
     
-  compile: (screen) ->
+  compile: (builder) ->
+    screen = builder.root.current_screen()
     function_screen_id = @getMethodName()
     return_screen_id = "#{screen.attrs['id']}_#{NameRegistry.register function_screen_id}"
 
@@ -227,10 +274,10 @@ exports.MethodCall = class MethodCall extends Base
     param_list = []
     for i in [0...@params.length]
       param = @params[i]
+      variable = param_type = null
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
         variable = @current_scope().lookup param.compile screen
-        param_type = variable.type()
         param_list.push "tmlvar:#{variable.name}"
       else
         param_list.push param.compile screen
@@ -238,10 +285,13 @@ exports.MethodCall = class MethodCall extends Base
 
       if method
         param_name = method.params[i].compile(screen)
-        method.current_scope().define param_name, param_type
+        v = method.current_scope().define param_name, param_type
+        if variable
+          v.depends_upon variable
 
     @current_scope().define ".__method_params", 'string'
     @create(Assign, @create(Identifier, ".__method_params"), @create(Literal, param_list.join ";")).compile(screen)
+    
     
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
@@ -274,10 +324,14 @@ exports.Assign = class Assign extends Base
   
   children: -> ['lvalue', 'rvalue']
   
+  prepare: ->
   compile: (screen) ->
     screen = screen.root.current_screen()
     throw new Error "Can't use assignment as left value" if @lvalue instanceof Assign
 
+    if @rvalue instanceof Method
+      @rvalue = @rvalue.compile screen.root
+  
     rval = @rvalue.compile screen
     if rval instanceof Assign
       rval = @current_scope().lookup(rval.lvalue.compile screen)
@@ -312,6 +366,12 @@ exports.Operation = class Operation extends Base
   children: -> ['lvalue', 'op', 'rvalue']
   
   type: -> @lvalue.type()
+  
+  get_dependent_variable: ->
+    if @lvalue instanceof Base
+      @lvalue.get_dependent_variable()
+    else
+      null
   
   prepare: ->
     # if op is > or >= then TML doesn't support that, so reverse the operands and the op
@@ -352,8 +412,9 @@ exports.Operation = class Operation extends Base
     result
   
 exports.Identifier = class Identifier extends Base
-  type: -> @current_scope().lookup(@compile()).type()
+  type: -> @get_dependent_variable().type()
   compile: (b) -> if typeof(@nodes[0]) == 'string' then @nodes[0] else @nodes[0].compile(b)
+  get_dependent_variable: -> @current_scope().lookup(@compile())
   
 exports.MethodReference = class MethodReference extends Base
   children: -> ['value']
@@ -374,8 +435,14 @@ exports.Return = class Return extends Base
 
   compile: (builder) ->
     screen_id = builder.attrs.id
-    @expression or= @create(Literal, "")
-    @current_scope().define "return", @expression.type()
+    @expression or= @create Literal, ""
+    if type = @expression.type()
+      v = @current_scope().define "return", @expression.type()
+    else
+      v = @current_scope().define "return"
+      dependent = @expression.get_dependent_variable()
+      v.depends_upon dependent
+      
     @create(Assign, @create(Identifier, "return"), @expression).compile builder
 
 # Supported conditional variants include any combination of the following:
@@ -422,9 +489,6 @@ exports.If = class If extends Base
     
 exports.Closure = class Closure extends Method
   Closure.__closure_id or= 0
-  # constructor: (nodes...) ->
-  #   super new Identifier("_closure_" + ++Closure.__closure_id), nodes...
-  
   getID: -> @id or= "_closure_" + ++Closure.__closure_id
   children: -> ['params', 'block']
   
@@ -442,11 +506,11 @@ exports.ForIn = class ForIn extends Base
     current_screen = b.root.current_screen().attrs.id
     
     @create(Require, "tsl/for_in").compile b
-    closure = (@create Closure, [@varid], @block)
-    closure.compile b
+    closure = @create Closure, [@varid], @block
+    closure.compile b.root
     
     b.root.goto current_screen
-    (@create MethodCall, new Identifier("for_in"), [@expression, new MethodReference(new Literal(closure.getID()))]).compile b
+    (@create MethodCall, new Identifier("for_in"), [@expression, new MethodReference new Literal closure.getID()]).compile b
     
 
 for i, klass of exports
