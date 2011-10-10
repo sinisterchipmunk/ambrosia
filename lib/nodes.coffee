@@ -227,9 +227,9 @@ exports.Method = class Method extends Base
     @block.compile screen if @block
     builder.root.goto previous.attrs.id
     
-    # Build, but don't compile, a method reference as a return value.
+    # Build a method reference as a return value.
     # This can be used by Assigns.
-    @create MethodReference, new Literal @getID()
+    @create(MethodReference, new Literal @getID()).compile builder
 
 exports.MethodCall = class MethodCall extends Base
   children: -> ['method_name', 'params']
@@ -327,39 +327,51 @@ exports.Assign = class Assign extends Base
   
   prepare: ->
   compile: (screen) ->
-    screen = screen.root.current_screen()
     throw new Error "Can't use assignment as left value" if @lvalue instanceof Assign
-    
-    # rval = @rvalue.compile screen
-
-    if @rvalue instanceof Method
-      @rvalue = @rvalue.compile screen.root
       
-    rval = @rvalue.compile screen
-    if rval instanceof Assign
-      rval = @current_scope().lookup(rval.lvalue.compile screen)
-    else if @rvalue instanceof Identifier
-      rval = @current_scope().lookup rval
-    
-    lval = @lvalue.compile screen
-    type = @rvalue.type()
-    lval = @current_scope().silently_define(lval, type).name
-    
+    rval = @rvalue.compile screen.root.current_screen()
     screen = screen.root.current_screen()
-    if typeof(rval) == 'object' and rval.lo
-      if rval.format
-        screen.b 'setvar', name: lval, lo: rval.lo, format: rval.format
-      else
-        screen.b 'setvar', name: lval, lo: rval.lo, op: rval.op, ro: rval.ro
-    else
-      if typeof(rval) == "object" and rval instanceof Variable
-        @current_scope().lookup(lval).depends_upon rval
-        rval = "tmlvar:#{rval.name}"
-      else
-        @current_scope().define lval, @rvalue.type()
-      screen.b 'setvar', name: lval, lo: rval
+
+    type = @rvalue.type()
+    lval = @current_scope().silently_define @lvalue.compile(screen), type
     
-    this # this is so assigns can chain assigns
+    # a = b
+    if @rvalue instanceof Identifier
+      rval = @current_scope().lookup rval
+      lval.depends_upon rval
+      screen.b 'setvar', name: lval.name, lo: "tmlvar:#{rval.name}"
+    # a = 1
+    else if @rvalue instanceof Literal
+      @current_scope().define lval.name, @rvalue.type()
+      screen.b 'setvar', name: lval.name, lo: rval
+    # a = b = c
+    else if rval instanceof Variable
+      lval.depends_upon rval
+      screen.b 'setvar', name: lval.name, lo: "tmlvar:#{rval.name}"
+    # a = :b; a = -> 1
+    else if @rvalue instanceof MethodReference or @rvalue instanceof Method
+      lval.setType 'string' # needs to be a string to hold method name
+      screen.b 'setvar', name: lval.name, lo: rval
+    # a = b + c
+    else
+      rval.name = lval.name
+      screen.b 'setvar', rval
+    
+    # if @rvalue instanceof Identifier
+    #   rval = @current_scope().lookup rval
+    # screen = screen.root.current_screen()
+    # if typeof(rval) == 'object' and rval.lo
+    #   rval.name = lval.name
+    #   screen.b 'setvar', rval
+    # else
+    #   if typeof(rval) == "object" and rval instanceof Variable
+    #     lval.depends_upon rval
+    #     rval = "tmlvar:#{rval.name}"
+    #   else
+    #     @current_scope().define lval.name, @rvalue.type()
+    #   screen.b 'setvar', name: lval.name, lo: rval
+    
+    lval
 
 exports.Operation = class Operation extends Base
   children: -> ['lvalue', 'op', 'rvalue']
