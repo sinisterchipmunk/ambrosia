@@ -9,9 +9,15 @@ exports.Base = class Base
     nodes = @nodes
     self = this
     children = @children() if @children
+    
+    setParent = (node) ->
+      node.parent = self
+      if node instanceof Array
+        setParent n for n in node
+      
     for index in [0...nodes.length]
       node = nodes[index]
-      node.parent = self
+      setParent node
       if children && children[index] != undefined
         self[children[index]] = node
     @after_initialize() if @after_initialize
@@ -56,9 +62,12 @@ exports.Base = class Base
   # if the reference is the name of a TML variable, the reference tag "tmlvar:" is prepended
   # to the return value.
   tml_variable: (field, builder) ->
-    val = field.compile builder
     if field instanceof Identifier
-      val = "tmlvar:#{field.current_scope().lookup(val).name}"
+      val = field.compile builder
+      val = "tmlvar:#{val.name}"
+    else
+      val = field.compile builder
+    
     val
     
   root: ->
@@ -88,7 +97,6 @@ exports.Require = class Require extends Base
     
   compile: (builder) ->
     @doc.compile builder
-    # return if @root().__dependencies[@path]
   
 exports.Document = class Document extends Base
   constructor: (nodes...) ->
@@ -169,8 +177,7 @@ exports.Literal = class Literal extends Base
       when 'boolean', 'number' then 'integer'
       else throw new Error "Untranslateable literal: #{JSON.stringify @value}"
   
-  compile: (builder) ->
-    @value.toString()
+  compile: (builder) -> @value.toString()
 
 exports.Method = class Method extends Base
   children: -> ['name', 'params', 'block']
@@ -181,11 +188,11 @@ exports.Method = class Method extends Base
   after_initialize: ->
     @params or= []
     @next = "#__return__"
-    if typeof(@name) == 'string'
-      @name = compile: -> @name
+    if @name instanceof Identifier
+      @name = @name.name
       
   getID: ->
-    @id or= @name.compile()
+    @id or= @name
     if @id
       @id
     else
@@ -210,7 +217,7 @@ exports.Method = class Method extends Base
     throw new Error "Duplicate method: #{id}" if @root().methods[id]
     @root().methods[id] = this
     @current_scope().define ".__method_params", 'string'
-    @current_scope().define param.compile(), null for param in @params
+    @current_scope().define param.name, null for param in @params
   
   compile: (builder) ->
     # this is to counter an error where method bodies are compiled twice. Remove this when
@@ -222,7 +229,7 @@ exports.Method = class Method extends Base
     screen.attrs.next = @next
     for index in [0...@params.length]
       param = @params[index]
-      asgn = @create Assign, @create(Identifier, param), @create(Operation, @create(Identifier, ".__method_params"), 'item', @create(Literal, index))
+      asgn = @create Assign, @create(Identifier, param.name), @create(Operation, @create(Identifier, ".__method_params"), 'item', @create(Literal, index))
       asgn.compile screen
     @block.compile screen if @block
     builder.root.goto previous.attrs.id
@@ -239,13 +246,13 @@ exports.MethodCall = class MethodCall extends Base
     
   getMethodName: ->
     return @_method_name if @_method_name
-    @_method_name = @method_name.compile()
+    @_method_name = @method_name.name #compile()
     
   prepare: ->
     # if it's a precompile method, wipe out this instance's compile method so it can do
     # no harm. TODO make this more flexible.
     if @getMethodName() == 'require'
-      @require = @create Require, (param.compile() for param in @params)...
+      @require = @create Require, (param.name for param in @params)...
       @compile = (screen) -> @require.compile screen.root
   
   get_dependent_variable: ->
@@ -277,14 +284,14 @@ exports.MethodCall = class MethodCall extends Base
       variable = param_type = null
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
-        variable = @current_scope().lookup param.compile screen
+        variable = param.compile screen
         param_list.push "tmlvar:#{variable.name}"
       else
         param_list.push param.compile screen
         param_type = param.type()
 
       if method
-        param_name = method.params[i].compile(screen)
+        param_name = method.params[i].name
         v = method.current_scope().define param_name, param_type
         if variable
           v.depends_upon variable
@@ -333,44 +340,11 @@ exports.Assign = class Assign extends Base
     screen = screen.root.current_screen()
 
     type = @rvalue.type()
-    lval = @current_scope().silently_define @lvalue.compile(screen), type
+    lval = @current_scope().silently_define @lvalue.name, type
     
-    # a = b
-    if @rvalue instanceof Identifier
-      rval = @current_scope().lookup rval
-      lval.depends_upon rval
-      screen.b 'setvar', name: lval.name, lo: "tmlvar:#{rval.name}"
-    # a = 1
-    else if @rvalue instanceof Literal
-      @current_scope().define lval.name, @rvalue.type()
-      screen.b 'setvar', name: lval.name, lo: rval
-    # a = b = c
-    else if rval instanceof Variable
-      lval.depends_upon rval
-      screen.b 'setvar', name: lval.name, lo: "tmlvar:#{rval.name}"
-    # a = :b; a = -> 1
-    else if @rvalue instanceof MethodReference or @rvalue instanceof Method
-      lval.setType 'string' # needs to be a string to hold method name
-      screen.b 'setvar', name: lval.name, lo: rval
-    # a = b + c
-    else
-      rval.name = lval.name
-      screen.b 'setvar', rval
-    
-    # if @rvalue instanceof Identifier
-    #   rval = @current_scope().lookup rval
-    # screen = screen.root.current_screen()
-    # if typeof(rval) == 'object' and rval.lo
-    #   rval.name = lval.name
-    #   screen.b 'setvar', rval
-    # else
-    #   if typeof(rval) == "object" and rval instanceof Variable
-    #     lval.depends_upon rval
-    #     rval = "tmlvar:#{rval.name}"
-    #   else
-    #     @current_scope().define lval.name, @rvalue.type()
-    #   screen.b 'setvar', name: lval.name, lo: rval
-    
+    setvar = screen.b 'setvar', name: lval.name
+    @lvalue.assign_value setvar, rval
+
     lval
 
 exports.Operation = class Operation extends Base
@@ -423,16 +397,37 @@ exports.Operation = class Operation extends Base
     result
   
 exports.Identifier = class Identifier extends Base
+  children: -> ['name']
   type: -> @get_dependent_variable().type()
-  compile: (b) -> if typeof(@nodes[0]) == 'string' then @nodes[0] else @nodes[0].compile(b)
-  get_dependent_variable: -> @current_scope().lookup(@compile())
+  compile: (b) -> @get_dependent_variable()
+  get_dependent_variable: -> @current_scope().lookup @name
+
+  assign_value: (setvar, val) ->
+    _var = @current_scope().define @name
+    if val instanceof Variable
+      _var.depends_upon val
+      setvar.attrs.lo = "tmlvar:#{val.name}"
+    else if typeof(val) == 'object'
+      setvar.attrs.lo = val.lo
+      if val.format != undefined then setvar.attrs.format = val.format
+      else if val.ro != undefined
+        setvar.attrs.ro = val.ro
+        setvar.attrs.op = val.op
+      else throw new Error "Can't assign variable #{_var.name} to no value (#{JSON.stringify val})"
+    else
+      setvar.attrs.lo = val
+    setvar
+    
   
 exports.MethodReference = class MethodReference extends Base
   children: -> ['value']
   type: -> "string"
   
   compile: (builder) ->
-    "##{@value.compile builder}"
+    if @value instanceof Identifier
+      "##{@value.name}"
+    else
+      "##{@value.compile builder}"
 
 exports.Return = class Return extends Base
   children: -> ['expression']
@@ -521,7 +516,7 @@ exports.ForIn = class ForIn extends Base
     closure.compile b.root
     
     b.root.goto current_screen
-    (@create MethodCall, new Identifier("for_in"), [@expression, new MethodReference new Literal closure.getID()]).compile b
+    (@create MethodCall, @create(Identifier, "for_in"), [@expression, @create(MethodReference, @create(Literal, closure.getID()))]).compile b
     
 
 for i, klass of exports

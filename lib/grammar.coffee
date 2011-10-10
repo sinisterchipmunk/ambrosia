@@ -85,10 +85,10 @@ grammar =
   ]
   
   Expression: [
-    o 'Identifier', -> new Identifier $1
+    o 'Identifier', -> $1
     o 'Identifier INDEX_START Expression INDEX_END', -> new ListIndex $1, $3
     o 'Value', -> $1
-    o ': Identifier', -> new MethodReference $2
+    o ': Expression', -> new MethodReference $2
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
