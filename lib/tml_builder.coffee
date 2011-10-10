@@ -38,7 +38,6 @@ Builder.screen = class Screen extends Builder
     new_screen_id = @attrs.id + NameRegistry.register @attrs.id
     new_screen_uri = uri_for new_screen_id
     next = @b 'next', uri: @attrs.next unless next = @first 'next'
-    delete @attrs.next # cleanliness is next to godliness!
     operation.uri = new_screen_uri
     next.b 'variant', operation
     scr = @root.screen new_screen_id, next: next.attrs.uri

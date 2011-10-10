@@ -291,13 +291,14 @@ exports.MethodCall = class MethodCall extends Base
 
     @current_scope().define ".__method_params", 'string'
     @create(Assign, @create(Identifier, ".__method_params"), @create(Literal, param_list.join ";")).compile(screen)
-    
-    
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
-    # create and return the return screen
-    # subsequent ops will be performed transparently on the return screen
-    screen.root.screen return_screen_id
+    # create the return screen and link into it
+    dest = screen.root.screen return_screen_id
+    screen.attrs.next = "##{dest.attrs.id}"
+    # if the method is known, return its return variable
+    if method then method.getReturnVariable()
+    else null
   
 exports.Parens = class Parens extends Base
   prepare: ->
@@ -328,10 +329,12 @@ exports.Assign = class Assign extends Base
   compile: (screen) ->
     screen = screen.root.current_screen()
     throw new Error "Can't use assignment as left value" if @lvalue instanceof Assign
+    
+    # rval = @rvalue.compile screen
 
     if @rvalue instanceof Method
       @rvalue = @rvalue.compile screen.root
-  
+      
     rval = @rvalue.compile screen
     if rval instanceof Assign
       rval = @current_scope().lookup(rval.lvalue.compile screen)
@@ -342,11 +345,7 @@ exports.Assign = class Assign extends Base
     type = @rvalue.type()
     lval = @current_scope().silently_define(lval, type).name
     
-    if @rvalue instanceof MethodCall
-      screen.attrs.next = "##{rval.attrs.id}"
-      screen = rval
-      rval = @root().find_method(@rvalue.getMethodName()).getReturnVariable()
-
+    screen = screen.root.current_screen()
     if typeof(rval) == 'object' and rval.lo
       if rval.format
         screen.b 'setvar', name: lval, lo: rval.lo, format: rval.format

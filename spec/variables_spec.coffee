@@ -59,10 +59,10 @@ describe "tml variables", ->
     
     describe "the resultant <vardcl> element", ->
       vardec = null
-      beforeEach -> vardec = doc.last "vardcl"
+      beforeEach -> vardec = doc.last "vardcl", name: 'init.one'
       
       it "should be named 'init.one'", ->
-        expect(vardec.attrs['name']).toEqual 'init.one'
+        expect(vardec).toBeTruthy()
       
       it "should have type 'integer'", ->
         expect(vardec.attrs['type']).toEqual 'integer'
