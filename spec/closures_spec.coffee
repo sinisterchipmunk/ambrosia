@@ -13,6 +13,7 @@ describe "closures", ->
   describe "with arguments", ->
     beforeEach -> 
       doc = dom "one = 0\na = (p) -> one = p\na 2"
+      # console.log doc.toString()
 
     it "should set one to 2", ->
       sim = simulate doc, (sim) -> not /__main___/.test sim.state.screen.id

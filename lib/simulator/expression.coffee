@@ -4,6 +4,7 @@ exports.Expression = class Expression
   constructor: (@variable_state, expr) ->
     @format = expr.format
     @op = expr.op
+    throw new Error "No lvalue in expression #{JSON.stringify expr}" if expr.lo == undefined
     @lvalue = Literalize(@variable_state, expr.lo, @type)
     if expr.ro != undefined and expr.ro != ''
       @rvalue = Literalize(@variable_state, expr.ro, @type)

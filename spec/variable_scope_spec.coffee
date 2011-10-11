@@ -5,8 +5,8 @@ Scope = require('variable_scope').VariableScope
 nodes = require('nodes')
 require './spec_helper'
 
-Identifier = (name) -> new nodes.Identifier(name)
-MethodCall = (name) -> new nodes.MethodCall(new Identifier(name), [])
+Identifier = (name) -> new nodes.Identifier name
+# MethodCall = (name) -> new nodes.MethodCall Identifier(name), []
 
 describe "scope", ->
   scope = oldFunc = null

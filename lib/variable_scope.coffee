@@ -6,7 +6,9 @@ exports.Variable = class Variable
   constructor: (@name, @_type = null, @method = false) -> @dependents = []
     
   depends_upon: (other_variable) ->
-    @dependents.push other_variable unless other_variable == this
+    unless other_variable == this
+      console.log "#{@name} depends upon #{other_variable.name}" if process.env['DEBUG'] >= 1
+      @dependents.push other_variable
     
   type: ->
     if @_type == null && @dependents.length > 0
