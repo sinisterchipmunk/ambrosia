@@ -19,7 +19,7 @@ exports.ForIn = class ForIn extends Base
   compile: (b) ->
     current_screen = b.root.current_screen().attrs.id
     
-    @create(Require, "tsl/for_in").compile b
+    @create(Require, "std/for_in").compile b
     closure = @create Closure, [@varid], @block
     closure.compile b.root
     

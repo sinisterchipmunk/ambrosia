@@ -21,6 +21,9 @@ exports.MethodCall = class MethodCall extends Base
     if @getMethodName() == 'require'
       @require = @create Require, (param.name for param in @params)...
       @compile = (screen) -> @require.compile screen.root
+    else if @getMethodName() == 'raise_warnings' or @getMethodName() == 'silence_warnings'
+      @current_scope()[@getMethodName()]()
+      @compile = (screen) -> 
   
   get_dependent_variable: ->
     function_screen_id = @getMethodName()

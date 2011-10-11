@@ -23,7 +23,14 @@ exports.Variable = class Variable
     else
       @_type
       
-  setType: (t) -> @_type = t
+  setType: (type, silenced = false, raise_warnings = false) ->
+    if @type() != null and type != null
+      if @type() != type
+        message = "#{type} variable #{@name} conflicts with a #{@type()} variable of the same name"
+        if raise_warnings then throw new Error message
+        if !silenced then console.log "Warning: #{message}"
+        
+    @_type = type
 
 exports.VariableScope = class Scope
   constructor: (prefix = null, @parent = null) ->
@@ -35,6 +42,20 @@ exports.VariableScope = class Scope
   prefix: ->
     if @parent then @parent.prefix() + @_prefix
     else @_prefix
+    
+  warnings_silenced: ->
+    return true if @_warnings_silenced
+    return @parent.warnings_silenced() if @parent
+    false
+    
+  silence_warnings: -> @_warnings_silenced = true
+  
+  warnings_raised: ->
+    return true if @_raise_warnings
+    return @parent.warnings_raised() if @parent
+    false
+    
+  raise_warnings: -> @_raise_warnings = true
 
   # defines the named variable if it doesn't exist; sets its type if its type is null; raises
   # an error if the new type would conflict with the previous (non-null) type; returns the
@@ -46,11 +67,7 @@ exports.VariableScope = class Scope
     qualified_name = @prefix() + name
     variable = @find(name)
     if variable
-      if variable.type() == null
-        variable.setType type
-      else
-        if type != null and variable.type() != type
-          throw new Error "#{type} variable #{qualified_name} conflicts with a #{variable.type()} variable of the same name"
+      variable.setType type, @warnings_silenced(), @warnings_raised() unless type == null
     else
       @defs[name] = variable = new Variable(qualified_name, type, method)
       
@@ -65,7 +82,7 @@ exports.VariableScope = class Scope
     variable = @find name
     if variable
       if variable.type == null
-        variable.setType type
+        variable.setType type, true
     else
       @defs[name] = variable = new Variable(@prefix() + name, type, method)
     variable
