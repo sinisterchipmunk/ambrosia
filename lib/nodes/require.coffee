@@ -6,6 +6,8 @@ fs = require 'fs'
 exports.Require = class Require extends Base
   children: -> ['path']
   
+  to_code: -> "require(#{@path})"
+  
   prepare: ->
     @namespace = @path
     @namespace = @namespace.replace match[0], '.' while match = /[\/\\]/.exec @namespace

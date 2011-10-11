@@ -6,6 +6,8 @@
 exports.Return = class Return extends Base
   children: -> ['expression']
   
+  to_code: -> "return #{if @expression then @expression.to_code() else ""}"
+  
   type: -> if @expression then @expression.type() else null
   
   with: (expr) ->

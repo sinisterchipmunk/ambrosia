@@ -10,6 +10,8 @@ exports.Parens = class Parens extends Base
     @assign = @create Assign, @id, @op
     
   type: -> @assign.type()
+  
+  to_code: -> "(#{@op.to_code()})"
     
   compile: (b) ->
     @assign.compile(b)

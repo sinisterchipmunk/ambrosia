@@ -11,3 +11,5 @@ exports.Literal = class Literal extends Base
   
   compile: (builder) -> @value.toString()
 
+  to_code: -> JSON.stringify @value
+  

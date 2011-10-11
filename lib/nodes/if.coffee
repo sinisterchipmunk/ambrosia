@@ -20,6 +20,8 @@
 #     doSomething() unless i == 1
 #
 exports.If = class If extends Base
+  to_code: -> "if #{@expression.to_code()}\n#{@block.to_code()}#{if @else_exp then "\nelse\n#{@else_exp.to_code()}" else ""}"
+  
   # @if_type is either 'if' or 'unless'.
   children: -> ['expression', 'block', 'if_type']
   

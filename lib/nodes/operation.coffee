@@ -5,7 +5,23 @@
 exports.Operation = class Operation extends Base
   children: -> ['lvalue', 'op', 'rvalue']
   
-  type: -> @lvalue.type()
+  type: ->
+    # special case: __method_params is just a container for real params.
+    # don't let its (string) type propogate.
+    #
+    # TODO see if this should hold true for all list types -- and see
+    # if there's anything that can be done about user-defined
+    # lists (since they're just strings anyways).
+    if @lvalue instanceof Identifier and @lvalue.name == ".__method_params"
+      return null
+      
+    @lvalue.type()
+  
+  to_code: ->
+    if @rvalue
+      "#{@lvalue.to_code()} #{@op} #{@rvalue.to_code()}"
+    else
+      @lvalue.to_code()
   
   get_dependent_variable: ->
     if @lvalue instanceof Base

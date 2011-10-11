@@ -29,6 +29,8 @@ exports.Document = class Document extends Base
     
   children: -> ['block']
   
+  to_code: -> @block.to_code()
+  
   prepare: ->
     @each_dependency (dep) ->
       dep.run_prepare_blocks()
@@ -38,7 +40,7 @@ exports.Document = class Document extends Base
     @run_prepare_blocks()
     @find_method('__main__').compile builder
     # important to compile scopes last, because method nodes are still building them until now
-    @current_scope().compile builder    
+    @current_scope().compile builder
     builder
       
   compile: (builder) ->

@@ -2,12 +2,16 @@ Builtins = (scope) ->
   # TODO support built-in variables
   key for key of scope.defs
 
+debug = (mesg) -> console.log mesg if process.env['DEBUG']
+
 exports.Variable = class Variable
-  constructor: (@name, @_type = null, @method = false) -> @dependents = []
+  constructor: (@name, @_type = null, @method = false) ->
+    debug "Created variable #{@name}#{if @_type then " with type #{@_type}" else ""}"
+    @dependents = []
     
   depends_upon: (other_variable) ->
     unless other_variable == this
-      console.log "#{@name} depends upon #{other_variable.name}" if process.env['DEBUG'] >= 1
+      debug "type of #{@name} depends upon #{other_variable.name}"
       @dependents.push other_variable
     
   type: ->
@@ -23,14 +27,21 @@ exports.Variable = class Variable
     else
       @_type
       
+  default_value: ->
+    switch @type()
+      when 'string', null then ''
+      else 0
+      
   setType: (type, silenced = false, raise_warnings = false) ->
     if @type() != null and type != null
       if @type() != type
         message = "#{type} variable #{@name} conflicts with a #{@type()} variable of the same name"
         if raise_warnings then throw new Error message
         if !silenced then console.log "Warning: #{message}"
-        
-    @_type = type
+    
+    if @_type != type # to silence useless debugs
+      debug "set type of #{@name} to #{type}"
+      @_type = type
 
 exports.VariableScope = class Scope
   constructor: (prefix = null, @parent = null) ->
@@ -38,6 +49,13 @@ exports.VariableScope = class Scope
     @defs = {}
     @builtin = Builtins(this)
     @subscopes = {}
+    
+  to_simulator_scope: (sim = {}) ->
+    for localname, def of @defs
+      sim[def.name] = { type: def.type(), value: def.default_value() }
+    for prefix, subscope of @subscopes
+      subscope.to_simulator_scope sim
+    sim
     
   prefix: ->
     if @parent then @parent.prefix() + @_prefix

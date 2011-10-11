@@ -18,6 +18,7 @@ nodes = """
   If                if
   Closure           closure
   ForIn             for_in
+  Range             range
 """.split /\n/
 
 for node in nodes[2..-1]

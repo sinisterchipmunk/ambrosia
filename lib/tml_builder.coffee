@@ -73,9 +73,8 @@ exports.TMLBuilder = class TMLBuilder extends Builder
   
   vardcl: (name, type = "string", value = null) ->
     if (vari = @first("vardcl", name: name))
-      if vari.attrs.type != type
-        throw new Error "Type mismatch: variable #{name} is a #{vari.attrs.type}, not a #{type}"
-      else return
+      vari.attrs.type = type
+      return
 
     attrs =
       name: name

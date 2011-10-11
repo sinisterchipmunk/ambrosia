@@ -33,6 +33,8 @@ exports.MethodCall = class MethodCall extends Base
     else
       method = @root().find_method function_screen_id
       return method.getReturnVariable()
+      
+  to_code: -> "#{@getMethodName()}(#{(param.to_code() for param in @params).join(', ')})"
     
   compile: (builder) ->
     screen = builder.root.current_screen()
@@ -44,6 +46,8 @@ exports.MethodCall = class MethodCall extends Base
     # return screen, since it's common code.
     if variable = @current_scope().find(function_screen_id)
       function_screen_id = "tmlvar:#{variable.name}"
+      if variable.last_known_value and match = /\#(.*)$/.exec variable.last_known_value
+        method = @root().find_method match[1]
     else
       method = @root().find_method function_screen_id
       throw new Error "Invalid parameter count: #{@params.length} for #{method.params.length}" if @params.length != method.params.length

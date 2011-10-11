@@ -1,6 +1,8 @@
 A terminal scripting language with emphasis on terseness and readability. The scripting language compiles into TML code, which can be distributed to terminals via Incendo Online.
 
-Here are some of the features that the scripting language adds, beyond vastly reducing the amount of typing necessary for TML development:
+This scripting language is under heavy development. It is **NOT** considered a stable release. If you encounter an error and suspect it may be a bug originating within the framework itself, you can run the compiler with the `DEBUG` environment variable set. This will dump internal information to standard output and may help track down the source of the error.
+
+Here are some of the features that the scripting language adds, beyond vastly reducing the amount of code necessary for terminal applications development:
 
 ## Type Inferencing
 
@@ -19,6 +21,31 @@ This simple example compiles into the following TML document:
         <setvar name="a" lo="1" />
       </screen>
     </tml>
+
+### Type Warnings
+
+Most values can be cast from integer to string and back. However, when combined with inferred types, this is usually not what you want because it can produce strings where you wanted integers and vice versa. Since there are legitimate use cases for type casting, the scripting language will simply print a warning instead of raising a fatal error. There are a few ways you can control this.
+
+If you're _sure_ you want to allow type casting within a particular scope, you can suppress warnings within that scope using the `silence_warnings` method. Here's an example:
+
+    init:
+      silence_warnings() # no warnings will be raised in the `init` method
+      one = 1
+      two = "hello" + 1
+      
+    init()
+    three = "hello" + 3 # a warning will be raised outside of the `init` method!
+
+Note that this will also affect sub-scopes.
+
+If you encounter warnings due to a bug in your code that you'd like to fix, it's usually helpful to have a backtrace available. To do this, you can cause would-be warnings to become errors that will be raised with backtrace information. To do this, use the `raise_warnings` method like so:
+
+    init:
+      raise_warnings() # warnings will be fatal in the `init` method
+      two = "hello" + 1 # BOOM!
+    
+    three = "hello" + 3 # a non-fatal warning will be raised outside of `init`!
+    init()
 
 ## Methods and Return Values
 
@@ -100,27 +127,35 @@ Note that the parentheses are still required to actually _call_ the closure, how
 
 Iterators have been added to simplify handling data incrementally. The body of an iterator is just a closure, so each iterator has its own private scope. That is, a variable defined for the first time in an iterator block is local to that block.
 
+### for [x] in [y]
+
 You can iterate through characters in a string using ForIn:
 
     i = 0
     for ch in "hello"
+      # ch == 'h', 'e', 'l', 'l', 'o'
       i++
     return i #=> 5
-    
-You can also iterate through list items using ForOf:
-
-    i = 0
-    for item in "one;two;three"
-      i++
-    return i #=> 3
     
 Iterating through a range of numbers is easy too:
 
     for i in [0..3]
-      # i == 0, i == 1, i == 2, i == 3
-      
-To iterate through a range exclusively (that is, stopping with i < 3), do this:
+      # i == 0, 1, 2, 3
+
+To iterate through a range exclusively (that is, stopping at i < 3 instead of i == 3), do this:
 
     for i in [0...3]
-      # i == 0, i == 1, i == 2
-  
+      # i == 0, 1, 2
+
+### for [x] of [y]
+
+You can also iterate through list items using ForOf:
+
+    i = 0
+    for item of "one;two;three"
+      # item == "one", "two", "three"
+      i++
+    return i #=> 3
+    
+IMPORTANT: Since a list is just a string delimited with semicolons, either `ForIn` or `ForOf` will work with it. Be careful to use the correct iterator!
+

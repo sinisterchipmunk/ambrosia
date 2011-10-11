@@ -11,6 +11,11 @@ exports.Method = class Method extends Base
   instance_name: ->
     super + "<#{@getID()}>"
     
+  to_code: ->
+    code = "#{@getID()}(#{(param.to_code() for param in @params).join(', ')}):"
+    if @block then "#{code}\n#{@block.to_code()}"
+    else code
+  
   after_initialize: ->
     @params or= []
     @next = "#__return__"

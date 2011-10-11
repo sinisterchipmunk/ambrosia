@@ -4,10 +4,13 @@
 #     for ch in "hello"
 #       ch   #=> 'h', 'e', 'l', 'l', 'o'
 #
+#     for ch in [0..3]
+#       ch   #=> 0, 1, 2, 3
+#
 # Note that for iterating through a string list, you want ForOf instead.
 
-# the intuitive syntax is prepared by the compiler. After compilation,
-# the logic resembles the following (in TML, of course):
+# the intuitive syntax is preprocessed by the compiler. After processing,
+# the logic resembles the following:
 #
 #     tmp(ch): ...
 #     for_in str, :tmp
@@ -22,3 +25,9 @@ for_in(str, yield):
     
     # FIXME should be able to do this:
     # for_in str - -1, yield
+
+for_in_range(current, stop, step, yield):
+  yield current
+  if current != stop
+    current = current + step
+    for_in_range current, stop, step, yield

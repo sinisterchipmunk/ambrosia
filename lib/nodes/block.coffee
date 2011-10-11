@@ -4,7 +4,12 @@
 exports.Block = class Block extends Base
   constructor: (nodes) -> super(nodes...)
   
+  to_code: ->
+    "  "+(node.to_code().split(/\n/).join("\n  ") for node in @nodes).join("\n  ")
+    
   compile: (builder) ->
+    @debug @to_code()
+    
     for node in @nodes
       node.compile builder
       

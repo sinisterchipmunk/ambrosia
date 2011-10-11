@@ -1,4 +1,7 @@
 exports.Base = class Base
+  debug: (mesg) ->
+    console.log mesg if process.env['DEBUG']
+  
   constructor: (@nodes...) ->
     nodes = @nodes
     self = this

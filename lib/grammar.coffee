@@ -94,6 +94,8 @@ grammar =
     o 'Operation'
     o 'ForIn', -> $1
     o 'Closure', -> $1
+    o '[ Expression .. Expression ]', -> new Range $2, $4
+    o '[ Expression ... Expression ]', -> new Range $2, $4, false
   ]
   
   Closure: [
