@@ -1,4 +1,6 @@
 nodes = """
+  CLASS_NAME        FILE_NAME
+  
   Base              base
   Require           require
   Document          document
@@ -18,6 +20,6 @@ nodes = """
   ForIn             for_in
 """.split /\n/
 
-for node in nodes
+for node in nodes[2..-1]
   [class_name, file_name] = node.trim().split /\s+/
   exports[class_name] = require("./nodes/#{file_name}")[class_name]
