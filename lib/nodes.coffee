@@ -59,17 +59,6 @@ exports.Base = class Base
       else throw e
     throw new Error "BUG: No scope! (in #{@node_tree()})"
     
-  # if the reference is the name of a TML variable, the reference tag "tmlvar:" is prepended
-  # to the return value.
-  tml_variable: (field, builder) ->
-    if field instanceof Identifier
-      val = field.compile builder
-      val = "tmlvar:#{val.name}"
-    else
-      val = field.compile builder
-    
-    val
-    
   root: ->
     p = this
     while p
@@ -284,7 +273,7 @@ exports.MethodCall = class MethodCall extends Base
       variable = param_type = null
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
-        variable = param.compile screen
+        variable = param.get_dependent_variable()
         param_list.push "tmlvar:#{variable.name}"
       else
         param_list.push param.compile screen
@@ -317,7 +306,7 @@ exports.Parens = class Parens extends Base
     
   compile: (b) ->
     @assign.compile(b)
-    return @tml_variable @id, b
+    return "tmlvar:"+@id.get_dependent_variable().name
     
 exports.ListIndex = class ListIndex extends Base
   type: -> 'string'
@@ -371,12 +360,14 @@ exports.Operation = class Operation extends Base
       if val instanceof Operation
         id = self.create Identifier, "__tmp#{w}"
         self.create(Assign, id, val).compile(screen)
-        return id
-      else val
+        return "tmlvar:"+id.get_dependent_variable().name
+      else if val instanceof Identifier
+        return "tmlvar:"+val.get_dependent_variable().name
+      else val.compile screen
     
-    lval = @tml_variable proc('l', @lvalue), screen
+    lval = proc 'l', @lvalue
     return lval unless @rvalue
-    rval = @tml_variable proc('r', @rvalue), screen
+    rval = proc 'r', @rvalue
 
     result = 
       lo: lval
@@ -399,7 +390,7 @@ exports.Operation = class Operation extends Base
 exports.Identifier = class Identifier extends Base
   children: -> ['name']
   type: -> @get_dependent_variable().type()
-  compile: (b) -> @get_dependent_variable()
+  compile: (b) -> "tmlvar:" + @get_dependent_variable().name
   get_dependent_variable: -> @current_scope().lookup @name
 
   assign_value: (setvar, val) ->
@@ -416,6 +407,12 @@ exports.Identifier = class Identifier extends Base
       else throw new Error "Can't assign variable #{_var.name} to no value (#{JSON.stringify val})"
     else
       setvar.attrs.lo = val
+      val = val.toString()
+      # if it's a list then it's a string.
+      if val.indexOf(";") != -1 then _var.setType 'string'
+      else if match = /^tmlvar:(.*)$/.exec val
+        _ro = @current_scope().lookup match[1]
+        _var.depends_upon _ro
     setvar
     
   
