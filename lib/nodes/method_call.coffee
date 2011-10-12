@@ -71,7 +71,7 @@ exports.MethodCall = class MethodCall extends Extension
         console.log '!!! NO METHOD !!!'
 
     @current_scope().define ".__method_params", 'string'
-    @create(Assign, @create(Identifier, ".__method_params"), @create(Literal, param_list.join ";")).compile(screen)
+    @assign screen, ".__method_params", param_list.join ";"
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
     # create the return screen and link into it

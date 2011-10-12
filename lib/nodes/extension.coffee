@@ -70,4 +70,20 @@ exports.Extension = class Extension extends Base
       @depend 'literal'
       @create MethodReference, @create Literal, name
     
-    
+  # Creates and compiles an instance of Assign so that a variable is assigned a value,
+  # generating code equivalent to `a = b`.
+  #
+  # If lvalue is a String, it will be converted into an instance of Identifier. Otherwise,
+  # it is used as-is. The rvalue is expected to be an instance of Base. Otherwise, it will
+  # be converted to an instance of Literal.
+  #
+  # Examples:
+  # 
+  #     @assign builder, "variable_name", 100
+  #
+  assign: (builder, lvalue, rvalue) ->
+    @depend 'identifier', 'literal', 'base'
+    lvalue = @create Identifier, lvalue unless lvalue instanceof Base
+    rvalue = @create Literal, rvalue    unless rvalue instanceof Base
+    @create(Assign, lvalue, rvalue).compile builder
+  
