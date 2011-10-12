@@ -9,7 +9,7 @@ exports.Require = class Require extends Base
   to_code: -> "require(#{@path})"
   
   prepare: ->
-    @namespace = @path
+    @namespace = "." + @path
     @namespace = @namespace.replace match[0], '.' while match = /[\/\\]/.exec @namespace
     @path = @path + ".tsl" if path.extname(@path) == ""
     @path = path.join(__dirname, '..', @path) unless @path[0] == '/' or @path[0] == '\\'
@@ -24,4 +24,5 @@ exports.Require = class Require extends Base
     @doc.run_prepare_blocks()
     
   compile: (builder) ->
-    @doc.compile builder
+    @doc.compile builder, false if @doc
+    null

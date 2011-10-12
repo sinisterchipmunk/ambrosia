@@ -25,6 +25,13 @@ describe "scope", ->
   #   
   #   it "should find method from MethodCall node", ->
   #     expect(MethodCall("calcAtten").type()).toEqual 'integer'
+  
+  describe "subscoping with top-level prefix", ->
+    other = null
+    beforeEach -> other = scope.sub '.other'
+    
+    it "should have prefix 'other.'", ->
+      expect(other.prefix()).toEqual 'other.'
       
   describe "local variable", ->
     beforeEach -> scope.define 'ambient', 'integer'

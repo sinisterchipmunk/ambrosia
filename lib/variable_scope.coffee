@@ -161,6 +161,8 @@ exports.VariableScope = class Scope
     
   sub: (prefix) ->
     throw new Error "Can't subscope without a prefix" if !prefix
+    if prefix[0] == '.'
+      return @root().sub prefix[1..-1]
     scope = new Scope(prefix, this)
     @subscopes[scope.prefix()] = scope
 

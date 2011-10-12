@@ -103,7 +103,7 @@ exports.TMLBuilder = class TMLBuilder extends Builder
       return scr
     else
       @insert 'screen', attrs, inner, after: 'screen'
-    
+
   current_screen: -> @root.first 'screen', id: @_current_screen
   
   goto: (screen_id) -> @_current_screen = screen_id

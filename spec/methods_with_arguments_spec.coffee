@@ -1,6 +1,27 @@
 require './spec_helper'
 
-doc = null
+doc = sim = null
+
+describe "with a list argument", ->
+  beforeEach ->
+    doc = dom """
+    _a = _b = _c = ""
+    init(a, b, c):
+      _a = a
+      _b = b
+      _c = c
+    init "one;two;three", "four", "five"
+    """
+
+    sim = simulate doc, (sim) ->
+      if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
+        return false
+      true
+
+  it "should not confuse list elements for arguments", ->
+    expect(sim.state.variables['_a'].value).toEqual "one;two;three"
+    expect(sim.state.variables['_b'].value).toEqual "four"
+    expect(sim.state.variables['_c'].value).toEqual "five"
 
 describe "an unused method", ->
   beforeEach ->

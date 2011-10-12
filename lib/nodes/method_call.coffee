@@ -1,11 +1,7 @@
 {NameRegistry} = require '../tml_builder'
-{Base} = require './base'
-{Identifier} = require './identifier'
-{Require} = require './require'
-{Literal} = require './literal'
-{Assign} = require './assign'
+{Extension} = require './extension'
 
-exports.MethodCall = class MethodCall extends Base
+exports.MethodCall = class MethodCall extends Extension
   children: -> ['method_name', 'params']
   
   type: ->
@@ -16,11 +12,12 @@ exports.MethodCall = class MethodCall extends Base
     @_method_name = @method_name.name #compile()
     
   prepare: ->
+    @depend 'assign', 'identifier', 'literal'
+    
     # if it's a precompile method, wipe out this instance's compile method so it can do
     # no harm. TODO make this more flexible.
     if @getMethodName() == 'require'
-      @require = @create Require, (param.name for param in @params)...
-      @compile = (screen) -> @require.compile screen.root
+      @compile = (screen) -> @require screen.root, (param.name for param in @params)...
     else if @getMethodName() == 'raise_warnings' or @getMethodName() == 'silence_warnings'
       @current_scope()[@getMethodName()]()
       @compile = (screen) -> 
@@ -56,6 +53,8 @@ exports.MethodCall = class MethodCall extends Base
     for i in [0...@params.length]
       param = @params[i]
       variable = param_type = null
+      # @create(Assign, @create(Identifier, ".__method_param_#{i}"), param).compile(screen.root.current_screen())
+
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
         variable = param.get_dependent_variable()
@@ -67,8 +66,9 @@ exports.MethodCall = class MethodCall extends Base
       if method
         param_name = method.params[i].name
         v = method.current_scope().define param_name, param_type
-        if variable
-          v.depends_upon variable
+        if variable then v.depends_upon variable
+      else
+        console.log '!!! NO METHOD !!!'
 
     @current_scope().define ".__method_params", 'string'
     @create(Assign, @create(Identifier, ".__method_params"), @create(Literal, param_list.join ";")).compile(screen)

@@ -157,5 +157,5 @@ You can also iterate through list items using ForOf:
       i++
     return i #=> 3
     
-IMPORTANT: Since a list is just a string delimited with semicolons, either `ForIn` or `ForOf` will work with it. Be careful to use the correct iterator!
+IMPORTANT: Since a list is just a string delimited with semicolons, it's possible to use `ForIn` instead of `ForOf`, which would iterate through _characters in the string_ instead of _items in the list_. Be careful to use the correct iterator!
 

@@ -32,7 +32,7 @@ exports.Builder = class Builder
   newInstance: (name, attrs, inner) ->
     klass = (if Builder[name] then Builder[name] else Builder)
     new klass name, attrs, inner, @depth + 1, this
-  
+    
   b: (name, attrs, inner) ->
     child = @newInstance(name, attrs, inner)
     @tags.push(child)

@@ -19,6 +19,8 @@ nodes = """
   Closure           closure
   ForIn             for_in
   Range             range
+  ForOf             for_of
+  PropertyAccess    property_access
 """.split /\n/
 
 for node in nodes[2..-1]

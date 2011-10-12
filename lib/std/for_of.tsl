@@ -1,0 +1,25 @@
+# Iterates through items in a string list, yielding each item in the list.
+# Example:
+#
+#     for ch of "one;two;three"
+#       ch   #=> "one", "two", "three"
+#
+#     for ch of "one"
+#       ch   #=> "one"
+#
+# Note that for iterating through characters in a string, you want ForIn instead.
+
+# the intuitive syntax is preprocessed by the compiler. After processing,
+# the logic resembles the following:
+#
+#     tmp(item): ...
+#     for_of str, :tmp
+#
+for_of(str, yield):
+  if str == "" then return
+  
+  item = str[0]
+  str = str[1..-1]
+  yield item
+  
+  for_of str, yield

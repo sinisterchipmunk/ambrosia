@@ -86,14 +86,26 @@ grammar =
   
   Expression: [
     o 'Identifier', -> $1
-    o 'Identifier INDEX_START Expression INDEX_END', -> new ListIndex $1, $3
+    o 'ListIndex', -> $1
     o 'Value', -> $1
     o ': Expression', -> new MethodReference $2
     o 'Assign'
     o 'MethodCall'
     o 'Operation'
     o 'ForIn', -> $1
+    o 'ForOf', -> $1
     o 'Closure', -> $1
+    o 'Range', -> $1
+    o 'Expression . Expression', -> new PropertyAccess $1, $3
+  ]
+  
+  ListIndex: [
+    o 'Identifier INDEX_START Expression INDEX_END', -> new ListIndex $1, $3
+    o 'Identifier INDEX_START Expression .. Expression INDEX_END', -> new ListIndex $1, new Range $3, $5
+    o 'Identifier INDEX_START Expression ... Expression INDEX_END', -> new ListIndex $1, new Range $3, $5, false
+  ]
+  
+  Range: [
     o '[ Expression .. Expression ]', -> new Range $2, $4
     o '[ Expression ... Expression ]', -> new Range $2, $4, false
   ]
@@ -116,6 +128,10 @@ grammar =
   
   ForIn: [
     o 'FOR Identifier FORIN Expression Block', -> new ForIn $2, $4, $5
+  ]
+  
+  ForOf: [
+    o 'FOR Identifier FOROF Expression Block', -> new ForOf $2, $4, $5
   ]
   
   Parenthetical: [

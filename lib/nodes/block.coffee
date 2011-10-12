@@ -8,10 +8,12 @@ exports.Block = class Block extends Base
     "  "+(node.to_code().split(/\n/).join("\n  ") for node in @nodes).join("\n  ")
     
   compile: (builder) ->
-    @debug @to_code()
+    @debug "> " + @to_code().split(/\n/).join("\n> ")
     
+    last_result = null
     for node in @nodes
-      node.compile builder
+      last_result = node.compile builder
+    last_result
       
   push: (node) ->
     node.parent = this

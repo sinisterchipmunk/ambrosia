@@ -1,0 +1,18 @@
+# FIXME should just be able to do list.length
+list_len(list):
+  if list == "" then return 0
+  count = 1
+  for ch in list
+    if ch == ";"
+      count++
+  count
+
+list_index(original_list, range_start, range_stop):
+  list = ""
+  if range_stop < 0
+    stop = list_len original_list
+    range_stop = stop + range_stop
+  for i in [range_start..range_stop]
+    list += i + ";"
+  list -= -1
+  return list
