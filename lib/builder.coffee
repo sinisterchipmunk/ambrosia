@@ -59,6 +59,12 @@ exports.Builder = class Builder
     @tags.push child
     child
     
+  search: (name, attrs = null) ->
+    all = @all name, attrs
+    for tag in @tags
+      all = all.concat tag.search name, attrs
+    all
+    
   first: (name, attrs = null) -> @all(name, attrs)[0]
     
   last: (name, attrs = null) -> all = @all(name, attrs); all[all.length-1]

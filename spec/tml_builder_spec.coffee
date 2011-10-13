@@ -15,7 +15,7 @@ describe "TMLBuilder", ->
     it "should branch into new screen after calling a method", ->
       b.add_return_screen
       b.screen 'method', next: '#__return__'
-      b.current_screen().call_method 'method'
+      b.current_screen().call_method 'method', 'method_return'
       expect(b.current_screen().attrs.id).not.toEqual('__main__')
       expect(b.current_screen().attrs.id).not.toEqual('method')
     

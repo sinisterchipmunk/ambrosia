@@ -1,0 +1,18 @@
+# Iterates through a range, yielding each integer in the range.
+# Example:
+#
+#     for i in [0..3]
+#       i   #=> 0, 1, 2, 3
+#
+
+# the intuitive syntax is preprocessed by the compiler. After processing,
+# the logic resembles the following:
+#
+#     tmp(i): ...
+#     for_in_range start, stop, step, :tmp
+#
+for_in_range(current, stop, step, yield):
+  yield current
+  if current != stop
+    current = current + step
+    for_in_range current, stop, step, yield

@@ -33,6 +33,16 @@ describe "scope", ->
     it "should have prefix 'other.'", ->
       expect(other.prefix()).toEqual 'other.'
       
+  describe "define variable with top-level prefix", ->
+    other = null
+    _var = null
+    beforeEach ->
+      other = scope.sub 'other'
+      _var = other.define ".variable"
+    
+    it "should have no prefix", ->
+      expect(_var.name).toEqual 'variable'
+      
   describe "local variable", ->
     beforeEach -> scope.define 'ambient', 'integer'
     

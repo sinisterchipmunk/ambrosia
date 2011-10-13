@@ -27,8 +27,8 @@ exports.Simulator = class Simulator
         id: null
       variables: {}
     @init_variables()
-    if start = @dom.first("screen")
-      @goto start.attrs.id
+    if @start_screen = @dom.first("screen")
+      @goto @start_screen.attrs.id
     else throw new Error "No screens found!"
     
   init_variables: ->
@@ -56,7 +56,7 @@ exports.Simulator = class Simulator
           type = @state.variables[match[1]].type
       variable.value = Expression.evaluate type, assign.attrs, @state.variables
       variable.value = parseInt(variable.value) if variable.type == 'integer'
-
+      
   step: ->
     @process_variants() # also triggers variable assigns
     
@@ -91,5 +91,15 @@ exports.Simulator = class Simulator
     else
       @goto candidates[0]
 
-  start: (callback) ->
-    @step() until not callback(this)
+  start: (callback) -> @resume callback
+  
+  # peek at next screen. This avoids setting variables by actually visiting it.
+  peek: ->
+    @find_possible_variants()[0]
+
+  resume: (callback) ->
+    if callback
+      @step() until not callback(this)
+    else
+      @step()
+      @resume callback if @peek() != "##{@start_screen.attrs.id}"

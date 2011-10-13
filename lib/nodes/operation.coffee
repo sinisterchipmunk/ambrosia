@@ -32,9 +32,9 @@ exports.Operation = class Operation extends Base
   prepare: ->
     # if op is > or >= then TML doesn't support that, so reverse the operands and the op
     if @op && @op.indexOf(">") != -1
-      [@lvalue, @rvalue] = [@lvalue, @rvalue]
-      if @op.indexOf '=' != -1 then @op = '<'
-      else                          @op = '<='
+      [@lvalue, @rvalue] = [@rvalue, @lvalue]
+      if @op.indexOf '=' != -1 then @op = '<='
+      else                          @op = '<'
     
   compile: (screen) ->
     self = this

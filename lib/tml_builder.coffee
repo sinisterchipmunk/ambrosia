@@ -35,25 +35,37 @@ Builder.screen = class Screen extends Builder
     result
   
   branch: (operation) ->
-    new_screen_id = @attrs.id + NameRegistry.register @attrs.id
-    new_screen_uri = uri_for new_screen_id
     next = @b 'next', uri: @attrs.next unless next = @first 'next'
+
+    # the merge screen is where the conditional ends, and program flow resumes normally.
+    @merge = @root.screen (@attrs.id + "_merge_" + NameRegistry.register @attrs.id), next: next.attrs.uri
+    next.attrs.uri = "##{@merge.attrs.id}"
+    
+    new_screen_id = @attrs.id + "_if_" + NameRegistry.register @attrs.id
+    new_screen_uri = uri_for new_screen_id
     operation.uri = new_screen_uri
     next.b 'variant', operation
     scr = @root.screen new_screen_id, next: next.attrs.uri
     scr._branched_from = this
+    scr.merge_to = @merge
     scr
   
   branch_else: ->
     new_screen_id = @_branched_from.attrs.id + "_else"
     scr = @root.screen new_screen_id, next: @_branched_from.next().attrs.uri
+    scr.merge_to = @_branched_from.merge
     @_branched_from.next().attrs.uri = "#" + new_screen_id
     scr
+    
+  branch_merge: ->
+    @root.goto @merge_to.attrs.id
+    @merge_to
   
   call_method: (name, return_target) ->
     return_target_uri = uri_for return_target
     method_uri = uri_for name
     
+    next = @next()
     # create the call stack if it doesn't exist already
     @root.add_return_screen()
     # insert the destination _following_ the method call into the call stack
@@ -62,7 +74,7 @@ Builder.screen = class Screen extends Builder
     # direct the current screen into the method screen
     @b 'next', uri: method_uri
     # build the screen that will take over operation after the method call returns
-    @root.screen return_target
+    @root.screen return_target, next: next.attrs.uri
 
 exports.TMLBuilder = class TMLBuilder extends Builder 
   constructor: ->
@@ -86,6 +98,7 @@ exports.TMLBuilder = class TMLBuilder extends Builder
     @insert('vardcl', attrs, before: 'screen')
 
   screen: (id = null, attrs = {}, inner = null) ->
+    if typeof(id) == 'object' then throw new Error("expected screen ID, got #{JSON.stringify id}")
     if typeof(attrs) == "function"
       inner = attrs
       attrs = {}

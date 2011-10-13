@@ -12,8 +12,6 @@ exports.MethodCall = class MethodCall extends Extension
     @_method_name = @method_name.name #compile()
     
   prepare: ->
-    @depend 'assign', 'identifier', 'literal'
-    
     # if it's a precompile method, wipe out this instance's compile method so it can do
     # no harm. TODO make this more flexible.
     if @getMethodName() == 'require'
@@ -34,6 +32,8 @@ exports.MethodCall = class MethodCall extends Extension
   to_code: -> "#{@getMethodName()}(#{(param.to_code() for param in @params).join(', ')})"
     
   compile: (builder) ->
+    @depend 'assign', 'identifier', 'literal'
+    
     screen = builder.root.current_screen()
     function_screen_id = @getMethodName()
     return_screen_id = "#{screen.attrs['id']}_#{NameRegistry.register function_screen_id}"
@@ -67,11 +67,14 @@ exports.MethodCall = class MethodCall extends Extension
         param_name = method.params[i].name
         v = method.current_scope().define param_name, param_type
         if variable then v.depends_upon variable
+        @assign screen, v.name, param
       else
-        console.log '!!! NO METHOD !!!'
+        @current_scope().silently_define ".__generic_method_param_#{i}", 'string'
+        @assign screen, ".__generic_method_param_#{i}", param
 
-    @current_scope().define ".__method_params", 'string'
-    @assign screen, ".__method_params", param_list.join ";"
+    @assign screen, ".__generic_method", true if !method
+    # @current_scope().define ".__method_params", 'string'
+    # @assign screen, ".__method_params", param_list.join ";"
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
     # create the return screen and link into it

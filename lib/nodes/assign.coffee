@@ -1,5 +1,6 @@
 {Base} = require './base'
 {Variable} = require '../variable_scope'
+{Identifier} = require './identifier'
 
 exports.Assign = class Assign extends Base
   type: -> @rvalue.type()
@@ -15,6 +16,8 @@ exports.Assign = class Assign extends Base
     screen = screen.root.current_screen()
 
     type = @rvalue.type()
+    if @rvalue instanceof Identifier and @rvalue.get_dependent_variable().name.indexOf("__generic_method_param") == 0
+      type = null
     lval = @current_scope().define @lvalue.name, type
     
     setvar = screen.b 'setvar', name: lval.name

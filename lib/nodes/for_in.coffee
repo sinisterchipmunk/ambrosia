@@ -12,16 +12,17 @@ exports.ForIn = class ForIn extends Extension
   type: -> 'string'
   to_code: -> "for #{@varid.to_code()} in #{@expression.to_code()}\n#{@block.to_code()}"
   compile: (b) ->
-    @require b, "std/for_in"
     @depend 'range', 'closure'
 
     current_screen = b.root.current_screen().attrs.id
     closure = @create Closure, [@varid], @block
     closure.compile b.root
     
-    b.root.goto current_screen
-    dest = "for_in"
     if @expression instanceof Range
+      @require b, "std/for_in_range"
+      b.root.goto current_screen
       @invoke b, "for_in_range", @expression.start, @expression.stop, @expression.step, @method closure.getID()
     else
+      @require b, "std/for_in"
+      b.root.goto current_screen
       @invoke b, "for_in", @expression, @method closure.getID()

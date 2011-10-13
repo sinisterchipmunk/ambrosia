@@ -42,5 +42,7 @@ exports.If = class If extends Base
     screen = builder.root.current_screen()
     screen = screen.branch op.compile screen
     @block.compile screen
-    screen = @else_exp.compile screen.branch_else() if @else_exp
-    screen
+    if @else_exp
+      screen = screen.branch_else()
+      @else_exp.compile screen
+    screen.branch_merge()

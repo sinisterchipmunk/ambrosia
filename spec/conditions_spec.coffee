@@ -1,8 +1,35 @@
 require './spec_helper'
 
 describe "conditions", ->
-  doc = null
+  doc = sim = null
   
+  describe "program flow", ->
+    beforeEach ->
+      doc = dom """
+      one = 0
+      init(a): one = a
+      if one >= 1 then init 2
+      else init 3
+      one = one + one
+      """
+      # console.log doc.toString()
+      sim = simulate doc
+      
+    describe "not setting control", ->
+      beforeEach -> 
+        sim.start()# -> console.log sim.state.screen.id, sim.state.variables.one.value if sim.state.screen.id != '__shift_char__'; sim.peek() != '#__main__'
+    
+      it "should process else, then continue", ->
+        expect(sim.state.variables['one'].value).toEqual 6
+      
+    describe "setting control", ->
+      beforeEach ->
+        sim.state.variables['one'].value = 1
+        sim.start()# -> console.log sim.state.screen.id, sim.state.variables.one.value if sim.state.screen.id != '__shift_char__'; sim.peek() != '#__main__'
+      
+      it "should process if, then continue", ->
+        expect(sim.state.variables['one'].value).toEqual 4
+###
   describe 'block', ->
     beforeEach -> doc = dom """
       init: one = 2

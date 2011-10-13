@@ -13,17 +13,18 @@ describe "for x in [0..3]", ->
     """
     doc = dom code
     # console.log doc.toString()
-    count = 100
+    count = 500
     sim = simulate doc, (sim) ->
-      # console.log sim.state.screen.id, sim.state.variables['std.for_in.for_in_range.current'].value, sim.state.variables['std.for_in.for_in_range.stop'].value
+      # if sim.state.screen.id == '_closure_3_merge_6'
+      # console.log sim.state.screen.id, sim.state.variables['i'].value, sim.state.variables['std.for_in_range.for_in_range.current'].value, sim.state.variables['std.for_in_range.for_in_range.stop'].value
       if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
         return false
       --count > 0
       
   it "should set types of start, stop, step to integer", ->
-    expect(sim.state.variables['std.for_in.for_in_range.current'].type).toEqual 'integer'
-    expect(sim.state.variables['std.for_in.for_in_range.stop'].type).toEqual 'integer'
-    expect(sim.state.variables['std.for_in.for_in_range.step'].type).toEqual 'integer'
+    expect(sim.state.variables['std.for_in_range.for_in_range.current'].type).toEqual 'integer'
+    expect(sim.state.variables['std.for_in_range.for_in_range.stop'].type).toEqual 'integer'
+    expect(sim.state.variables['std.for_in_range.for_in_range.step'].type).toEqual 'integer'
   
   it "should set i to 4", ->
     # console.log doc.toString()

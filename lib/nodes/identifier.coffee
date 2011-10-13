@@ -34,7 +34,7 @@ exports.Identifier = class Identifier extends Base
         _var.last_known_value = val
       else if match = /^tmlvar:(.*)$/.exec val
         _ro = @current_scope().lookup match[1]
-        _var.depends_upon _ro
+        _var.depends_upon _ro unless /^__generic_method_param_/.test _ro.name
         _var.last_known_value = _ro.last_known_value
       else
         _var.last_known_value = val

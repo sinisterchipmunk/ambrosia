@@ -48,7 +48,7 @@ describe "a method which sets variable to value of argument", ->
   beforeEach -> doc = dom "init(a): one = a\nmain: init 1"
   
   it "should set 'one' to 'a'", ->
-    expect(doc.first("screen", id:"init").first("setvar", name:"init.one").attrs.lo).toEqual "tmlvar:init.a"
+    expect(doc.search("setvar", name:"init.one")[0].attrs.lo).toEqual "tmlvar:init.a"
     
 # variants to test grammar
 describe "a single empty method with a single argument, parenthetical", ->
