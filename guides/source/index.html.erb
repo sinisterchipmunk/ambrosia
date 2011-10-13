@@ -1,0 +1,34 @@
+<% content_for :page_title do %>
+  Ambrosia
+<% end %>
+
+<% content_for :header_section do %>
+  <h2>Ambrosia Guides</h2>
+  
+  <p>
+    These guides are designed to make you immediately productive with Ambrosia,
+    and to help you understand how all of the pieces fit together.
+  </p>
+<% end %>
+
+<% content_for :index_section do %>
+<div id="subCol">
+  <dl>
+    <dd class="work-in-progress">Guides marked with this icon are currently being worked on. While they might still be useful to you, they may contain incomplete information and even errors. You can help by reviewing them and posting your comments and corrections to the author.</dd>
+  </dl>
+</div>
+<% end %>
+
+<h3>Start Here</h3>
+
+<dl>
+  
+<%= guide('Getting Started', 'getting_started.html') do %>
+  <p>Everything you need to know to install Ambrosia and create your first application.</p>
+<% end %>
+
+<%= guide("Quick Reference", 'quickref.html') do %>
+  <p>An overview of most aspects of Ambrosia.</p>
+<% end %>
+
+</dl>

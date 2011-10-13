@@ -29,7 +29,7 @@ describe "conditions", ->
       
       it "should process if, then continue", ->
         expect(sim.state.variables['one'].value).toEqual 4
-###
+
   describe 'block', ->
     beforeEach -> doc = dom """
       init: one = 2
@@ -40,9 +40,9 @@ describe "conditions", ->
     """
     
     it "should create an appropriate variant", ->
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual 'tmlvar:one'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less_or_equal'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual 'tmlvar:one'
     
     it "should call init() from variant", ->
       uri = doc.first('screen', id: "__main__").variants()[0].attrs.uri
@@ -61,9 +61,9 @@ describe "conditions", ->
 
     it "should create an appropriate variant", ->
       # console.log doc.toString()
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual 'tmlvar:one'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less_or_equal'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual 'tmlvar:one'
 
     it "should call init() from variant", ->
       uri = doc.first('screen', id: "__main__").variants()[0].attrs.uri
@@ -88,9 +88,9 @@ describe "conditions", ->
     """
 
     it "should create an appropriate variant", ->
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual 'tmlvar:one'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less_or_equal'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual 'tmlvar:one'
 
     it "should call init() from variant", ->
       uri = doc.first('screen', id: "__main__").variants()[0].attrs.uri
@@ -105,9 +105,9 @@ describe "conditions", ->
     """
 
     it "should create an appropriate variant", ->
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual 'tmlvar:one'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less_or_equal'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual 'tmlvar:one'
 
     it "should call init() from variant", ->
       uri = doc.first('screen', id: "__main__").variants()[0].attrs.uri
@@ -132,9 +132,9 @@ describe "conditions", ->
     """
 
     it "should create an appropriate variant", ->
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual 'tmlvar:one'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less'
-      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.lo).toEqual '1'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.op).toEqual 'less_or_equal'
+      expect(doc.first('screen', id: "__main__").variants()[0].attrs.ro).toEqual 'tmlvar:one'
 
     it "should call init() from variant", ->
       uri = doc.first('screen', id: "__main__").variants()[0].attrs.uri
