@@ -18,10 +18,16 @@ exports.Identifier = class Identifier extends Base
       _var.last_known_value = val.last_known_value
     else if typeof(val) == 'object'
       setvar.attrs.lo = val.lo
+      if val.lo instanceof Variable
+        expr_type = val.lo.type()
+        setvar.attrs.lo = "tmlvar:#{val.lo.name}"
       if val.format != undefined then setvar.attrs.format = val.format
       else if val.ro != undefined
         setvar.attrs.ro = val.ro
         setvar.attrs.op = val.op
+        if val.ro instanceof Variable
+          setvar.attrs.ro = "tmlvar:#{val.ro.name}"
+          expr_type or= val.ro.type()
       else throw new Error "Can't assign variable #{_var.name} to no value (#{JSON.stringify val})"
       if op_type = expr_type || _var.type()
         _var.last_known_value = Expression.evaluate op_type, setvar.attrs, @current_scope().root().to_simulator_scope()

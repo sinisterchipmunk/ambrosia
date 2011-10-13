@@ -15,11 +15,10 @@
 #     tmp(item): ...
 #     for_of str, :tmp
 #
-for_of(str, yield):
-  if str == "" then return
-  
-  item = str[0]
-  str = str[1..-1]
-  yield item
-  
-  for_of str, yield
+for_of(_list, _index, yield):
+  item = _list[_index]
+
+  if item == ';' then return
+  else
+    yield item
+    for_of _list, _index + 1, yield

@@ -21,4 +21,4 @@ exports.ForOf = class ForOf extends Extension
     
     b.root.goto current_screen
     
-    @invoke b, "for_of", @expression, @method closure.getID()
+    @invoke b, "for_of", @expression, 0, @method closure.getID()

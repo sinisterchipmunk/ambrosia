@@ -1,6 +1,7 @@
 {Base} = require './base'
 {Identifier} = require './identifier'
 {Assign} = require './assign'
+{Variable} = require "../variable_scope"
 
 exports.Operation = class Operation extends Base
   children: -> ['lvalue', 'op', 'rvalue']
@@ -15,7 +16,7 @@ exports.Operation = class Operation extends Base
     if @lvalue instanceof Identifier and @lvalue.name == ".__method_params"
       return null
       
-    @lvalue.type()
+    @lvalue.type() || @rvalue.type()
   
   to_code: ->
     if @rvalue
@@ -45,7 +46,10 @@ exports.Operation = class Operation extends Base
         return "tmlvar:"+id.get_dependent_variable().name
       else if val instanceof Identifier
         return "tmlvar:"+val.get_dependent_variable().name
-      else val.compile screen
+      else if val instanceof Variable
+        return "tmlvar:"+val.name
+      else
+        val.compile screen
     
     lval = proc 'l', @lvalue
     return lval unless @rvalue

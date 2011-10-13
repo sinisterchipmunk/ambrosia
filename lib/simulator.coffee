@@ -22,6 +22,8 @@ require './simulator/all_expressions'
 exports.Simulator = class Simulator
   constructor: (@dom) ->
     if @dom.name != 'tml' then throw new Error("TML builder required")
+    @recursion_depth = 0
+    @max_recursion_depth = 10000
     @state =
       screen:
         id: null
@@ -36,7 +38,7 @@ exports.Simulator = class Simulator
       @state.variables[variable.attrs.name] =
         type: variable.attrs.type or "string"
         value: DefaultVariableValue(variable)
-    
+      
   goto: (id) ->
     if match = /^tmlvar:(.*)$/.exec id
       id = id.replace match[0], @state.variables[match[1]].value
@@ -98,6 +100,8 @@ exports.Simulator = class Simulator
     @find_possible_variants()[0]
 
   resume: (callback) ->
+    if ++@recursion_depth > @max_recursion_depth
+      throw new Error "Recursion error!"
     if callback
       @step() until not callback(this)
     else

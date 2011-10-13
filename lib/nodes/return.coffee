@@ -25,4 +25,9 @@ exports.Return = class Return extends Base
       dependent = @expression.get_dependent_variable()
       v.depends_upon dependent
       
+    current = builder.root.current_screen()
+    if next = current.first 'next'
+      next.attrs.uri = '#__return__'
+    else
+      current.attrs.next = '#__return__'
     @create(Assign, @create(Identifier, "return"), @expression).compile builder
