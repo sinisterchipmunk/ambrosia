@@ -4,6 +4,7 @@
 exports.Simulator = require("./simulator").Simulator
 {Lexer} = require("./lexer")
 parser = require("./grammar").parser
+require "./extensions"
 
 lexer = new Lexer
 

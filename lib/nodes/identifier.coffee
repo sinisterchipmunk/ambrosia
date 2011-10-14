@@ -1,6 +1,7 @@
 {Base} = require './base'
 {Variable} = require '../variable_scope'
 {Expression} = require '../simulator/expression'
+util = require 'util'
 require '../simulator/all_expressions'
 
 exports.Identifier = class Identifier extends Base
@@ -28,7 +29,7 @@ exports.Identifier = class Identifier extends Base
         if val.ro instanceof Variable
           setvar.attrs.ro = "tmlvar:#{val.ro.name}"
           expr_type or= val.ro.type()
-      else throw new Error "Can't assign variable #{_var.name} to no value (#{JSON.stringify val})"
+      else throw new Error "Can't assign variable #{_var.name} to no value (#{util.inspect val})"
       if op_type = expr_type || _var.type()
         _var.last_known_value = Expression.evaluate op_type, setvar.attrs, @current_scope().root().to_simulator_scope()
     else

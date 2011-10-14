@@ -1,5 +1,8 @@
 {NameRegistry} = require '../tml_builder'
 {Extension} = require './extension'
+{Document} = require './document'
+{Base} = require './base'
+{Variable} = require '../variable_scope'
 
 exports.MethodCall = class MethodCall extends Extension
   children: -> ['method_name', 'params']
@@ -19,6 +22,15 @@ exports.MethodCall = class MethodCall extends Extension
     else if @getMethodName() == 'raise_warnings' or @getMethodName() == 'silence_warnings'
       @current_scope()[@getMethodName()]()
       @compile = (screen) -> 
+    else
+      preps = Document.preprocessors
+      if preps and prep = preps[@getMethodName()]
+        @compile = (b) ->
+          result = prep.invoke.call this, b.root, (param.compile b for param in @params)...
+          unless result instanceof Variable or result instanceof Base
+            throw new Error "Return value of preprocessor invocation must be a Variable or compileable instance of Base"
+          @type = -> result.type()
+          if result.compile then result.compile b else result
   
   get_dependent_variable: ->
     function_screen_id = @getMethodName()
@@ -36,7 +48,7 @@ exports.MethodCall = class MethodCall extends Extension
     
     screen = builder.root.current_screen()
     function_screen_id = @getMethodName()
-    return_screen_id = "#{screen.attrs['id']}_#{NameRegistry.register function_screen_id}"
+    return_screen_id = "#{screen.attrs['id']}_#{builder.root.name_registry.register function_screen_id}"
 
     # see if it's a local variable *referencing* a method; if so, get the reference instead
     # note we do this *after* calculating return_screen_id; this is so we can reuse the

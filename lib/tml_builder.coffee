@@ -13,10 +13,13 @@ uri_for = (path) ->
 #    NameRegistry.register('name') #=> a unique integer ID
 #
 exports.NameRegistry = class NameRegistry
-  @unique_id: 0
-  @registry: {}
-  @register: (name) ->
-    NameRegistry.registry[name] or= NameRegistry.unique_id++
+  constructor: ->
+    @unique_id = 0
+    @registry = {}
+    @counters = {}
+    
+  register: (name) -> @registry[name] or= @unique_id++
+  increment: (name) -> @counters[name] or= 0; name + "_" + @counters[name]++
 
 Builder.screen = class Screen extends Builder
   variants: () ->
@@ -35,25 +38,28 @@ Builder.screen = class Screen extends Builder
     result
   
   branch: (operation) ->
-    next = @b 'next', uri: @attrs.next unless next = @first 'next'
+    unless next = @first 'next'
+      next = @b 'next', uri: @attrs.next
 
     # the merge screen is where the conditional ends, and program flow resumes normally.
-    @merge = @root.screen (@attrs.id + "_merge_" + NameRegistry.register @attrs.id), next: next.attrs.uri
-    next.attrs.uri = "##{@merge.attrs.id}"
+    @merge_to = @root.screen @attrs.id + "_merge", next: next.attrs.uri
+    next.attrs.uri = "##{@merge_to.attrs.id}"
     
-    new_screen_id = @attrs.id + "_if_" + NameRegistry.register @attrs.id
+    if operation.key then base_id = @attrs.id + "_key"
+    else base_id = @attrs.id + "_if"
+    new_screen_id = @root.name_registry.increment base_id
     new_screen_uri = uri_for new_screen_id
     operation.uri = new_screen_uri
     next.b 'variant', operation
     scr = @root.screen new_screen_id, next: next.attrs.uri
     scr._branched_from = this
-    scr.merge_to = @merge
+    scr.merge_to = @merge_to
     scr
   
   branch_else: ->
     new_screen_id = @_branched_from.attrs.id + "_else"
     scr = @root.screen new_screen_id, next: @_branched_from.next().attrs.uri
-    scr.merge_to = @_branched_from.merge
+    scr.merge_to = @_branched_from.merge_to
     @_branched_from.next().attrs.uri = "#" + new_screen_id
     scr
     
@@ -78,6 +84,7 @@ Builder.screen = class Screen extends Builder
 
 exports.TMLBuilder = class TMLBuilder extends Builder 
   constructor: ->
+    @name_registry = new NameRegistry
     super('tml', xmlns: "http://www.ingenico.co.uk/tml", cache: "deny")
     @b 'head', (b) ->
       b.b 'defaults', cancel: 'emb://embedded.tml'

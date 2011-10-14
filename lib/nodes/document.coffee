@@ -3,11 +3,20 @@
 {VariableScope}  = require '../variable_scope'
 
 exports.Document = class Document extends Base
+  Document.preprocessors or= {}
+  
   constructor: (nodes...) ->
     @scope = new VariableScope
     @methods = {}
     @__dependencies = {}
     super
+    
+  @preprocessor: (name, args..., body) ->
+    if Document.preprocessors[name]
+      throw new Error "A preprocessor named #{name} already exists"
+    Document.preprocessors[name] =
+      name: name,
+      invoke: body
     
   instance_name: ->
     @current_scope().prefix() + super
