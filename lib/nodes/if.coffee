@@ -20,14 +20,14 @@
 #     doSomething() unless i == 1
 #
 exports.If = class If extends Base
-  to_code: -> "if #{@expression.to_code()}\n#{@block.to_code()}#{if @else_exp then "\nelse\n#{@else_exp.to_code()}" else ""}"
+  to_code: -> "if #{@expression.to_code()}\n#{@block.to_code()}#{if @else_block then "\nelse\n#{@else_block.to_code()}" else ""}"
   
   # @if_type is either 'if' or 'unless'.
   children: -> ['expression', 'block', 'if_type']
   
   addElse: (block) ->
-    @else_exp = block
-    @else_exp.parent = this
+    @else_block = block
+    @else_block.parent = this
     this
   
   compile: (builder) ->
@@ -42,7 +42,7 @@ exports.If = class If extends Base
     screen = builder.root.current_screen()
     screen = screen.branch op.compile screen
     @block.compile screen
-    if @else_exp
+    if @else_block
       screen = screen.branch_else()
-      @else_exp.compile screen
+      @else_block.compile screen
     screen.branch_merge()

@@ -19,6 +19,15 @@ exports.Base = class Base
         self[children[index]] = node
     @after_initialize() if @after_initialize
   
+  # Prefixes str and any new lines in str with two spaces, returning the result. Str
+  # is not modified in-place.
+  #
+  # As a short-cut, str may be an instance of Base. If it is, its to_code() method
+  # will be called and used in its place.
+  indent: (str) ->
+    str = str.to_code() if str instanceof Base
+    "  " + str.split(/\n/).join("\n  ")
+  
   create: (klass, args...) ->
     child = new klass args...
     child.parent = this

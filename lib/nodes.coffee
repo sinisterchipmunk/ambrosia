@@ -21,6 +21,7 @@ nodes = """
   Range             range
   ForOf             for_of
   PropertyAccess    property_access
+  Switch            switch
 """.split /\n/
 
 for node in nodes[2..-1]

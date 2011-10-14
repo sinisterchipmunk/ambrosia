@@ -20,9 +20,12 @@ exports.Method = class Method extends Base
   
   after_initialize: ->
     @params or= []
-    @next = "#__return__"
     if @name instanceof Identifier
       @name = @name.name
+    if @getID() == '__main__' 
+      @next = "#__main__"
+    else
+      @next = "#__return__"
       
   getID: ->
     @id or= @name
