@@ -1,9 +1,39 @@
 require './spec_helper'
 
 describe "Simulator", ->
-  doc = null
+  doc = sim = null
   beforeEach -> doc = build('tml')
   
+  describe "key input", ->
+    beforeEach ->
+      doc.b 'vardcl', name: 'last_key', type: 'string'
+      screen = doc.b 'screen', id: "init"
+      screen.b 'setvar', name:'last_key', lo: ''
+      doc.b 'screen', id: 'none'
+      key1 = doc.b 'screen', id: 'key1', next: '#init'
+      key1.b 'setvar', name: 'last_key', lo: '1'
+      next = screen.b "next", uri: "#none"
+      next.b 'variant', uri: '#key1', key: '1'
+      
+      sim = simulate doc
+      # console.log doc.toString()
+      sim.start()
+    
+    it "should wait at key input screen", ->
+      expect(sim.state.screen.id).toEqual 'init'
+      
+    it "should continue immediately after recognized key input is received", ->
+      sim.press "1"
+      expect(sim.state.variables.last_key.value).toEqual "1"
+      
+    it "should continue immediately after unrecognized key input is received", ->
+      sim.press "menu"
+      expect(sim.state.screen.id).toEqual "none"
+      expect(sim.state.variables.last_key.value).toEqual ""
+      
+    it "should puke if an invalid key is used", ->
+      expect(-> sim.press "puke").toThrow "Invalid key: 'puke'"
+      
   it "should raise error given no screens", ->
     expect(-> simulate doc, -> false).toThrow("No screens found!")
     
@@ -37,16 +67,16 @@ describe "Simulator", ->
       doc.b 'screen', id: 'other'
     
     it "should follow the <next>", ->
-      timeout = 10
       found = false
       simulate doc, (sim) ->
-        if sim.state.screen.id == 'init'
-          timeout -= 1
-          return timeout > 0
-        else
-          found = true
-          return false
+        return found = (sim.state.screen.id == 'other')
       expect(found).toBeTruthy()
+      
+  describe "with an infinite recursion screen", ->
+    it "should raise an error", ->
+      doc.b 'screen', id: 'init', next: '#other'
+      doc.b 'screen', id: 'other', next: '#other'
+      expect(-> simulate doc, (sim) -> true).toThrow()
     
   describe "with a single screen", ->
     beforeEach -> doc.b 'screen', id: 'init'
@@ -57,12 +87,15 @@ describe "Simulator", ->
       expect(called).toBeTruthy()
       
     it "should be on that screen at start", ->
+      called = false
       simulate doc, (sim) ->
+        called = true
         expect(sim.state.screen.id).toEqual 'init'
         false
+      expect(called).toBeTruthy()
         
     it "should raise an error if no next screen exists", ->
-      expect(-> simulate doc, (sim) -> true).toThrow("Cannot step forward: screen 'init' is a dead end!")
+      expect(-> simulate doc, (sim) -> true).not.toThrow("Cannot step forward: screen 'init' is a dead end!")
         
     it "should raise an error jumping to nonexistent screens", ->
       expect(-> simulate doc, (sim) -> sim.goto "missing").toThrow("Screen 'missing' not found!")

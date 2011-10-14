@@ -60,7 +60,10 @@ exports.Simulator = class Simulator
       variable.value = parseInt(variable.value) if variable.type == 'integer'
       
   step: ->
+    if ++@recursion_depth > @max_recursion_depth
+      throw new Error "Recursion error!"
     @process_variants() # also triggers variable assigns
+    @state.key = "" # reset input key for processing at next screen
     
   find_possible_variants: ->
     candidates = []
@@ -70,7 +73,10 @@ exports.Simulator = class Simulator
     if next
       for variant in next.all("variant")
         if variant.attrs['key']
-          throw new Error "TODO: Not implemented: handle keypress variants"
+          if @state.key
+            return [variant.attrs['uri']] if @state.key == variant.attrs['key']
+          else
+            throw new Error "waiting for input"
         else
           result = Expression.evaluate "boolean", variant.attrs, @state.variables
           candidates.push variant.attrs['uri'] if result
@@ -89,21 +95,35 @@ exports.Simulator = class Simulator
   process_variants: ->
     candidates = @find_possible_variants()
     if candidates.length == 0
-      throw new Error "Cannot step forward: screen '#{@state.screen.id}' is a dead end!"
+      # throw new Error "Cannot step forward: screen '#{@state.screen.id}' is a dead end!"
     else
       @goto candidates[0]
 
   start: (callback) -> @resume callback
+  
+  # valid keys to be pressed include:
+  #     0..9, 00, f1..f9, up, down, menu, stop, enter, cancel
+  press: (key) ->
+    unless key in ("0 1 2 3 4 5 6 7 8 9 f1 f2 f3 f4 f5 f6 f7 f8 f9 up down menu stop enter cancel".split(/\s/))
+      throw new Error "Invalid key: '#{key}'"
+    @state.key = key
+    @start()
   
   # peek at next screen. This avoids setting variables by actually visiting it.
   peek: ->
     @find_possible_variants()[0]
 
   resume: (callback) ->
-    if ++@recursion_depth > @max_recursion_depth
-      throw new Error "Recursion error!"
+    @recursion_depth = 0
     if callback
-      @step() until not callback(this)
-    else
       @step()
-      @resume callback if @peek() != "##{@start_screen.attrs.id}"
+      @resume callback if callback(this) && @peek()
+    else
+      try
+        @step()
+        peeked = @peek()
+        @resume callback if peeked && peeked != "##{@start_screen.attrs.id}"
+      catch e
+        if e.message == "waiting for input"
+          return
+        else throw e
