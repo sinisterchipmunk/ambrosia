@@ -1,5 +1,6 @@
 {Document} = require '../nodes/document'
 {Literal} = require '../nodes/literal'
+{ViewTemplate} = require '../view_template'
 path = require 'path'
 fs = require 'fs'
 xml = require('jsdom').jsdom
@@ -16,9 +17,8 @@ Document.preprocessor 'display',
       filepath = "#{filepath}.xml"
     
     @views or= {}
-    content = @views[filepath] or= fs.readFileSync filepath, 'UTF-8'
-    
-    result = xml content
+    template = @views[filepath] or= new ViewTemplate fs.readFileSync filepath, 'UTF-8'
+    dom = xml template.process this, builder
     screen = builder.current_screen()
     
     traverse = (b) ->
@@ -33,7 +33,7 @@ Document.preprocessor 'display',
         b.b node.nodeName.toLowerCase(), attrs, traverse
       delete b.attrs.dom
     
-    screen.b 'display', dom: result, traverse
+    screen.b 'display', dom: dom, traverse
 
     # what is there to return?
     @create Literal, ""

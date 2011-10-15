@@ -1,0 +1,6 @@
+amount = 0
+display 'enter_amount'
+
+if amount < 100
+  message = "Amount is too low!"
+  display 'error'
