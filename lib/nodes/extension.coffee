@@ -1,4 +1,5 @@
 {Base} = require './base'
+{Assign} = require './assign'
 
 # An Extension is a node that is accompanied by code generated directly
 # from the scripting language itself.

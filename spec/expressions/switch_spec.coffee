@@ -3,13 +3,18 @@ require '../spec_helper'
 describe "switch", ->
   doc = sim = null
   beforeEach ->
+    # the closure is not necessary for the code to work, but it is necessary to allow
+    # the simulator to inject values into `i` after the first screen has already been
+    # processed.
     doc = dom """
     i = j = 0
-    switch i
-      when 0 then j = 1
-      when 1
-        j = 2
-      else j = 3
+    closure = ->
+      switch i
+        when 0 then j = 1
+        when 1
+          j = 2
+        else j = 3
+    closure()
     """
     # console.log doc.toString()
     sim = simulate doc

@@ -1,5 +1,6 @@
 {Extension} = require './extension'
 {Block} = require './block'
+{Identifier} = require './identifier'
 
 exports.Switch = class Switch extends Extension
   to_code: ->
@@ -12,9 +13,11 @@ exports.Switch = class Switch extends Extension
   
   prepare: ->
     @depend 'if', 'operation'
+    
+    @actual_value = @create Identifier, 'switch.actual_value'
     @_if = _if = null
     for _when in @whens
-      new_if = @create If, @create(Operation, @expression, '==', _when[0]), _when[1], 'if'
+      new_if = @create If, @create(Operation, @actual_value, '==', _when[0]), _when[1], 'if'
       if @_if
         _if.addElse @create Block, [new_if]
         _if = new_if
@@ -23,4 +26,5 @@ exports.Switch = class Switch extends Extension
       _if.addElse @else_block
     
   compile: (b) ->
-    @_if.compile b
+    @assign b, @actual_value, @expression
+    @_if.compile b.root.current_screen()

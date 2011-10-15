@@ -27,6 +27,8 @@ exports.Operation = class Operation extends Base
   get_dependent_variable: ->
     if @lvalue instanceof Base
       @lvalue.get_dependent_variable()
+    else if @lvalue instanceof Variable
+      @lvalue
     else
       null
   
@@ -49,7 +51,9 @@ exports.Operation = class Operation extends Base
       else if val instanceof Variable
         return "tmlvar:"+val.name
       else
-        val.compile screen
+        _v = val.compile screen
+        if _v instanceof Variable then "tmlvar:#{_v.name}"
+        else _v
     
     lval = proc 'l', @lvalue
     return lval unless @rvalue
