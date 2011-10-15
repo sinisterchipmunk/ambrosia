@@ -90,6 +90,8 @@ exports.Builder = class Builder
     false
     
   stringify: ->
+    if @name == '#text' then return @tabs() + @attrs.value.split(/\n/).join("\n#{@tabs()}").trim()
+    
     front = "<#{@name} "
     front += "#{k}=\"#{v}\" " for k, v of @attrs
     if @tags.length > 0
