@@ -29,7 +29,9 @@ Document.preprocessor 'display',
             name = attr.name
             value = attr.value
             attrs[name] = value
-        if node.nodeName == '#text' then attrs.value = node.nodeValue
+        if node.nodeName == '#text'
+          attrs.value = node.nodeValue.trim()
+          if attrs.value == "" then continue
         b.b node.nodeName.toLowerCase(), attrs, traverse
       delete b.attrs.dom
     
