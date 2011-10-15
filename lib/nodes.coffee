@@ -2,7 +2,6 @@ nodes = """
   CLASS_NAME        FILE_NAME
   
   Base              base
-  Require           require
   Document          document
   Block             block
   Literal           literal

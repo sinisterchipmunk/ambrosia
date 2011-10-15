@@ -17,9 +17,7 @@ exports.MethodCall = class MethodCall extends Extension
   prepare: ->
     # if it's a precompile method, wipe out this instance's compile method so it can do
     # no harm. TODO make this more flexible.
-    if @getMethodName() == 'require'
-      @compile = (screen) -> @require screen.root, (param.name for param in @params)...
-    else if @getMethodName() == 'raise_warnings' or @getMethodName() == 'silence_warnings'
+    if @getMethodName() == 'raise_warnings' or @getMethodName() == 'silence_warnings'
       @current_scope()[@getMethodName()]()
       @compile = (screen) -> 
     else

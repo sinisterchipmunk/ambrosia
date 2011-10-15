@@ -31,9 +31,9 @@ exports.Extension = class Extension extends Base
   #       # do other stuff
   #
   require: (builder, path) ->
-    @depend 'require'
     current_screen = builder.root.current_screen().attrs.id
-    @create(Require, path).compile builder
+    throw new Error "path is required" unless path
+    @invoke builder, "require", path
     builder.root.goto current_screen
   
   # Causes the compiler to invoke the specified method with the given arguments
