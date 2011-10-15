@@ -1,0 +1,4 @@
+<form>
+  Amount:
+  <input type='number' format='^$*0.00' name='amount' size='8' />
+</form>

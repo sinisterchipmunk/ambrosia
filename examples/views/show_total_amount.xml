@@ -1,0 +1,10 @@
+<table width='100%' height='100%'>
+  <tr><td align='center' colspan='2' valign='middle'>
+    Total Amount:
+    <%= amount % '^$*0.00' %>
+  </td></tr>
+  <tr valign='bottom'>
+    <td align='left'><%= link_to "Accept", :submit_txn %></td>
+    <td align='right'><%= link_to "Cancel", -> return %></td>
+  </tr>
+</table>

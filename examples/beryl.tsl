@@ -1,0 +1,22 @@
+# When the customer swipes a "VISA" credit card
+#   And the terminal displays "Credit Sale"
+#   And I enter an amount of "$1.00"
+#   And I select "Accept"
+# Then the terminal should display "APPROVED"
+
+layout "layout"
+
+amount = 0
+title = "Credit Sale"
+
+submit_txn:
+  post_data "/payments", amount
+
+card_swipe 'magnetic'
+
+display 'enter_amount'
+display 'show_total_amount'
+
+switch getch()
+  when 'f1' then submit_txn()
+  when 'f3' then return
