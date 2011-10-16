@@ -21,11 +21,6 @@ describe "for x in [0..3]", ->
         return false
       --count > 0
       
-  it "should set types of start, stop, step to integer", ->
-    expect(sim.state.variables['std.for_in_range.for_in_range.current'].type).toEqual 'integer'
-    expect(sim.state.variables['std.for_in_range.for_in_range.stop'].type).toEqual 'integer'
-    expect(sim.state.variables['std.for_in_range.for_in_range.step'].type).toEqual 'integer'
-  
   it "should set i to 4", ->
     # console.log doc.toString()
     # console.log sim.state.variables

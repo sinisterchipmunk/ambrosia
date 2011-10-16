@@ -1,1 +1,1 @@
-<getvar name="message" />
+<%= message %>

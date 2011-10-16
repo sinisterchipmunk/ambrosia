@@ -1,6 +1,7 @@
 {Document} = require '../nodes/document'
 TML = require '../tml'
 
+eval_id = 0
 Document.preprocessor 'eval',
   (builder, code, namespace = null) ->
     if namespace == null
@@ -9,9 +10,11 @@ Document.preprocessor 'eval',
       if namespace[0] == '.' then subscope = @current_scope().root().sub namespace[1..-1]
       else subscope = @current_scope().sub namespace
       
-    @root().__dependencies[namespace] = doc = TML.parse code
-    doc.scope = subscope
-    doc.run_prepare_blocks()
-    doc.compile builder, false
-
-    @create Literal, ""
+    block = TML.parse(code).block
+    for node in block.nodes
+      if node.getID and node.getID() == '__main__'
+        node.id = '__eval_'+eval_id++
+    block.parent = this
+    block.scope = subscope
+    block.run_prepare_blocks()
+    block
