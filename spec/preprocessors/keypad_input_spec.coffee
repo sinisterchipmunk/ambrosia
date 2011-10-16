@@ -7,6 +7,7 @@ describe "keypad input", ->
     beforeEach ->
       doc = dom "a = getch()"
       sim = simulate doc
+      sim.start()
   
     it "should set a to 1", ->
       # console.log doc.toString()
@@ -21,6 +22,7 @@ describe "keypad input", ->
     beforeEach ->
       doc = dom "a = getch('2')"
       sim = simulate doc
+      sim.start()
   
     it "should set a to 1", ->
       # console.log doc.toString()

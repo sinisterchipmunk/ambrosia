@@ -24,6 +24,7 @@ describe "conditions", ->
       
     describe "setting control", ->
       beforeEach ->
+        sim.step()
         sim.state.variables['one'].value = 1
         sim.start()# -> console.log sim.state.screen.id, sim.state.variables.one.value if sim.state.screen.id != '__shift_char__'; sim.peek() != '#__main__'
       

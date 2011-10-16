@@ -26,6 +26,7 @@ describe "switch", ->
       
   describe "with i == 1", ->
     it "should set j to 2", ->
+      sim.step()
       sim.state.variables.i.value = 1
       sim.start()
       
@@ -33,6 +34,7 @@ describe "switch", ->
 
   describe "with i == 2", ->
     it "should set j to 3", ->
+      sim.step()
       sim.state.variables.i.value = 2
       sim.start()
 
