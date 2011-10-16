@@ -29,9 +29,8 @@ exports.Simulator = class Simulator
         id: null
       variables: {}
     @init_variables()
-    if @start_screen = @dom.first("screen")
-      @goto @start_screen.attrs.id
-    else throw new Error "No screens found!"
+    unless @start_screen = @dom.first("screen")
+      throw new Error "No screens found!"
     
   init_variables: ->
     for variable in @dom.all("vardcl")
@@ -48,6 +47,39 @@ exports.Simulator = class Simulator
     @state.screen.id = screen.attrs.id
     @state.screen.element = screen
     @process_variable_assignments()
+    @state.key = "" # reset input key for processing at next screen
+    # if it's a display or print screen, process the output appropriately
+    @state.display = ""
+    @state.print or= ""
+    if display = @state.screen.element.first 'display'
+      @state.display = @process_output_element display
+      
+  process_output_element: (e) ->
+    str = "" + (sub.toString(false) for sub in e.all())
+    while match = /<getvar(.*?)\/?\s*>/.exec str
+      attrs = {}
+      for attr in match[1].trim().split(' ')
+        [key, value] = attr.split '='
+        attrs[key] = value[1..-2]
+      
+      variable = @state.variables[attrs['name']]
+      result = variable.value
+
+      str = str.replace match[0], result
+    str
+  
+  is_waiting_for_input: ->
+    scr = @state.screen.element
+    if scr.first 'display' # display screen
+      return true
+
+    next = @state.screen.element.first('next')
+    if next
+      for variant in next.all("variant")
+        if variant.attrs['key']
+          unless @state.key
+            return true
+    false
     
   process_variable_assignments: ->
     for assign in @state.screen.element.all('setvar')
@@ -60,10 +92,12 @@ exports.Simulator = class Simulator
       variable.value = parseInt(variable.value) if variable.type == 'integer'
       
   step: ->
-    if ++@recursion_depth > @max_recursion_depth
-      throw new Error "Recursion error!"
-    @process_variants() # also triggers variable assigns
-    @state.key = "" # reset input key for processing at next screen
+    if !@state.screen.element # first screen
+      @goto @start_screen.attrs.id
+    else
+      if ++@recursion_depth > @max_recursion_depth
+        throw new Error "Recursion error!"
+      @process_variants() # also triggers variable assigns
     
   find_possible_variants: ->
     candidates = []
@@ -121,6 +155,8 @@ exports.Simulator = class Simulator
     else
       try
         @step()
+        return if @is_waiting_for_input()
+          # throw new Error "waiting for input"
         peeked = @peek()
         @resume callback if peeked && peeked != "##{@start_screen.attrs.id}"
       catch e

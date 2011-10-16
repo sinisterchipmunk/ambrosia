@@ -4,6 +4,35 @@ describe "Simulator", ->
   doc = sim = null
   beforeEach -> doc = build('tml')
   
+  describe "display output", ->
+    beforeEach ->
+      doc.b 'screen', id: 'first', next: '#second', (b) -> b.b 'display', (b) -> b.b '#text', value: 'text one'
+      doc.b 'screen', id: 'second', next: '#first', (b) -> b.b 'display', (b) -> b.b '#text', value: 'text two'
+    
+    it "should wait at first display screen", ->
+      sim = simulate doc
+      sim.start()
+      expect(sim.state.screen.id).toEqual 'first'
+      
+    it "should have 'text one' output", ->
+      sim = simulate doc
+      sim.start()
+      expect(sim.state.display).toContain "text one"
+    
+    it "should not have 'text two' output", ->
+      sim = simulate doc
+      sim.start()
+      expect(sim.state.display).not.toContain "text two"
+      
+    it "should include variables in output", ->
+      doc.b 'vardcl', name: 'a', type: 'string'
+      doc.first('screen').b 'setvar', name: 'a', lo: 'value of a'
+      doc.first('screen').first('display').b 'getvar', name: 'a'
+      sim = simulate doc
+      sim.start()
+      expect(sim.state.display).toContain "value of a"
+      
+  
   describe "key input", ->
     beforeEach ->
       doc.b 'vardcl', name: 'last_key', type: 'string'
@@ -69,7 +98,8 @@ describe "Simulator", ->
     it "should follow the <next>", ->
       found = false
       simulate doc, (sim) ->
-        return found = (sim.state.screen.id == 'other')
+        found = (sim.state.screen.id == 'other')
+        return !found
       expect(found).toBeTruthy()
       
   describe "with an infinite recursion screen", ->
