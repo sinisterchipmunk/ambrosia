@@ -1,3 +1,5 @@
+{Variable} = require './variable_scope'
+
 exports.ViewTemplate = class ViewTemplate
   constructor: (@content) ->
     
@@ -14,12 +16,17 @@ exports.ViewTemplate = class ViewTemplate
     content
     
   process_embedded_values: (content, context, builder) ->
+    varid = 0
+    {Assign} = require './nodes/assign'
+    {Identifier} = require './nodes/identifier'
+    {MethodCall} = require './nodes/method_call'
+    {Literal} = require './nodes/literal'
     @each_match '<%=', '%>', content, (match) ->
-      # this is still hacky. Really, should eval the code in a new document with sub-scope from current level,
-      # then insert the result / return value of the eval here.
-      if v = context.current_scope().find(match.trim())
-        "<getvar name=\"#{v.name}\" />"
-      else throw new Error "Variable #{match.trim()} not found"
+      id = context.create Identifier, "embedded_#{varid++}"
+      assign = context.create Assign, id, context.create MethodCall, context.create(Identifier, 'eval'), [context.create Literal, match.trim()]
+      assign.compile builder
+      result = id.get_dependent_variable()
+      "<getvar name=\"#{result.name}\" />"
     
   process: (context, builder) ->
     content = @process_embedded_values @content, context, builder

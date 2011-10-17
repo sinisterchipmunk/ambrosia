@@ -59,6 +59,9 @@ exports.Operation = class Operation extends Base
     return lval unless @rvalue
     rval = proc 'r', @rvalue
 
+    depth = @depth()
+    result_variable = @current_scope().define ".tmp.#{@type()}.op#{depth}", @type()
+
     result = 
       lo: lval
       ro: rval
@@ -75,4 +78,10 @@ exports.Operation = class Operation extends Base
       result.format = result.ro
       delete result.ro
       delete result.op
-    result
+
+    if result.op and result.op in ['equal', 'not_equal', 'less', 'less_or_equal']
+      return result
+    
+    setvar = screen.root.current_screen().b 'setvar', name: result_variable.name
+    @create(Identifier, result_variable.name).assign_value setvar, result
+    result_variable

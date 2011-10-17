@@ -42,8 +42,16 @@ exports.Base = class Base
     for node in @nodes
       node.run_prepare_blocks() if node instanceof Base
   
+  depth: ->
+    depth = 0
+    p = this
+    depth++ while p = p.parent
+    depth
+    
   children: -> []
   
+  # All subclasses of Base +must+ override #compile and the method +must+ return either
+  # an instance of Variable, or a literal String or Number value.
   compile: -> throw new Error "no compiler for node"
   
   type: -> throw new Error "node has no type"

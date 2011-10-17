@@ -18,6 +18,8 @@ exports.Return = class Return extends Base
   compile: (builder) ->
     screen_id = builder.attrs.id
     @expression or= @create Literal, ""
+    assignment = @create(Assign, @create(Identifier, "return"), @expression).compile builder
+    
     if type = @expression.type()
       v = @current_scope().define "return", @expression.type()
     else
@@ -30,4 +32,6 @@ exports.Return = class Return extends Base
       next.attrs.uri = '#__return__'
     else
       current.attrs.next = '#__return__'
-    @create(Assign, @create(Identifier, "return"), @expression).compile builder
+    
+    # @create(Assign, @create(Identifier, "return"), @expression).compile builder
+    return assignment

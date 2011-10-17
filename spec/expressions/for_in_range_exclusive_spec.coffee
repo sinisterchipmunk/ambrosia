@@ -12,11 +12,9 @@ describe "for x in [0...3]", ->
       str += j
     """
     doc = dom code
-    count = 100
-    sim = simulate doc, (sim) ->
-      if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
-        return false
-      --count > 0
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
 
   it "should set i to 3", ->
     expect(sim.state.variables.i.value).toEqual 3

@@ -26,10 +26,17 @@ exports.MethodCall = class MethodCall extends Extension
       if preps and prep = preps[@getMethodName()]
         @compile = (b) ->
           result = prep.invoke.call this, b.root, (param.compile b for param in @params)...
-          unless result instanceof Variable or result instanceof Base
-            throw new Error "Return value of preprocessor invocation must be a Variable or compileable instance of Base"
-          @type = -> result.type()
-          if result.compile then result.compile b else result
+          if result instanceof Variable or result instanceof Base
+            @type = -> result.type()
+            result = result.compile b if result.compile
+          else if typeof(result) == 'string'
+            @type = -> 'string'
+          else if typeof(result) == 'number'
+            @type = -> 'integer'
+          else
+            sys = require 'sys'
+            throw new Error "#{@getMethodName()}: return value of preprocessor invocation must be a String, Number, Variable or compileable instance of Base (got #{sys.inspect result})"
+          result
   
   get_dependent_variable: ->
     function_screen_id = @getMethodName()

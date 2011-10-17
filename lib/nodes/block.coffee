@@ -1,5 +1,6 @@
 {Base} = require './base'
 {Document} = require './document'
+{Return} = require './return'
 
 exports.Block = class Block extends Base
   constructor: (nodes) -> super(nodes...)

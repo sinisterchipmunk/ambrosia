@@ -21,3 +21,8 @@ describe "display", ->
     sim.start()
     expect(sim.state.display).toContain "value of a"
     
+  it "should embed operations into output", ->
+    doc = dom 'a = 1\ndisplay "../spec/fixtures/views/basic-embedded-operation"'
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.display).toContain "3"

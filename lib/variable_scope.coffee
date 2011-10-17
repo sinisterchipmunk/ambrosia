@@ -10,19 +10,25 @@ exports.Variable = class Variable
     @dependents = []
     
   depends_upon: (other_variable) ->
-    unless other_variable == this
+    # don't depend upon string variables because string is the default type.
+    # If no other variables are depended upon, default string will win.
+    unless other_variable == this or other_variable.type() == 'string'
       debug "type of #{@name} depends upon #{other_variable.name}"
       @dependents.push other_variable
     
   type: ->
     if @_type == null && @dependents.length > 0
+      # Since the default type is string, take the first non-string type in the dependents list.
+      # If all dependents are strings then return string, else return null to signal there's not
+      # yet any expressly defined type.
+      
       type = null
       for dep in @dependents
-        if type
-          other = dep.type()
-          throw new Error "#{@name} (a #{type}) depends upon #{dep.name}, but it is a #{other}" if type != other
-        else
-          type = dep.type()
+        _t = dep.type()
+        if _t
+          if _t != 'string' then return _t
+          else type = 'string'
+      # console.log type
       type
     else
       @_type
@@ -34,7 +40,8 @@ exports.Variable = class Variable
       
   setType: (type, silenced = false, raise_warnings = false) ->
     if @type() != null and type != null
-      if @type() != type
+      # silence warnings about strings because string is the default!
+      if @type() != type && @_type != 'string'
         message = "#{type} variable #{@name} conflicts with a #{@type()} variable of the same name"
         if raise_warnings then throw new Error message
         if !silenced then console.log "Warning: #{message}"

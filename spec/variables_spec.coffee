@@ -1,7 +1,7 @@
 require './spec_helper'
 
-describe "tml variables", ->
-  doc = null
+describe "variables", ->
+  doc = sim = null
   
   describe "assigning to a variable", ->
     beforeEach ->
@@ -11,16 +11,13 @@ describe "tml variables", ->
       expect(doc.first("screen", id:"init").first("setvar", name:"init.two").attrs.lo).toEqual 'tmlvar:init.one'
   
   describe "assigning to expression result", ->
-    beforeEach -> doc = dom "init:\n\tone = 1 + 1\ninit()"
+    beforeEach ->
+      doc = dom "init:\n\tone = 1 + 1\ninit()"
+      sim = simulate doc
+      sim.start()
     
-    it "should define variable 'one'", ->
-      expect(doc.first("vardcl", name: 'init.one', type: 'integer')).toBeTruthy()
-      
-    it "should set value of 'one' on 'init' screen", ->
-      set = doc.first("screen", id:"init").first("setvar", name:"init.one")
-      expect(set.attrs.lo).toEqual '1'
-      expect(set.attrs.ro).toEqual '1'
-      expect(set.attrs.op).toEqual 'plus'
+    it "should set 'one' to correct value", ->
+      expect(sim.state.variables['init.one'].value).toEqual 2
   
   describe "assigning a screen reference", ->
     beforeEach -> doc = dom "init:\n\tone = :one\ninit()"

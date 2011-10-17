@@ -15,4 +15,3 @@ Document.preprocessor 'require',
     
     @code = fs.readFileSync _path, 'UTF-8'
     @invoke builder, "eval", @code, @namespace
-    return @create Literal, ""

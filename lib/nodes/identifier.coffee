@@ -7,7 +7,7 @@ require '../simulator/all_expressions'
 exports.Identifier = class Identifier extends Base
   children: -> ['name']
   type: -> @get_dependent_variable().type()
-  compile: (b) -> "tmlvar:" + @get_dependent_variable().name
+  compile: (b) -> @get_dependent_variable() #"tmlvar:" + @get_dependent_variable().name
   get_dependent_variable: -> @current_scope().lookup @name
   to_code: -> @name
     

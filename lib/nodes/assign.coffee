@@ -6,7 +6,7 @@ exports.Assign = class Assign extends Base
   type: -> @rvalue.type()
   
   children: -> ['lvalue', 'rvalue']
-  
+  get_dependent_variable: -> @lvalue.get_dependent_variable()
   to_code: -> @lvalue.to_code() + " = " + @rvalue.to_code()
   prepare: ->
   compile: (screen) ->
