@@ -13,13 +13,20 @@ uri_for = (path) ->
 #    NameRegistry.register('name') #=> a unique integer ID
 #
 exports.NameRegistry = class NameRegistry
+  validate = (m) ->
+    if m.length > 32 then throw new Error "ID #{m} exceeds maximum 32 characters!"
+    m
+  
   constructor: ->
     @unique_id = 0
     @registry = {}
     @counters = {}
     
   register: (name) -> @registry[name] or= @unique_id++
-  increment: (name) -> @counters[name] or= 0; name + "_" + @counters[name]++
+  
+  increment: (name) ->
+    @counters[name] or= 0
+    validate name + "_" + @counters[name]++
 
 Builder.screen = class Screen extends Builder
   extend: () ->
@@ -34,6 +41,13 @@ Builder.screen = class Screen extends Builder
     @remove 'next'
     @attrs.next = '#' + next_screen.attrs.id
     next_screen
+    
+  # returns true if this screen is an output screen that implicitly
+  # waits for user input before continuing. Note that this does _not_
+  # include screens that contain hotkey variants.
+  is_wait_screen: () ->
+    return true if @first 'display' or @first 'print'
+    false
   
   variants: () ->
     if next = @first 'next'

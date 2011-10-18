@@ -14,6 +14,8 @@ exports.Assign = class Assign extends Base
       
     rval = @rvalue.compile screen.root.current_screen()
     screen = screen.root.current_screen()
+    if screen.is_wait_screen()
+      screen = screen.extend()
 
     type = @rvalue.type()
     if @rvalue instanceof Identifier and @rvalue.get_dependent_variable().name.indexOf("__generic_method_param") == 0

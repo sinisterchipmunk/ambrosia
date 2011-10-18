@@ -3,6 +3,21 @@ require '../spec_helper'
 describe "keypad input", ->
   doc = sim = null
   
+  describe "with a display", ->
+    beforeEach ->
+      doc = dom """
+      a = 1
+      display '../spec/fixtures/views/basic-embedded-variable'
+      b = getch('1')
+      """
+      # console.log doc.toString()
+      sim = simulate doc
+      sim.start()
+    
+    it "should set b to 1", ->
+      sim.press '1'
+      expect(sim.state.variables.b.value).toEqual '1'
+  
   describe "with default key set", ->
     beforeEach ->
       doc = dom "a = getch()"

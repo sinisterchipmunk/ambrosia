@@ -15,6 +15,8 @@ Document.preprocessor 'display',
       dom = xml template.process this, builder
     
     screen = builder.current_screen()
+    if screen.is_wait_screen()
+      screen = screen.extend()
 
     traverse = (b) ->
       for node in b.attrs.dom.childNodes
@@ -31,7 +33,6 @@ Document.preprocessor 'display',
       delete b.attrs.dom
     
     screen.b 'display', dom: dom, traverse
-    screen.extend()
 
     # what is there to return?
     @create Literal, ""
