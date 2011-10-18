@@ -26,3 +26,10 @@ describe "display", ->
     sim = simulate doc
     sim.start()
     expect(sim.state.display).toContain "3"
+    
+  it "should run code but not embed it", ->
+    doc = dom 'a = 1\ndisplay "../spec/fixtures/views/basic-embedded-code"'
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.variables.a.value).toEqual 2

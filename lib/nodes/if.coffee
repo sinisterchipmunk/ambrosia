@@ -25,6 +25,8 @@ exports.If = class If extends Base
   # @if_type is either 'if' or 'unless'.
   children: -> ['expression', 'block', 'if_type']
   
+  type: -> @block.type() || @else_block.type()
+  
   addElse: (block) ->
     @else_block = block
     @else_block.parent = this
@@ -46,3 +48,4 @@ exports.If = class If extends Base
       screen = screen.branch_else()
       @else_block.compile screen
     screen.branch_merge()
+    

@@ -8,6 +8,8 @@ exports.Block = class Block extends Base
   to_code: ->
     "  "+(node.to_code().split(/\n/).join("\n  ") for node in @nodes).join("\n  ")
     
+  type: -> @nodes[@nodes.length-1].type()
+    
   compile: (builder) ->
     @debug "> " + @to_code().split(/\n/).join("\n> ")
     

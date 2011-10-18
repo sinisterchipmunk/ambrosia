@@ -28,7 +28,7 @@ exports.MethodCall = class MethodCall extends Extension
           result = prep.invoke.call this, b.root, (param.compile b for param in @params)...
           if result instanceof Variable or result instanceof Base
             @type = -> result.type()
-            result = result.compile b if result.compile
+            return result.compile b if result.compile
           else if typeof(result) == 'string'
             @type = -> 'string'
           else if typeof(result) == 'number'
