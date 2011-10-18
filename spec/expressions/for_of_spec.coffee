@@ -14,13 +14,7 @@ describe "for x of list", ->
   
   describe "simulated", ->
     beforeEach ->
-      try
-        sim.start ->
-          # unless sim.state.screen.id in ['__shift_char__', '__shift_last__']
-          #   console.log sim.state.screen.id, sim.state.variables['str'].value
-          sim.peek() != '#__main__'
-      catch e
-      # console.log sim.state.variables
+      sim.start()
 
     it "should iterate through items of the list", ->
       expect(sim.state.variables.str.value).toEqual 'onetwothree'

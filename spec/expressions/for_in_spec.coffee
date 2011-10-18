@@ -13,10 +13,8 @@ describe "ForIn (indented)", ->
       copy += j
     """
     doc = dom code
-    sim = simulate doc, (sim) ->
-      if sim.state.screen.id == '__shift_last__' and sim.state.variables['call.stack'].value == ''
-        return false
-      true
+    sim = simulate doc
+    sim.start()
   
   it "should set i to 3", ->
     # console.log doc.toString()
