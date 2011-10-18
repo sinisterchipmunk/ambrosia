@@ -33,9 +33,11 @@ exports.MethodCall = class MethodCall extends Extension
             @type = -> 'string'
           else if typeof(result) == 'number'
             @type = -> 'integer'
+          else if result == false
+            return MethodCall.prototype.compile.call this, b
           else
             sys = require 'sys'
-            throw new Error "#{@getMethodName()}: return value of preprocessor invocation must be a String, Number, Variable or compileable instance of Base (got #{sys.inspect result})"
+            throw new Error "#{@getMethodName()}: return value of preprocessor invocation must be `false` to pass through, or a String, Number, Variable or compileable instance of Base (got #{sys.inspect result})"
           result
   
   get_dependent_variable: ->

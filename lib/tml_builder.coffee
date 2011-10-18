@@ -22,6 +22,19 @@ exports.NameRegistry = class NameRegistry
   increment: (name) -> @counters[name] or= 0; name + "_" + @counters[name]++
 
 Builder.screen = class Screen extends Builder
+  extend: () ->
+    @source_id or= @attrs.id
+    new_id = @root.name_registry.increment @source_id
+    next_screen = @root.screen new_id
+    next_screen.source_id = @source_id
+    if next = @first 'next'
+      variants = next.all 'variant'
+    next = next_screen.b 'next', uri: @next().attrs.uri, (b) ->
+      b.b 'variant', v.attrs for v in variants if variants
+    @remove 'next'
+    @attrs.next = '#' + next_screen.attrs.id
+    next_screen
+  
   variants: () ->
     if next = @first 'next'
       next.all 'variant'

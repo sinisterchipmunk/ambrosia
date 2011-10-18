@@ -33,3 +33,30 @@ describe "display", ->
     sim = simulate doc
     sim.start()
     expect(sim.state.variables.a.value).toEqual 2
+    
+  it "should extend the screen if it already has a display", ->
+    doc = dom '''
+    a = 1; display "../spec/fixtures/views/basic-embedded-variable"
+    a = 2; display "../spec/fixtures/views/basic-embedded-variable"
+    '''
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.display.trim()).toEqual '1'
+    sim.press 'enter'
+    expect(sim.state.display.trim()).toEqual '2'
+
+  describe "with layout", ->
+    it "should yield to layout", ->
+      doc = dom '''
+      a = 1
+      title = "this is a title"
+      layout "../spec/fixtures/views/basic-layout"
+      display "../spec/fixtures/views/basic-embedded-operation"
+      '''
+      # console.log doc.toString()
+      sim = simulate doc
+      sim.start()
+      expect(sim.state.display).toMatch /the result is[\s\t\n]+3/
+      expect(sim.state.display).toContain "this is a title"
+  
