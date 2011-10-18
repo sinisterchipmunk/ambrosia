@@ -41,11 +41,17 @@ exports.If = class If extends Base
       else
         op = @create Operation, @expression, "not_equal", ""
   
-    screen = builder.root.current_screen()
+    screen = if_screen = builder.root.current_screen()
     screen = screen.branch op.compile screen
     @block.compile screen
     if @else_block
-      screen = screen.branch_else()
-      @else_block.compile screen
+      if @else_block.nodes.length == 1 and @else_block.nodes[0] instanceof If
+        # else if ...
+        builder.root.goto if_screen.attrs.id
+        @else_block.compile if_screen
+      else
+        # else ...
+        screen = screen.branch_else()
+        @else_block.compile screen
     screen.branch_merge()
     
