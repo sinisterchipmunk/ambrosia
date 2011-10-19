@@ -158,10 +158,9 @@ exports.TMLBuilder = class TMLBuilder extends Builder
   # Manages a simple call stack in TML and helps return from method calls
   add_return_screen: ->
     # only do this once
-    return if @first("vardcl", name:'call.stack_shift') != undefined
+    return if @first("screen", id:'__return__') != undefined
 
     @vardcl 'call.stack_shift', 'string'
-    @vardcl 'call.stack',       'string'
 
     # modify the '__main__' screen to clear the call stack upon each visit
     main = @first("screen", id: "__main__")

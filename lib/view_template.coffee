@@ -10,17 +10,37 @@ fs = require 'fs'
 exports.ViewTemplate = class ViewTemplate
   varid = 0
   
-  @find: (filename, view_path = process.env['AMBROSIA_VIEW_PATH'] or path.join process.cwd(), 'views') ->
-    if filename[0] == /[//\\]/
-      filepath = filename
-    else
-      filepath = path.join view_path, filename
+  read_template_from_path = (filepath) ->
     unless path.extname filepath
       filepath = "#{filepath}.xml"
     
-    ViewTemplate.views or= {}
-    ViewTemplate.views[filepath] or= new ViewTemplate fs.readFileSync filepath, 'UTF-8'
+    try
+      ViewTemplate.views[filepath] or= new ViewTemplate fs.readFileSync filepath, 'UTF-8'
+    catch e
+      null
     
+  
+  @find: (filename) ->
+    view_paths = ViewTemplate.paths()
+    ViewTemplate.views or= {}
+
+    if filename[0] == /[//\\]/
+      return read_template_from_path filename
+    else
+      for view_path in view_paths
+        filepath = path.join view_path, filename
+        template = read_template_from_path filepath
+        return template if template    
+  
+  @paths = ->
+    ViewTemplate._paths or= (->
+      paths = [
+        path.join process.cwd(), 'views'
+        path.join __dirname, "std/views"
+      ]
+      paths.unshift p if p = process.env['AMBROSIA_VIEW_PATH']
+      paths
+    )()
 
   constructor: (@content) ->
     

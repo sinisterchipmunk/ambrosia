@@ -14,4 +14,4 @@ Document.preprocessor 'require',
     return @create(Literal, "") if @root().__dependencies[@namespace]
     
     @code = fs.readFileSync _path, 'UTF-8'
-    @invoke builder, "eval", @code, @namespace
+    @invoke(builder, "eval", @code, @namespace) or @create Literal, ""

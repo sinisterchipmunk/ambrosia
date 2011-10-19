@@ -1,0 +1,10 @@
+<h1>Uncaught Error</h1>
+
+<h2>
+  <%= message %>
+</h2>
+
+<h3>Call Stack</h3>
+<p>
+  <%= call.stack %>
+</p>

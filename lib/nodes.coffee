@@ -21,6 +21,7 @@ nodes = """
   ForOf             for_of
   PropertyAccess    property_access
   Switch            switch
+  Throw             throw
 """.split /\n/
 
 for node in nodes[2..-1]

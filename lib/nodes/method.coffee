@@ -56,13 +56,18 @@ exports.Method = class Method extends Base
     @current_scope().define param.name, null for param in @params
   
   compile: (builder) ->
-    # this is to counter an error where method bodies are compiled twice. Remove this when
+    # this is to counter an error where method bodies are compiled twice. TODO Remove this when
     # the compile phase solidifies.
     if @compiled then throw new Error "Already compiled method #{@getID()} (#{@node_tree()})"
     else @compiled = true
     previous = builder.root.current_screen() || {attrs:id:"__main__"}
     screen = builder.root.screen @getID()
     screen.attrs.next = @next
+    
+    # clear the call stack if this is the __main__ method
+    if @getID() == '__main__'
+      @create(Assign, @create(Identifier, ".call.stack"), @create(Literal, "")).compile builder
+    
     assigns = []
 
     # compile a check to see if the method was called anonymously. If so, we need to extract the

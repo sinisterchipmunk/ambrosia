@@ -1,0 +1,37 @@
+call.stack = ""
+
+__return__:
+  call.stack_shift = call.stack[0]
+  if call.stack_shift == '' then __main__()
+  else __shift_char__()
+
+__shift_char__:
+  call.stack = call.stack - -1
+  if call.stack % 'c' == ';' then __shift_last__()
+  else __shift_char__()
+
+__shift_last__:
+  call.stack = call.stack - -1
+  (:(call.stack_shift))()
+
+# main = @first("screen", id: "__main__")
+# main.b 'setvar', name: 'call.stack', lo: ''
+# 
+# # called when returning from a function. Figures out where to return to.
+# @screen '__return__', (ret) ->
+#   ret.b 'next', uri: '#__shift_char__', (nxt) ->
+#     # if no items in stack, return to main; else, shift 1 character
+#     nxt.b 'variant', uri: '#__main__', lo: 'tmlvar:call.stack_shift', op:'equal', ro:''
+#   ret.b 'setvar', name: 'call.stack_shift', lo: 'tmlvar:call.stack', op:'item', ro:'0'
+# 
+# # shifts 1 character out of the string. This is looped until the first character is the list delimeter, ';'
+# @screen '__shift_char__', (shi) ->
+#   shi.b 'next', uri: '#__shift_char__', (nxt) ->
+#     nxt.b 'variant', uri: '#__shift_last__', lo: 'tmlvar:call.stack', op: 'equal', ro: ';', format: 'c'
+#   shi.b 'setvar', name: 'call.stack', lo: 'tmlvar:call.stack', op: 'minus', ro: '-1'
+# 
+# # shifts the remaining ';' delimeter from the string, and then goes to the destination screen
+# @screen '__shift_last__', (shi) ->
+#   # remove the ; from the beginning of the string, then go to the return destination
+#   shi.b 'next', uri: 'tmlvar:call.stack_shift'
+#   shi.b 'setvar', name: 'call.stack', lo: 'tmlvar:call.stack', op: 'minus', ro: '-1'

@@ -32,6 +32,8 @@ grammar =
 
   Identifier: [
     o 'IDENTIFIER',                             -> new Identifier $1
+    o '. IDENTIFIER',                           -> new Identifier ".#{$2}"
+    o 'Identifier . IDENTIFIER',                -> $1.name += "." + $3; $1
   ]
 
   # Block and statements, which make up a line in a body.
@@ -96,7 +98,7 @@ grammar =
     o 'ForOf', -> $1
     o 'Closure', -> $1
     o 'Range', -> $1
-    o 'Expression . Expression', -> new PropertyAccess $1, $3
+    # o 'Expression . Expression', -> new PropertyAccess $1, $3
   ]
   
   ListIndex: [
@@ -120,6 +122,7 @@ grammar =
     o 'If', -> $1
     o 'Return', -> $1
     o 'Switch', -> $1
+    o 'THROW Expression', -> new Throw $2
   ]
   
   Switch: [
