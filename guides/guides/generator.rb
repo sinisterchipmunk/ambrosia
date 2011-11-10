@@ -156,9 +156,11 @@ module Guides
 
     def set_header_section(body, view)
       new_body = body.gsub(/(.*?)endprologue\./m, '').strip
+      raise "No header, add an 'endprologue.' line" unless $1
       header = $1
 
       header =~ /h2\.(.*)/
+      raise "No header, add an 'h2.' section" unless $1
       page_title = "Ambrosia: #{$1.strip}"
 
       header = textile(header)
@@ -222,6 +224,8 @@ module Guides
 #            $1
           when 'erb'
             'ruby; html-script: true'
+          when 'amb'
+            'ruby'
           when 'html'
             'xml' # html is understood, but there are .xml rules in the CSS
           when 'yaml', 'shell'

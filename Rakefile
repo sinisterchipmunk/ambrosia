@@ -21,4 +21,7 @@ namespace :guides do
   end
 end
 
+desc 'Generate guides (for authors), use ONLY=foo to process just "foo.textile"'
+task :guides => 'guides:generate'
+
 task :default => 'guides:generate'
