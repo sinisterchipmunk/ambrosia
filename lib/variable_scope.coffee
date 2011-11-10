@@ -15,6 +15,8 @@ exports.Variable = class Variable
     unless other_variable == this or other_variable.type() == 'string'
       debug "type of #{@name} depends upon #{other_variable.name}"
       @dependents.push other_variable
+      
+  is_method_reference: -> @last_known_value && @last_known_value.indexOf('#') == 0
     
   type: ->
     if @_type == null && @dependents.length > 0

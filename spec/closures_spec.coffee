@@ -2,6 +2,27 @@ require './spec_helper'
 
 describe "closures", ->
   doc = null
+
+  describe "another test, which should be no different...", ->
+    sim = simulate dom """
+      say_hello = () ->
+        return "Hello, World!"
+      
+      say_hello_to = (name) ->
+        return "Hello, " + name
+      
+      one = say_hello()
+      two = say_hello_to "Colin"
+    """
+    
+    it "should set one to 'Hello, World!'", ->
+      sim.start()
+      expect(sim.state.variables.one.value).toEqual 'Hello, World!'
+      
+    it "should set two to 'Hello, Colin'", ->
+      sim.start()
+      expect(sim.state.variables.two.value).toEqual 'Hello, Colin'
+
   describe "without arguments", ->
     beforeEach -> 
       doc = dom "one = 0\na = -> one = 1\na()"

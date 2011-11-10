@@ -8,6 +8,10 @@ exports.MethodCall = class MethodCall extends Extension
   children: -> ['method_name', 'params']
   
   type: ->
+    if variable = @current_scope().find(@getMethodName())
+      if variable.is_method_reference()
+        return variable.type()
+
     @root().find_method(@getMethodName()).type(@params)
     
   getMethodName: ->
