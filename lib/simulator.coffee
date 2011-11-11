@@ -79,11 +79,18 @@ exports.Simulator = class Simulator
         if variant.attrs['key']
           unless @state.key
             return true
+      
+    # check for card parsers, but only those that require interaction      
+    if tform = @state.screen.element.first('tform')
+      if card = tform.first('card')
+        if card.attrs['parser'] == 'mag' and card.attrs['params'] == 'read_data'
+          return true
     false
     
   process_variable_assignments: ->
     for assign in @state.screen.element.all('setvar')
       variable = @state.variables[assign.attrs.name]
+      throw new Error "Variable not defined: #{assign.attrs.name}" unless variable
       type = variable.type
       if assign.attrs.lo and match = /^tmlvar:(.*)$/.exec(assign.attrs.lo.toString())
         if @state.variables[match[1]]

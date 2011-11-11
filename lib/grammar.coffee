@@ -32,8 +32,8 @@ grammar =
 
   Identifier: [
     o 'IDENTIFIER',                             -> new Identifier $1
-    o '. IDENTIFIER',                           -> new Identifier ".#{$2}"
-    o 'Identifier . IDENTIFIER',                -> $1.name += "." + $3; $1
+    o '. Identifier',                           -> $2.name = "." + $2.name; $2
+    o 'Identifier . Identifier',                -> $1.name += "." + $3.name; $1
   ]
 
   # Block and statements, which make up a line in a body.
@@ -123,6 +123,7 @@ grammar =
     o 'Return', -> $1
     o 'Switch', -> $1
     o 'THROW Expression', -> new Throw $2
+    o 'JS', -> new EmbeddedTML $1
   ]
   
   Switch: [

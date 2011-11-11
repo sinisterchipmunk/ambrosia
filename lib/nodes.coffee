@@ -22,6 +22,7 @@ nodes = """
   PropertyAccess    property_access
   Switch            switch
   Throw             throw
+  EmbeddedTML       embedded_tml
 """.split /\n/
 
 for node in nodes[2..-1]
