@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 
 # first, build coffee to js so that line numbers reported in error stacks actually mean something
-$(dirname "${BASH_SOURCE[0]}")/build
+AMBROSIA_PATH=$(dirname "${BASH_SOURCE[0]}")/..
+$AMBROSIA_PATH/script/build
 
 if [[ $? == 0 ]]
 then
   # build was successful
-  PATH=$PATH:./node_modules/jasmine-node/bin NODE_PATH=$NODE_PATH:./out jasmine-node --coffee spec $*
+  PATH=$PATH:$AMBROSIA_PATH/node_modules/jasmine-node/bin \
+  NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/out                 \
+  AMBROSIA_STDLIB_PATH=$AMBROSIA_PATH/lib/assets/ambrosia \
+  jasmine-node --coffee spec $*
 else
   # build failed
   echo -e "\033[31mFailed to compile sources\033[0m"

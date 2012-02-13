@@ -7,8 +7,6 @@ fs   = require 'fs'
 lib  = path.join path.dirname(fs.realpathSync(__filename)), '../lib'
 cli = new (require("#{lib}/cli").CLI)
 
-should_execute = true
-
 switches = [
   [ '-c', '--compile CODE', "Compile the code and print the resulting TML to stdout"]
   [ '-e', '--exec CODE', 'Evaluate the code using the simulator and print result to stdout' ]
@@ -35,7 +33,6 @@ parser.on 'exec', (name, code) ->
   process.exit 0
   
 parser.parse process.argv
-return unless should_execute
 
 if process.argv.length > 2
   cli.compile process.argv[2..-1]...

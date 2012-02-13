@@ -9,15 +9,15 @@ class PreprocessorVariables
     @defaults()
     
   defaults: ->
-    @view_paths or= (->
+    @ambrosia_path = __dirname
+    @ambrosia_stdlib_path = process.env['AMBROSIA_STDLIB_PATH'] || path.join(__dirname, '../ambrosia')
+    @view_paths or= (=>
       paths = [
         path.join process.cwd(), 'views'
-        path.join __dirname, "std/views"
+        path.join @ambrosia_stdlib_path, "std/views"
       ]
       paths.unshift p if p = process.env['AMBROSIA_VIEW_PATH']
       paths
     )()
-    
-    @ambrosia_path = __dirname
 
 exports.$ = new PreprocessorVariables

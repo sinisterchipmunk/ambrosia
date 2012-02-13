@@ -20,6 +20,8 @@
 require './simulator/all_expressions'
     
 exports.Simulator = class Simulator
+  KEYS = ("0 1 2 3 4 5 6 7 8 9 f1 f2 f3 f4 f5 f6 f7 f8 f9 up down menu stop enter cancel".split(/\s/))
+  
   constructor: (@dom) ->
     if @dom.name != 'tml' then throw new Error("TML builder required")
     @recursion_depth = 0
@@ -145,7 +147,7 @@ exports.Simulator = class Simulator
   # valid keys to be pressed include:
   #     0..9, 00, f1..f9, up, down, menu, stop, enter, cancel
   press: (key) ->
-    unless key in ("0 1 2 3 4 5 6 7 8 9 f1 f2 f3 f4 f5 f6 f7 f8 f9 up down menu stop enter cancel".split(/\s/))
+    unless key in KEYS
       throw new Error "Invalid key: '#{key}'"
     @state.key = key
     @start()

@@ -5,13 +5,12 @@
 # Then the terminal should display "APPROVED"
 
 layout "layout"
-
 amount = 0
 title = "Credit Sale"
 
 submit_txn:
   post "/payments", amount
-
+  
 read_card 'magnetic'
 display 'enter_amount', 'show_total_amount'
 
