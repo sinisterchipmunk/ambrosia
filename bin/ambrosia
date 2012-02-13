@@ -12,18 +12,17 @@ should_execute = true
 switches = [
   [ '-c', '--compile CODE', "Compile the code and print the resulting TML to stdout"]
   [ '-e', '--exec CODE', 'Evaluate the code using the simulator and print result to stdout' ]
-  [ '-h', '--help', 'Shows help' ]
 ]
 
 parser = new OptionParser switches
 
 parser.banner = [
   "Usages:"
-  "   tsl filename1 ... filenameN"
+  "   ambrosia filename1 ... filenameN"
   "     If only 1 filename is given, the result will be sent to stdout."
   "     Otherwise, results will be saved to [filenameN].tml."
   "     "
-  "   tsl -[ce] 'ambrosia script'"
+  "   ambrosia -[ce] 'ambrosia script'"
   "     Compiles and/or executes the script and prints the result stdout."
 ].join("\n")
 

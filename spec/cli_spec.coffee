@@ -16,3 +16,7 @@ describe 'CLI', ->
       new CLI().compile_script("return a = 1")
       expect(console.log).toHaveBeenCalledMatching(/<setvar name="a"/)
     
+  describe "comping a file", ->
+    it "should log the dom", ->
+      new CLI().compile('./spec/fixtures/scripts/functions')
+      expect(console.log).toHaveBeenCalledMatching(/<setvar name="result"/)

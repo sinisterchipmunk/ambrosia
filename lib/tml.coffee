@@ -1,6 +1,7 @@
 # This DSL borrowed from CoffeeScript and twisted to suit our own maniacal means. :)
 # See http://jashkenas.github.com/coffee-script/documentation/docs/grammar.html for the original.
 
+fs   = require 'fs'
 global.$ = require('./preprocessor_variables').$
 exports.Simulator = require("./simulator").Simulator
 {Lexer} = require("./lexer")
@@ -34,9 +35,9 @@ exports.compile = (code) ->
 exports.compile_files = (sources...) ->
   results = {}
 
-  for i in sources
-    script = fs.readFileSync(sources[i], 'UTF-8')
+  for source_path in sources
+    script = fs.readFileSync(source_path, 'UTF-8')
     tml_code = exports.compile(script)
-    results[sources[i]] = tml_code
+    results[source_path] = tml_code
   
   results

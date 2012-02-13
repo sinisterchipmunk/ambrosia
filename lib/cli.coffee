@@ -1,3 +1,4 @@
+fs   = require 'fs'
 tml = require './tml'
 {Simulator} = require "./simulator"
 
