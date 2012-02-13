@@ -28,19 +28,14 @@ exports.ViewTemplate = class ViewTemplate
       return read_template_from_path filename
     else
       for view_path in view_paths
-        filepath = path.join view_path, filename
+        view_path = path.join process.cwd(), view_path if view_path[0] == '.'
+        filepath = path.normalize path.join view_path, filename
         template = read_template_from_path filepath
-        return template if template    
+        return template if template
+    
+    throw new Error("Could not find view \"#{filename}\" in view paths #{JSON.stringify $.view_paths}")
   
-  @paths = ->
-    ViewTemplate._paths or= (->
-      paths = [
-        path.join process.cwd(), 'views'
-        path.join __dirname, "std/views"
-      ]
-      paths.unshift p if p = process.env['AMBROSIA_VIEW_PATH']
-      paths
-    )()
+  @paths = -> $.view_paths
 
   constructor: (@content) ->
     

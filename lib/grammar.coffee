@@ -29,7 +29,7 @@ grammar =
     o 'Identifier CALL_START ParamList CALL_END : Block', -> new Method $1, $3, $6
     o 'Identifier CALL_START ParamList CALL_END : Line', -> new Method $1, $3, Block.wrap [$6]
   ]
-
+  
   Identifier: [
     o 'IDENTIFIER',                             -> new Identifier $1
     o '. Identifier',                           -> $2.name = "." + $2.name; $2
@@ -98,6 +98,7 @@ grammar =
     o 'ForOf', -> $1
     o 'Closure', -> $1
     o 'Range', -> $1
+    o 'Array', -> $1
     # o 'Expression . Expression', -> new PropertyAccess $1, $3
   ]
   
@@ -107,6 +108,34 @@ grammar =
     o 'Identifier INDEX_START Expression ... Expression INDEX_END', -> new ListIndex $1, new Range $3, $5, false
   ]
   
+  Array: [
+    o '[ ]', -> new Array []
+    o '[ ArgList OptComma ]', -> new Array $2
+  ]
+  
+  # The **ArgList** is both the list of objects passed into a function call,
+  # as well as the contents of an array literal
+  # (i.e. comma-separated expressions). Newlines work as well.
+  ArgList: [
+    o 'Arg',                                              -> [$1]
+    o 'ArgList , Arg',                                    -> $1.concat $3
+    o 'ArgList OptComma TERMINATOR Arg',                  -> $1.concat $4
+    o 'INDENT ArgList OptComma OUTDENT',                  -> $2
+    o 'ArgList OptComma INDENT ArgList OptComma OUTDENT', -> $1.concat $4
+  ]
+
+  # Valid arguments are Blocks or Splats.
+  Arg: [
+    o 'Expression'
+    # o 'Splat'
+  ]
+  
+  # An optional, trailing comma.
+  OptComma: [
+    o ''
+    o ','
+  ]
+
   Range: [
     o '[ Expression .. Expression ]', -> new Range $2, $4
     o '[ Expression ... Expression ]', -> new Range $2, $4, false

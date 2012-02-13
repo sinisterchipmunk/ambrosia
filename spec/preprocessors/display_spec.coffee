@@ -3,6 +3,16 @@ require '../spec_helper'
 describe "display", ->
   doc = sim = null
   
+  it "should raise a coherent error if the view is not found", ->
+    expect(->
+      doc = dom '$.view_paths = ["over/the/rainbow"]\ndisplay "somewhere"'
+    ).toThrow('Could not find view "somewhere" in view paths ["over/the/rainbow"]')
+  
+  it "should display a relative view in the view path", ->
+    doc = dom '$.view_paths = ["./spec/fixtures/views"]\ndisplay "without-embedded"'
+    display = doc.first('screen', id: '__main__').first 'display'
+    expect(display).toBeDefined()
+  
   it "should display a view", ->
     doc = dom 'display "../spec/fixtures/views/without-embedded"'
     display = doc.first('screen', id: '__main__').first 'display'

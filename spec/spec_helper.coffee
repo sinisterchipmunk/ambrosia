@@ -28,3 +28,5 @@ global.simulate = (dom, callback) ->
   sim = new tml.Simulator dom
   sim.start callback if callback
   sim
+
+beforeEach -> $.reset()

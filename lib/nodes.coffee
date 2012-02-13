@@ -23,6 +23,7 @@ nodes = """
   Switch            switch
   Throw             throw
   EmbeddedTML       embedded_tml
+  Array             array
 """.split /\n/
 
 for node in nodes[2..-1]

@@ -1,11 +1,12 @@
 {Document} = require '../nodes/document'
 {Literal} = require '../nodes/literal'
+{Assign} = require '../nodes/assign'
 {ViewTemplate} = require '../view_template'
 xml = require('jsdom').jsdom
 
 Document.preprocessor 'display',
   (builder, filename) ->
-    template = ViewTemplate.find filename, @root().view_path || null
+    template = ViewTemplate.find filename
     
     if layout = @root().layout
       @root().current_template = template
