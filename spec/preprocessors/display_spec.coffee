@@ -12,6 +12,11 @@ describe "display", ->
     doc = dom '$.view_paths = ["./spec/fixtures/views"]\ndisplay "without-embedded"'
     display = doc.first('screen', id: '__main__').first 'display'
     expect(display).toBeDefined()
+    
+  it "should display multiple views", ->
+    doc = dom '$.view_paths = ["./spec/fixtures/views"]\ndisplay "without-embedded", "link_to_one"'
+    expect(doc.toString()).toMatch(/<a href="#one"/)
+    expect(doc.toString()).toMatch(/this is test content/)
   
   it "should display a view", ->
     doc = dom 'display "../spec/fixtures/views/without-embedded"'

@@ -1,7 +1,7 @@
 # This DSL borrowed from CoffeeScript and twisted to suit our own maniacal means. :)
 # See http://jashkenas.github.com/coffee-script/documentation/docs/grammar.html for the original.
 
-global.$ = require('preprocessor_variables').$
+global.$ = require('./preprocessor_variables').$
 exports.Simulator = require("./simulator").Simulator
 {Lexer} = require("./lexer")
 parser = require("./grammar").parser

@@ -10,13 +10,11 @@ amount = 0
 title = "Credit Sale"
 
 submit_txn:
-  post_data "/payments", amount
+  post "/payments", amount
 
-card_swipe 'magnetic'
+read_card 'magnetic'
+display 'enter_amount', 'show_total_amount'
 
-display 'enter_amount'
-display 'show_total_amount'
-
-switch getch()
+switch getch 'f1 f3'
   when 'f1' then submit_txn()
   when 'f3' then return
