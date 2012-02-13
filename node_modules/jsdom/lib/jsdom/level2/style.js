@@ -4,9 +4,6 @@ var core = require("./core").dom.level2.core,
     cssom = require("cssom"),
     assert = require('assert');
 
-// modify cloned instance for more info check: https://github.com/tmpvar/jsdom/issues/325
-core = Object.create(core);
-
 // What works now:
 // - Accessing the rules defined in individual stylesheets
 // - Modifications to style content attribute are reflected in style property
@@ -116,7 +113,7 @@ function scanForImportRules(cssRules, baseUrl) {
       // See http://dev.w3.org/csswg/cssom/#css-import-rule
       //     If loading of the style sheet fails its cssRules list is simply
       //     empty. I.e. an @import rule always has an associated style sheet.
-      fetchStylesheet.call(this, cssRules[i].href, self.sheet);
+      fetchStylesheet.call(this, cssRules[i].href, this.sheet);
     }
   }
 }
