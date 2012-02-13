@@ -1,0 +1,8 @@
+coffee -c -o ./out ./lib
+
+if [[ $? == 0 ]]
+then
+  cp -r ./lib/std ./out/std
+else
+  exit 1
+fi
