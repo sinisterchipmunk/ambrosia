@@ -1,6 +1,7 @@
 {Base} = require './base'
 {Variable} = require '../variable_scope'
 {Expression} = require '../simulator/expression'
+{Literal} = require './literal'
 util = require 'util'
 require '../simulator/all_expressions'
 
@@ -8,7 +9,11 @@ exports.Identifier = class Identifier extends Base
   children: -> ['name']
   type: -> @get_dependent_variable().type()
   compile: (b) -> @get_dependent_variable() #"tmlvar:" + @get_dependent_variable().name
-  get_dependent_variable: -> @current_scope().lookup @name
+  get_dependent_variable: ->
+    if @name[0..1] == '$.'
+      new Literal $[@name[2..-1]]
+    else
+      @current_scope().lookup @name
   to_code: -> @name
     
   assign_value: (setvar, val, expr_type = null) ->
@@ -17,6 +22,10 @@ exports.Identifier = class Identifier extends Base
       _var.depends_upon val
       setvar.attrs.lo = "tmlvar:#{val.name}"
       _var.last_known_value = val.last_known_value
+    else if val instanceof Literal
+      _var.setType val.type()
+      setvar.attrs.lo = val.value
+      _var.last_known_value = val.value
     else if typeof(val) == 'object'
       setvar.attrs.lo = val.lo
       if val.lo instanceof Variable

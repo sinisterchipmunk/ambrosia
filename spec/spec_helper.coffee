@@ -29,4 +29,6 @@ global.simulate = (dom, callback) ->
   sim.start callback if callback
   sim
 
-beforeEach -> $.reset()
+beforeEach ->
+  $.reset()
+  require './helpers/type_helper'

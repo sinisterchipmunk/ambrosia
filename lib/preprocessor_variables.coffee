@@ -17,5 +17,7 @@ class PreprocessorVariables
       paths.unshift p if p = process.env['AMBROSIA_VIEW_PATH']
       paths
     )()
+    
+    @ambrosia_path = __dirname
 
 exports.$ = new PreprocessorVariables

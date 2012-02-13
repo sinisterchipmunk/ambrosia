@@ -24,4 +24,9 @@ end
 desc 'Generate guides (for authors), use ONLY=foo to process just "foo.textile"'
 task :guides => 'guides:generate'
 
-task :default => 'guides:generate'
+task :default => :test
+
+desc "Run all tests"
+task :test do
+  exec "script/test"
+end

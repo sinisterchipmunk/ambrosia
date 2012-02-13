@@ -10,3 +10,9 @@ describe "preprocessor ($) variables", ->
   it "should set view paths by default", ->
     expect($.view_paths).not.toEqual(['../spec/fixtures/views'])
     
+  it "should use their values in scripts", ->
+    doc = dom '$.a = 1; a = $.a'
+    sim = simulate(doc)
+    sim.start
+    sim.state.variables.a.value.should == 1
+    

@@ -30,3 +30,13 @@ exports.compile = (code) ->
     code.compile()
   else
     exports.parse(code).compile()
+
+exports.compile_files = (sources...) ->
+  results = {}
+
+  for i in sources
+    script = fs.readFileSync(sources[i], 'UTF-8')
+    tml_code = exports.compile(script)
+    results[sources[i]] = tml_code
+  
+  results

@@ -1,35 +1,44 @@
 #!/usr/bin/env coffee
 
+{OptionParser} = require 'optparse'
+
 path = require 'path'
 fs   = require 'fs'
 lib  = path.join path.dirname(fs.realpathSync(__filename)), '../lib'
+cli = new (require("#{lib}/cli").CLI)
 
-tml = require "#{lib}/tml"
+should_execute = true
 
-# require(lib + '/command').run()
+switches = [
+  [ '-c', '--compile CODE', "Compile the code and print the resulting TML to stdout"]
+  [ '-e', '--exec CODE', 'Evaluate the code using the simulator and print result to stdout' ]
+  [ '-h', '--help', 'Shows help' ]
+]
+
+parser = new OptionParser switches
+
+parser.banner = [
+  "Usages:"
+  "   tsl filename1 ... filenameN"
+  "     If only 1 filename is given, the result will be sent to stdout."
+  "     Otherwise, results will be saved to [filenameN].tml."
+  "     "
+  "   tsl -[ce] 'ambrosia script'"
+  "     Compiles and/or executes the script and prints the result stdout."
+].join("\n")
+
+parser.on 'compile', (name, code) ->
+  cli.compile_script code
+  process.exit 0
+
+parser.on 'exec', (name, code) ->
+  cli.exec code
+  process.exit 0
+  
+parser.parse process.argv
+return unless should_execute
 
 if process.argv.length > 2
-  results = {}
-  num = 0
-  
-  for i in [2...process.argv.length]
-    script = fs.readFileSync(process.argv[i], 'UTF-8')
-    code = tml.compile(script).toString()
-    results[process.argv[i]] = code
-    num++
-    
-  for filename, code of results
-    if num == 1
-      console.log code
-    else
-      if match = /^(.*)\.([^\.]*)$/.exec filename
-        filename = match[1]
-      filename += ".tml"
-      # console.log filename
-      fs.writeFile filename, code, (err) ->
-        if (err) then throw err
-        console.log "(Wrote file #{filename})"
+  cli.compile process.argv[2..-1]...
 else
-  console.log "Usage: tsl filename1 ... filenameN"
-  console.log "   If only 1 filename is given, the result will be sent to stdout."
-  console.log "   Otherwise, results will be saved to [filenameN].tml."
+  console.log parser.toString()

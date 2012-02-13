@@ -28,10 +28,11 @@ exports.Return = class Return extends Base
       v.depends_upon dependent
       
     current = builder.root.current_screen()
-    if next = current.first 'next'
-      next.attrs.uri = '#__return__'
-    else
-      current.attrs.next = '#__return__'
+    unless current.attrs['id'] == '__main__'
+      if next = current.first 'next'
+        next.attrs.uri = '#__return__'
+      else
+        current.attrs.next = '#__return__'
     
     # @create(Assign, @create(Identifier, "return"), @expression).compile builder
     return assignment

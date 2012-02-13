@@ -18,7 +18,8 @@ exports.Assign = class Assign extends Base
       screen = screen.extend()
 
     type = @rvalue.type()
-    if @rvalue instanceof Identifier and @rvalue.get_dependent_variable().name.indexOf("__generic_method_param") == 0
+    dependent = @rvalue instanceof Identifier and @rvalue.get_dependent_variable()
+    if dependent instanceof Variable and dependent.name.indexOf("__generic_method_param") == 0
       type = null
       
     if @lvalue.name[0..1] == '$.'

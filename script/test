@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 # first, build coffee to js so that line numbers reported in error stacks actually mean something
 $(dirname "${BASH_SOURCE[0]}")/build
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 coffee -c -o ./out ./lib
 
 if [[ $? == 0 ]]
