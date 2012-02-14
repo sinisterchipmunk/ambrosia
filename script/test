@@ -2,14 +2,16 @@
 
 # first, build coffee to js so that line numbers reported in error stacks actually mean something
 AMBROSIA_PATH=$(dirname "${BASH_SOURCE[0]}")/..
-$AMBROSIA_PATH/script/build
+# $AMBROSIA_PATH/script/build
+rake build:js
 
 if [[ $? == 0 ]]
 then
   # build was successful
-  PATH=$PATH:$AMBROSIA_PATH/node_modules/jasmine-node/bin \
-  NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/out                 \
-  AMBROSIA_STDLIB_PATH=$AMBROSIA_PATH/lib/assets/ambrosia \
+  PATH=$PATH:$AMBROSIA_PATH/node_modules/jasmine-node/bin    \
+  NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/node_modules:$AMBROSIA_PATH/lib/assets/javascripts \
+  AMBROSIA_STDLIB_PATH=$AMBROSIA_PATH/lib/assets/tml         \
+  AMBROSIA_FILE_EXT=.tml.ambrosia                            \
   jasmine-node --coffee spec $*
 else
   # build failed

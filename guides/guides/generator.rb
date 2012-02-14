@@ -137,9 +137,9 @@ module Guides
         view = ActionView::Base.new(source_dir, :edge => edge)
         view.extend(Helpers)
 
-        if guide =~ /\.html\.erb$/
+        if guide =~ /\.html\.erb/
           # Generate the special pages like the home.
-          result = view.render(:layout => 'layout', :file => guide)
+          result = view.render(:layout => 'layout', :file => guide, :handlers => [:erb])
         else
           body = File.read(File.join(source_dir, guide))
           body = set_header_section(body, view)

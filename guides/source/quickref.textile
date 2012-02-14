@@ -6,7 +6,7 @@ This scripting language vastly reduces the amount of code that needs to be writt
 
 endprologue.
 
-WARNING: This scripting language is under heavy development. It is **NOT** considered a stable release. If you encounter an error and suspect it may be a bug originating within the framework itself, you can run the compiler with the +DEBUG+ environment variable set. This will dump internal information to standard output and may help track down the source of the error.
+WARNING: This scripting language is under heavy development. It is **NOT** considered stable. If you encounter an error and suspect it may be a bug originating within the framework itself, you can run the compiler with the +DEBUG+ environment variable set. This will dump internal information to standard output and may help track down the source of the error.
 
 
 h3. Type Inferencing
@@ -216,3 +216,22 @@ return i #=> 3
     
 IMPORTANT: Since a list is just a string delimited with semicolons, it's possible to use +ForIn+ instead of +ForOf+, which would iterate through _characters in the string_ instead of _items in the list_. Be careful to use the correct iterator!
 
+
+h3. Views
+
+At some point, you'll want to display content on the terminal. To do this, create a +views+ directory in the same location as your script and then add an XML file containing the contents of the screen. Here's an example:
+
+<html>
+<!-- views/hello_world.xml -->
+<h1>Hello, World!</h1>
+<p>Hello from Ambrosia!</p>
+</html>
+
+Once you have created your view, you can display it using the +display+ function:
+
+<amb>
+display "hello_world"
+</amb>
+
+TIP: You can control the location of your Ambrosia views by setting the +AMBROSIA_VIEW_PATH+ environment variable, or by setting its equivalent within Ambrosia itself: <code>$.view_paths.push "path/to/views"</code>
+  

@@ -1,4 +1,7 @@
 source :gemcutter
 
 gem 'RedCloth', '4.2.8'
-gem 'rails'
+gem 'actionpack'
+gem 'sprockets'
+gem 'rack-asset-compiler'
+gem 'jasmine'

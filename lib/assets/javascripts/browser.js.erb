@@ -1,0 +1,46 @@
+(function(global) {
+  var global = window;
+  
+ var Ambrosia = (function() {
+    var process = {
+      env: {
+        AMBROSIA_STDLIB_PATH: 'stdlib',
+        AMBROSIA_FILE_EXT: '.tml.ambrosia',
+        AMBROSIA_VIEW_PATH: 'views'
+      },
+      
+      cwd: function() { return "" }
+    };
+    
+    var _require = {};
+    require = function(path) { return require[path] = require[path] || _require[path] && _require[path](); };
+    
+    _require['path'] = function() {
+      return {
+        join: function() {
+          path = ""
+          for (var i = 0; i < arguments.length; i++)
+            if (arguments[i] != "")
+              path += "/" + arguments[i];
+          return path;
+        }
+      };
+    };
+
+    <% $sprockets_env.each_logical_path do |fi|
+      local = fi.sub(/\.js$/, '')
+      next if File.basename(fi) == 'browser.js' or File.extname(fi) != '.js' %>
+    _require['<%= local %>'] = (function() {
+      var exports = this;
+      _require['<%= local %>'] = function() { return exports; };
+      var __dirname = '<%= File.join(File.dirname(__FILE__), File.dirname(fi)) %>';
+      <%= $stderr.puts fi; $sprockets_env[fi] %>
+      return exports;
+    });
+    <% end %>
+
+    return require('tml');
+  })();
+
+  global.Ambrosia = Ambrosia;
+})(this);

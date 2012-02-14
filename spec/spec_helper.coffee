@@ -3,6 +3,8 @@ fs = require 'fs'
 lexer = require 'lexer'
 builder = require 'builder'
 
+global = window unless typeof(global) != 'undefined'
+
 global.Builder = builder.Builder
 
 global.fixture = (filename, ext = 'tml') ->

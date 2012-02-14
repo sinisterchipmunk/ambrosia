@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
 
+rm -rf ./out
+mkdir ./out
+
 coffee -c -o ./out ./lib/assets/javascripts
-exit $?
+
+if [[ $? == 0 ]]
+then
+  # rename *.js.js => *.js
+  # FIXME any better way?
+  ruby -e "Dir['./out/**/*.js.js'].each { |f| system('mv', f, f.sub(/\.js$/, '')) }"
+else
+  exit 1
+fi
+

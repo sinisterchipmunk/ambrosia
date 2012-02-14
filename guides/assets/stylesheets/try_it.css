@@ -1,0 +1,12 @@
+textarea {
+  width: 450px;
+  height: 300px;
+}
+
+#mainCol {
+  width: auto;
+}
+
+#subCol {
+  width: 0;
+}
