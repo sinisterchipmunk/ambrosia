@@ -1,6 +1,8 @@
 require 'action_controller/railtie'
 
 module Ambrosia::TestCase
+  @@initialized = !!Rails.application
+  
   class RailsTestApp < Rails::Application
     config.assets.version = '1'
     config.active_support.deprecation = :log
@@ -8,14 +10,17 @@ module Ambrosia::TestCase
     config.secret_token = "12345" * 10
     config.action_dispatch.show_exceptions = false
     config.assets.enabled = true
-    
-    def self.initialized?
-      @initialized
-    end unless respond_to?(:initialized?)
+    config.cache_classes = false
+    config.consider_all_requests_local       = true
+    config.action_controller.perform_caching = false
   end
   
   def app_path(relative_path)
     RailsTestApp.root.join relative_path
+  end
+  
+  def draw_routes &block
+    RailsTestApp.routes.draw &block
   end
   
   def create_file(filename, contents = nil)
@@ -35,13 +40,17 @@ module Ambrosia::TestCase
   end
   
   def setup
-    RailsTestApp.initialize! unless RailsTestApp.initialized?
-    reset_app_files!
+    RailsTestApp.initialize! unless @@initialized
+    @@initialized = true
     bump_assets! # don't allow cached assets to taint other tests
   end
   
   def bump_assets!
     RailsTestApp.config.assets.version = (RailsTestApp.config.assets.version.to_i + 1).to_s
+  end
+  
+  def cleanup
+    reset_app_files!
   end
   
   def reset_app_files!

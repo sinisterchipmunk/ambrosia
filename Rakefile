@@ -37,7 +37,7 @@ end
 
 desc 'Generate guides (for authors), use ONLY=foo to process just "foo.textile"'
 task :guides => [ 'guides:generate', 'build:browser' ]
-task :default => [ 'test:units', 'test:sprockets' ]#, 'build:browser', 'jasmine:ci' ]
+task :default => [ 'test:units', 'test:integrations' ]#, 'build:browser', 'jasmine:ci' ]
 
 namespace :build do
   desc "Build all javascript files from coffee source"
@@ -62,8 +62,8 @@ namespace :test do
     exit 1 unless system "cake test"
   end
 
-  desc "Run sprockets integration tests"
-  RSpec::Core::RakeTask.new :sprockets
+  desc "Run rails integration tests"
+  RSpec::Core::RakeTask.new :integrations
 end
 
 begin

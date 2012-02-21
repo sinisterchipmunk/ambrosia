@@ -6,7 +6,7 @@ module Ambrosia
 
     def self.call(template)
       compiled_source = erb_handler.call(template)
-      "Ambrosia.compile_to_string(begin;#{compiled_source};end)"
+      "Ambrosia.compile(begin;#{compiled_source};end)"
     end
   end
 end
