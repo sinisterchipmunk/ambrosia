@@ -38,6 +38,7 @@ stylesheets:
 #
 helpers:
   - helpers/**/*.js
+  - helpers/**/*.coffee
   - spec_helper.coffee
 
 # spec_files

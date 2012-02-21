@@ -1,3 +1,17 @@
+begin
+  require 'bundler'
+  Bundler::GemHelper.install_tasks
+  Bundler.setup
+rescue LoadError
+  puts " *** You don't seem to have Bundler installed. ***"
+  puts "     Please run the following command:"
+  puts
+  puts "       gem install bundler"
+  exit
+end
+
+require 'rspec/core/rake_task'
+
 namespace :guides do
   # gen doc:js first because we're going to include a direct link to the JS API dox
   task :generate do
@@ -23,14 +37,12 @@ end
 
 desc 'Generate guides (for authors), use ONLY=foo to process just "foo.textile"'
 task :guides => [ 'guides:generate', 'build:browser' ]
-
-task :default => :test
+task :default => [ 'test:units', 'test:sprockets' ]#, 'build:browser', 'jasmine:ci' ]
 
 namespace :build do
   desc "Build all javascript files from coffee source"
   task :js do
-    exit 1 unless system "cake", "build"
-    exit 1 unless system "cake", "build:parser"
+    exit 1 unless system "cake", "build", "build:parser"
   end
   
   desc "Build sources into a single browser-friendly .js file"
@@ -42,14 +54,19 @@ namespace :build do
     File.open('guides/output/javascripts/ambrosia-browser.js', 'w') { |f| f.print $sprockets_env['browser.js'] }
     puts "Built to guides/output/javascripts/ambrosia-browser.js"
   end
-  
-  desc "Build everything"
-  task :all => [ 'build:js', 'build:browser' ]
 end
 
-desc "Run all tests"
-task :test => "build:js" do
-  exit 1 unless exec "script/test"
+desc "Build everything"
+task :build => [ 'build:js', 'build:browser' ]
+
+namespace :test do
+  desc "Run ambrosia unit tests"
+  task :units do
+    exit 1 unless system "cake test"
+  end
+
+  desc "Run sprockets integration tests"
+  RSpec::Core::RakeTask.new :sprockets
 end
 
 begin
