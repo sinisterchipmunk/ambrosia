@@ -9,4 +9,8 @@ module Ambrosia
   autoload :VERSION,      'ambrosia/version'
   
   extend Ambrosia::Compiler
+  
+  def self.build_source_to(dest)
+    File.open(dest, 'w') { |f| f.print Ambrosia::Template::Source.content }
+  end
 end

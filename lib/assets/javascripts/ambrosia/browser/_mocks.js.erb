@@ -1,0 +1,51 @@
+var _files = {};
+
+_require['path'] = function() {
+  return {
+    join: function() {
+      var path = ""
+      for (var i = 0; i < arguments.length; i++)
+        if (arguments[i] != "")
+          path += "/" + arguments[i];
+      return path;
+    },
+
+    basename: function(path) {
+      var split = path.split(/[\\\/]/);
+      return split[split.length-1];
+    },
+
+    normalize: function(path) {
+      var split = path.split(/[\\\/]/);
+      var normalized = [];
+      for (var i = 0; i < split.length; i++) {
+        if (split[i] == '.' || split[i] == '') continue;
+        if (split[i] == '..') normalized.pop();
+        else normalized.push(split[i]);
+      }
+      return normalized.join('/');
+    },
+
+    extname: function(path) {
+      var name = require('path').basename(path);
+      if (name.indexOf('.') > 0) 
+        return name.substring(name.indexOf('.')+1, name.length);
+      else
+        return '';
+    }
+  };
+};
+
+<%# add 'file' contents %>
+<% view_env.each_logical_path do |fi| %>
+  _files[path.join(<%= raw fi.inspect %>)] = <%= raw view_env[fi].to_s.inspect %>;
+<% end %>
+
+_require['fs'] = function() {
+  return {
+    readFileSync: function(path) {
+      if (_files[path]) return _files[path];
+      throw new Error("Missing file: "+path);
+    }
+  };
+};

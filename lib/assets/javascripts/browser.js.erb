@@ -5,7 +5,7 @@
   var Ambrosia = (function() {
     var process = {
       env: {
-        AMBROSIA_STDLIB_PATH: 'stdlib',
+        AMBROSIA_STDLIB_PATH: '/',
         AMBROSIA_FILE_EXT: '.tml.ambrosia',
         AMBROSIA_VIEW_PATH: 'views'
       },
@@ -16,50 +16,18 @@
     var _require = {};
     require = function(path) { return require[path] = require[path] || _require[path] && _require[path](); };
     
-    _require['path'] = function() {
-      return {
-        join: function() {
-          var path = ""
-          for (var i = 0; i < arguments.length; i++)
-            if (arguments[i] != "")
-              path += "/" + arguments[i];
-          return path;
-        },
-        
-        basename: function(path) {
-          var split = path.split(/[\\\/]/);
-          return split[split.length-1];
-        },
-        
-        normalize: function(path) {
-          var split = path.split(/[\\\/]/);
-          var normalized = [];
-          for (var i = 0; i < split.length; i++) {
-            if (split[i] == '.' || split[i] == '') continue;
-            if (split[i] == '..') normalized.pop();
-            else normalized.push(split[i]);
-          }
-          return normalized.join('/');
-        },
-        
-        extname: function(path) {
-          var name = require('path').basename(path);
-          if (name.indexOf('.') > 0) 
-            return name.substring(name.indexOf('.')+1, name.length);
-          else
-            return '';
-        }
-      };
-    };
-
+    (function() {
+      <%= render :partial => 'ambrosia/browser/mocks', :locals => { :view_env => view_env } %>
+    })();
+    
     <% sprockets_env.each_logical_path do |fi|
       local = fi.sub(/\.js$/, '')
-      next if File.basename(fi) == 'browser.js' or File.extname(fi) != '.js' %>
+      next if File.basename(fi) == 'browser.js' or File.extname(fi) != '.js' or File.basename(fi) == '_mocks.js' %>
     _require['<%= local %>'] = (function() {
       var exports = this;
       _require['<%= local %>'] = function() { return exports; };
       var __dirname = '<%= File.join(File.dirname(__FILE__), File.dirname(fi)) %>';
-      <%= sprockets_env[fi] %>
+      <%= raw sprockets_env[fi].to_s %>
       return exports;
     });
     <% end %>
@@ -70,6 +38,6 @@
   if (typeof define === 'function' && define.amd) {
     define(function() { return Ambrosia; });
   } else { 
-    root.Ambrosia = Ambrosia; 
+    (typeof(root) == 'undefined' ? global : root).Ambrosia = Ambrosia; 
   }
 })(this);

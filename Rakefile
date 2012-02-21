@@ -48,7 +48,7 @@ namespace :build do
   desc "Build sources into a single browser-friendly .js file"
   task :browser do
     require 'ambrosia'
-    File.open('guides/output/javascripts/ambrosia-browser.js', 'w') { |f| f.print Ambrosia::Template::Source.content }
+    Ambrosia.build_source_to 'guides/output/javascripts/ambrosia-browser.js'
     puts "Built to guides/output/javascripts/ambrosia-browser.js"
   end
 end

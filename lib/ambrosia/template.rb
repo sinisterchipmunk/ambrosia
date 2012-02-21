@@ -1,5 +1,3 @@
-require 'sprockets'
-
 class Ambrosia::Template < Tilt::Template
   include Ambrosia::Compiler
     

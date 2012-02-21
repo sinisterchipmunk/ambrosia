@@ -1,10 +1,13 @@
 require 'rack/coffee_compiler'
+require 'ambrosia'
 
 module Jasmine
   class Config
     alias_method :old_js_files, :js_files
 
     def js_files(spec_filter = nil)
+      Ambrosia.build_source_to 'guides/output/javascripts/ambrosia-browser.js'
+      
       # Convert all .coffee files into .js files before putting them in a script tag
       old_js_files(spec_filter).map do |filename|
         filename.sub(/\.coffee/, '.js')
@@ -27,7 +30,7 @@ module Jasmine
         # use Rack::CoffeeCompiler,
         #     :source_dir => File.join(root, 'src'),
         #     :url => '/public/javascripts'
-
+        
         run Jasmine.app(config)
       end
 
