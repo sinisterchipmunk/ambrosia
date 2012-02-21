@@ -1,12 +1,22 @@
 var _files = {};
 
-_require['path'] = function() {
+var path = (_require['path'] = function() {
   return {
     join: function() {
       var path = ""
-      for (var i = 0; i < arguments.length; i++)
-        if (arguments[i] != "")
-          path += "/" + arguments[i];
+      for (var i = 0; i < arguments.length; i++) {
+        var segments;
+        if (arguments[i].indexOf("/") != -1) segments = arguments[i].split(/\//);
+        else segments = [ arguments[i] ];
+        
+        for (var j = 0; j < segments.length; j++) {
+          var segment = segments[j];
+          if (segment != "") {
+            path += "/" + segment;
+          }
+        }
+      }
+      console.log(path);
       return path;
     },
 
@@ -34,7 +44,7 @@ _require['path'] = function() {
         return '';
     }
   };
-};
+})();
 
 <%# add 'file' contents %>
 <% view_env.each_logical_path do |fi| %>
