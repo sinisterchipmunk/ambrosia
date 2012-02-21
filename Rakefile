@@ -47,11 +47,8 @@ namespace :build do
   
   desc "Build sources into a single browser-friendly .js file"
   task :browser do
-    require 'sprockets'
-    $sprockets_env = Sprockets::Environment.new
-    $sprockets_env.append_path 'lib/assets/javascripts'
-    $sprockets_env.append_path 'lib/assets/tml'
-    File.open('guides/output/javascripts/ambrosia-browser.js', 'w') { |f| f.print $sprockets_env['browser.js'] }
+    require 'ambrosia'
+    File.open('guides/output/javascripts/ambrosia-browser.js', 'w') { |f| f.print Ambrosia::Template::Source.content }
     puts "Built to guides/output/javascripts/ambrosia-browser.js"
   end
 end

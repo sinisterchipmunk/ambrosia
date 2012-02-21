@@ -1,4 +1,4 @@
-require '../spec_helper'
+require 'spec_helper'
 {Expression} = require 'simulator/expression'
 
 # boolean expressions are unique in that they are only evaluated by <variant> tags.

@@ -1,4 +1,4 @@
-require './spec_helper'
+require 'spec_helper'
 {Literal} = require 'nodes/literal'
 
 describe "Literals", ->

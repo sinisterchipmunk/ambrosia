@@ -1,5 +1,6 @@
 (function(global) {
-  window.global = window;
+  if (typeof(window) != 'undefined')
+    window.global = global;
   
   var Ambrosia = (function() {
     var process = {
@@ -51,14 +52,14 @@
       };
     };
 
-    <% $sprockets_env.each_logical_path do |fi|
+    <% sprockets_env.each_logical_path do |fi|
       local = fi.sub(/\.js$/, '')
       next if File.basename(fi) == 'browser.js' or File.extname(fi) != '.js' %>
     _require['<%= local %>'] = (function() {
       var exports = this;
       _require['<%= local %>'] = function() { return exports; };
       var __dirname = '<%= File.join(File.dirname(__FILE__), File.dirname(fi)) %>';
-      <%= $stderr.puts fi; $sprockets_env[fi] %>
+      <%= sprockets_env[fi] %>
       return exports;
     });
     <% end %>
@@ -66,5 +67,9 @@
     return require('tml');
   })();
 
-  global.Ambrosia = Ambrosia;
+  if (typeof define === 'function' && define.amd) {
+    define(function() { return Ambrosia; });
+  } else { 
+    root.Ambrosia = Ambrosia; 
+  }
 })(this);

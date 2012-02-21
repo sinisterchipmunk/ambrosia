@@ -1,4 +1,4 @@
-require '../spec_helper'
+require 'spec_helper'
 {Expression} = require 'simulator/expression'
 
 describe "number expression", ->

@@ -1,4 +1,4 @@
-require './spec_helper'
+require 'spec_helper'
 {MethodCall, Identifier} = require 'nodes'
 
 describe "param list", ->

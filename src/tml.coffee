@@ -32,6 +32,9 @@ exports.compile = (code) ->
   else
     exports.parse(code).compile()
 
+exports.compile_to_string = (code) ->
+  exports.compile(code).toString()
+
 exports.compile_files = (sources...) ->
   results = {}
 

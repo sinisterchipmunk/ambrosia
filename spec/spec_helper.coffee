@@ -31,4 +31,4 @@ global.simulate = (dom, callback) ->
 
 beforeEach ->
   $.reset()
-  require './helpers/type_helper'
+  require 'javascripts/helpers/type_helper'

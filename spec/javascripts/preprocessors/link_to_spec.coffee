@@ -1,4 +1,4 @@
-require '../spec_helper'
+require 'spec_helper'
 
 describe 'link_to', ->
   it "should construct a link", ->

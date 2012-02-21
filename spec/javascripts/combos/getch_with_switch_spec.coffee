@@ -1,4 +1,4 @@
-require '../spec_helper'
+require 'spec_helper'
 
 describe "getch with switch combo", ->
   doc = sim = null

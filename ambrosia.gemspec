@@ -14,11 +14,13 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rails',          '~> 3'
   s.add_dependency 'sprockets'
+  s.add_dependency 'execjs'
 
   s.add_development_dependency 'RedCloth', '4.2.8'
   s.add_development_dependency 'rack-asset-compiler'
   s.add_development_dependency 'jasmine'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec-rails'
+  s.add_development_dependency 'coffee-script'
 
   s.rubyforge_project = "ambrosia"
 
