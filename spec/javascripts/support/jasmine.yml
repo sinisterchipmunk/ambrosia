@@ -37,8 +37,8 @@ stylesheets:
 #   - helpers/**/*.js
 #
 helpers:
-  - helpers/**/*.js
-  - helpers/**/*.coffee
+  - "helpers/**/*.js"
+  - "helpers/**/*.coffee"
   - spec_helper.coffee
 
 # spec_files
@@ -52,8 +52,8 @@ helpers:
 #   - **/*[sS]pec.js
 #
 spec_files:
-  - **/*_spec.js
-  - **/*_spec.coffee
+  - "**/*_spec.js"
+  - "**/*_spec.coffee"
 
 # src_dir
 #

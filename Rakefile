@@ -37,7 +37,7 @@ end
 
 desc 'Generate guides (for authors), use ONLY=foo to process just "foo.textile"'
 task :guides => [ 'guides:generate', 'build:browser' ]
-task :default => [ 'test:units', 'test:integrations' ]#, 'build:browser', 'jasmine:ci' ]
+task :default => [ 'test:units', 'build:browser', 'test:integrations', 'jasmine:ci' ]
 
 namespace :build do
   desc "Build all javascript files from coffee source"

@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "ambrosia"
+require "ambrosia/version"
 
 Gem::Specification.new do |s|
   s.name        = "ambrosia"
@@ -12,14 +12,14 @@ Gem::Specification.new do |s|
   s.summary     = %q{Scripting language for generating Incendo TML code}
   s.description = s.summary
 
-  s.add_dependency 'rails',          '~> 3'
+  s.add_dependency 'rails', ">= 3.2"
   s.add_dependency 'sprockets'
   s.add_dependency 'execjs'
 
   s.add_development_dependency 'RedCloth', '4.2.8'
   s.add_development_dependency 'rack-asset-compiler'
   s.add_development_dependency 'jasmine'
-  s.add_development_dependency 'rspec-rails'
+  s.add_development_dependency 'rspec-rails', ">= 2"
   s.add_development_dependency 'coffee-script'
 
   s.rubyforge_project = "ambrosia"
