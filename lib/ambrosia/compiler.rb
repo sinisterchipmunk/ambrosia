@@ -1,5 +1,6 @@
 require 'execjs'
 require 'sprockets'
+require 'nokogiri'
 
 module Ambrosia::Compiler
   EngineError      = ExecJS::RuntimeError
@@ -12,7 +13,10 @@ module Ambrosia::Compiler
       end
     
       def context
-        @context ||= ExecJS.compile(content)
+        # FIXME it would be better to memoize this but we can't right now because
+        # views are compiled as part of the original source. We have to pull
+        # views outside of the compile phase before we can memoize the context.
+        @context = ExecJS.compile(content)
       end
 
       def render(path, base_path = @base_path || File.expand_path("../assets/javascripts", File.dirname(__FILE__)))
@@ -53,6 +57,21 @@ module Ambrosia::Compiler
   end
   
   def compile(script)
-    Source.context.call "Ambrosia.compile_to_string", script
+    tml_code = Source.context.call "Ambrosia.compile_to_string", script
+    validate tml_code
+  end
+  
+  def validate(xml)
+    path = File.expand_path('../tml.xsd', File.dirname(__FILE__))
+    xsd = Nokogiri::XML::Schema(File.read path)
+    doc = Nokogiri::XML(xml)
+    
+    errors = []
+    xsd.validate(doc).each { |error| errors.push error.to_s }
+    unless errors.empty?
+      raise errors.join("; ")
+    end
+    
+    xml
   end
 end
