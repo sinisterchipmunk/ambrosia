@@ -8,3 +8,5 @@ NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/lib/assets/javascripts/ambrosia/src:$AMBROSI
 AMBROSIA_STDLIB_PATH=$AMBROSIA_PATH/lib/assets/tml         \
 AMBROSIA_FILE_EXT=.tml.ambrosia                            \
 jasmine-node --coffee spec $*
+
+exit $?
