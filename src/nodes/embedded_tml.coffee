@@ -14,6 +14,8 @@ exports.EmbeddedTML = class EmbeddedTML extends Base
     dom = create_dom @tml
     screen = screen.root.current_screen()
     
+    list = ""
+    
     traverse = (b) ->
       for node in b.attrs.dom_nodes
         attrs = dom_nodes: node.childNodes
@@ -30,5 +32,5 @@ exports.EmbeddedTML = class EmbeddedTML extends Base
     
     screen.attrs.dom_nodes = dom
     traverse screen
-      
+    
     ""
