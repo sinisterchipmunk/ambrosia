@@ -4,7 +4,7 @@ AMBROSIA_PATH=$(dirname "${BASH_SOURCE[0]}")/..
 
 # build was successful
 PATH=$PATH:$AMBROSIA_PATH/node_modules/jasmine-node/bin    \
-NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/lib/assets/javascripts:$AMBROSIA_PATH/spec \
+NODE_PATH=$NODE_PATH:$AMBROSIA_PATH/lib/assets/javascripts/ambrosia/src:$AMBROSIA_PATH/spec \
 AMBROSIA_STDLIB_PATH=$AMBROSIA_PATH/lib/assets/tml         \
 AMBROSIA_FILE_EXT=.tml.ambrosia                            \
 jasmine-node --coffee spec $*

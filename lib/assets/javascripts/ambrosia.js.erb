@@ -17,19 +17,18 @@
     require = function(path) { return require[path] = require[path] || _require[path] && _require[path](); };
     
     (function() {
-      <%= render :partial => 'ambrosia/browser/mocks', :locals => { :view_env => view_env } %>
+      <%= render :partial => 'ambrosia/mocks', :locals => { :stdlib_env => stdlib_env } %>
     })();
     
-    <% sprockets_env.each_logical_path do |fi|
-      local = fi.sub(/\.js$/, '')
-      next if File.basename(fi) == 'browser.js' or File.extname(fi) != '.js' or File.basename(fi) == '_mocks.js' %>
-    _require['<%= local %>'] = (function() {
-      var exports = this;
-      _require['<%= local %>'] = function() { return exports; };
-      var __dirname = '<%= File.join(File.dirname(__FILE__), File.dirname(fi)) %>';
-      <%= raw sprockets_env[fi].to_s %>
-      return exports;
-    });
+    <% ambrosia_build_env.each_logical_path do |fi|
+      local = fi.sub(/\.js$/, '') %>
+      _require['<%= local %>'] = (function() {
+        var exports = this;
+        _require['<%= local %>'] = function() { return exports; };
+        var __dirname = '<%= File.join(File.dirname(__FILE__), File.dirname(fi)) %>';
+        <%= raw ambrosia_build_env[fi].to_s %>
+        return exports;
+      });
     <% end %>
 
     return require('tml');

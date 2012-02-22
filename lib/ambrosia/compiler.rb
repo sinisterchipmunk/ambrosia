@@ -9,7 +9,7 @@ module Ambrosia::Compiler
   module Source
     class << self
       def content
-        render 'browser'
+        render 'ambrosia'
       end
     
       def context
@@ -22,24 +22,24 @@ module Ambrosia::Compiler
         av.render :template => path, :handlers => [:erb], :formats => [:js]
       end
 
-      def sprockets_env
-        @sprockets_env ||= begin
-          sprockets_env = Sprockets::Environment.new
-          sprockets_env.append_path File.expand_path("../assets/javascripts", File.dirname(__FILE__))
-          sprockets_env
+      def ambrosia_build_env
+        @ambrosia_env ||= begin
+          env = Sprockets::Environment.new
+          env.append_path File.expand_path("../assets/javascripts/ambrosia/src", File.dirname(__FILE__))
+          env
         end
       end
 
-      def view_env
-        @view_env ||= begin
-          view_env = Sprockets::Environment.new
-          view_env.append_path File.expand_path("../assets/tml", File.dirname(__FILE__))
-          view_env
+      def stdlib_env
+        @stdlib_env ||= begin
+          env = Sprockets::Environment.new
+          env.append_path File.expand_path("../assets/tml", File.dirname(__FILE__))
+          env
         end
       end
     end
     
-    delegate :sprockets_env, :view_env, :to => '::Ambrosia::Compiler::Source'
+    delegate :ambrosia_build_env, :stdlib_env, :to => '::Ambrosia::Compiler::Source'
   end
   
   def compile(script)

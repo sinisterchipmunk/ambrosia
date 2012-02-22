@@ -48,8 +48,8 @@ var path = (_require['path'] = function() {
 })();
 
 <%# add 'file' contents %>
-<% view_env.each_logical_path do |fi| %>
-  _files[path.join(<%= raw fi.inspect %>)] = <%= raw view_env[fi].to_s.inspect %>;
+<% stdlib_env.each_logical_path do |fi| %>
+  _files[path.join(<%= raw fi.inspect %>)] = <%= raw stdlib_env[fi].to_s.inspect %>;
 <% end %>
 
 _require['fs'] = function() {

@@ -1,6 +1,6 @@
 fs            = require 'fs'
 path          = require 'path'
-{extend}      = require './src/helpers'
+{extend}      = require './src/ambrosia/src/helpers'
 {spawn, exec} = require 'child_process'
 
 run = (cb, cmd, args...) ->
@@ -18,8 +18,8 @@ task 'build', 'build the Ambrosia language from source', build = (cb) ->
 task 'build:parser', 'rebuild the Jison parser (run build first)', build_parser = (cb) ->
   extend global, require('util')
   require 'jison'
-  parser = require('./lib/assets/javascripts/grammar').parser
-  fs.writeFile 'lib/assets/javascripts/parser.js', parser.generate()
+  parser = require('./lib/assets/javascripts/ambrosia/src/grammar').parser
+  fs.writeFile 'lib/assets/javascripts/ambrosia/src/parser.js', parser.generate()
   cb() if typeof(cb) is 'function'
 
 task 'test', 'run the ambrosia tests',  ->
