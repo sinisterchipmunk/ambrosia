@@ -1,6 +1,5 @@
 require 'execjs'
 require 'sprockets'
-# require 'action_view/base'
 
 module Ambrosia::Compiler
   EngineError      = ExecJS::RuntimeError
@@ -26,6 +25,7 @@ module Ambrosia::Compiler
         @ambrosia_env ||= begin
           env = Sprockets::Environment.new
           env.append_path File.expand_path("../assets/javascripts/ambrosia/src", File.dirname(__FILE__))
+          env.append_path File.expand_path("../../vendor/assets/javascripts", File.dirname(__FILE__))
           env
         end
       end
@@ -37,9 +37,19 @@ module Ambrosia::Compiler
           env
         end
       end
+      
+      def view_env
+        @view_env ||= begin
+          env = Sprockets::Environment.new
+          paths = Rails.application.paths['ambrosia/views'].existent_directories
+          Rails::Engine.subclasses.each { |engine| paths += engine.paths['ambrosia/views'].existent_directories }
+          paths.each { |path| env.append_path path }
+          env
+        end
+      end
     end
     
-    delegate :ambrosia_build_env, :stdlib_env, :to => '::Ambrosia::Compiler::Source'
+    delegate :ambrosia_build_env, :stdlib_env, :view_env, :to => '::Ambrosia::Compiler::Source'
   end
   
   def compile(script)

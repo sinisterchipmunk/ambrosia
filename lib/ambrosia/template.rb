@@ -4,7 +4,7 @@ class Ambrosia::Template < Tilt::Template
   attr_reader :context
 
   def self.default_mime_type
-    "application/tml"
+    "text/tml"
   end
 
   def prepare

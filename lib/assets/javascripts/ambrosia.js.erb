@@ -20,6 +20,10 @@
       <%= render :partial => 'ambrosia/mocks', :locals => { :stdlib_env => stdlib_env } %>
     })();
     
+    (function() {
+      <%= render :partial => 'ambrosia/views', :locals => { :view_env => view_env } %>
+    })();
+    
     <% ambrosia_build_env.each_logical_path do |fi|
       local = fi.sub(/\.js$/, '') %>
       _require['<%= local %>'] = (function() {

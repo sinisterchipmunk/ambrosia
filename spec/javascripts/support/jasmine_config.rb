@@ -1,6 +1,9 @@
 require 'rack/coffee_compiler'
 require 'ambrosia'
 
+# needed for ambrosia view paths
+Ambrosia::TestCase::RailsTestApp.initialize!
+
 module Jasmine
   class Config
     alias_method :old_js_files, :js_files

@@ -1,0 +1,6 @@
+var fs = _require['fs']();
+var path = _require['path']();
+
+<% view_env.each_logical_path do |filename| %>
+  fs.addMockFile(path.join("views", <%= raw filename.inspect %>), <%= raw view_env[filename].to_s.inspect %>);
+<% end %>

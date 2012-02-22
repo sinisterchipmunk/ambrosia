@@ -2,7 +2,7 @@
 {Literal} = require 'nodes/literal'
 {Assign} = require 'nodes/assign'
 {ViewTemplate} = require 'view_template'
-create_dom = require('dom').create_dom
+{create_dom, traverse_and_build, build_dom_from} = require 'dom'
 
 Document.preprocessor 'display',
   (builder, filenames...) ->
@@ -11,30 +11,17 @@ Document.preprocessor 'display',
     
       if layout = @root().layout
         @root().current_template = template
-        dom = create_dom layout.process this, builder
+        dom_nodes = create_dom layout.process this, builder
         @root().current_template = null
       else
-        dom = create_dom template.process this, builder
+        dom_nodes = create_dom template.process this, builder
         
       screen = builder.current_screen()
       if screen.is_wait_screen()
         screen = screen.extend()
 
-      traverse = (b) ->
-        for node in b.attrs.dom_nodes
-          attrs = dom_nodes: node.childNodes
-          if node.attributes
-            for attr in node.attributes
-              name = attr.name
-              value = attr.value
-              attrs[name] = value
-          if node.nodeName == '#text'
-            attrs.value = node.nodeValue.trim()
-            if attrs.value == "" then continue
-          b.b node.nodeName.toLowerCase(), attrs, traverse
-        delete b.attrs.dom_nodes
-    
-      screen.b 'display', dom_nodes: dom, traverse
+      display = screen.b 'display'
+      traverse_and_build display, dom_nodes
 
     # what is there to return?
     @create Literal, ""

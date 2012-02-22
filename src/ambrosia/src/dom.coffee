@@ -1,14 +1,26 @@
-jsdom = require('jsdom')
-# jsdom and= jsdom.jsdom
+{Parser, DefaultHandler} = require 'htmlparser'
 
 exports.create_dom = (code) ->
-  code = "<div>#{code}</div>"
+  handler = new DefaultHandler (error, dom) -> throw new Error(error) if error
+  parser = new Parser handler
+  parser.parseComplete code
+  handler.dom
   
-  if jsdom
-    div = jsdom.jsdom(code).childNodes[0]
-  else
-    parser = new DOMParser()
-    xmlDoc = parser.parseFromString code, "text/xml"
-    div = xmlDoc.documentElement
-    
-  div.childNodes
+exports.traverse_and_build = (b, dom_nodes) ->
+  for node in dom_nodes
+    attrs = {}
+    if node.attribs
+      for name, value of node.attribs
+        attrs[name] = value
+    if node.type == 'text'
+      node.name = '#text'
+      attrs.value = node.data.trim()
+      if attrs.value == "" then continue
+      
+    built_node = b.b node.name.toLowerCase(), attrs
+    exports.traverse_and_build built_node, node.children || []
+
+exports.build_dom_from = (code, builder) ->
+  dom_nodes = exports.create_dom code
+  exports.traverse_and_build builder, dom_nodes
+  builder

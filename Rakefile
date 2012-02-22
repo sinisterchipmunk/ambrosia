@@ -50,6 +50,7 @@ namespace :build do
   desc "Build sources into a single browser-friendly .js file"
   task :browser do
     require 'ambrosia'
+    Ambrosia::TestCase::RailsTestApp.initialize! # needed for the view paths
     Ambrosia.build_source_to 'guides/output/javascripts/ambrosia-browser.js'
     puts "Built to guides/output/javascripts/ambrosia-browser.js"
   end
