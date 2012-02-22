@@ -6,6 +6,6 @@ exports.Throw = class Throw extends Extension
   to_code: -> "throw #{@expression.to_code()}"
   
   compile: (b) ->
-    @require b, 'std/throw'
+    @import b, 'std/throw'
     @invoke b, 'throw_error', @expression
     

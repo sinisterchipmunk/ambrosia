@@ -3,7 +3,7 @@
 Document.preprocessor 'read_card',
   (builder, card_type) ->
     card_types = (if card_type then card_type.split(/\s+/) else [])
-    result = @require builder, 'std/card_parser'
+    result = @import builder, 'std/card_parser'
 
     builder.current_screen().b 'tform', (b) ->
       for type in card_types

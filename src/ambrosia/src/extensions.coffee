@@ -1,7 +1,7 @@
 require 'ext/getch'
 require 'ext/display'
 require 'ext/eval'
-require 'ext/require'
+require 'ext/import'
 require 'ext/layout'
 require 'ext/link_to'
 require 'ext/post'

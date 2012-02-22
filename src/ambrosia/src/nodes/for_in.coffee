@@ -20,10 +20,10 @@ exports.ForIn = class ForIn extends Extension
     closure.compile b.root
     
     if @expression instanceof Range
-      @require b, "std/for_in_range"
+      @import b, "std/for_in_range"
       b.root.goto current_screen
       @invoke b, "for_in_range", @expression.start, @expression.stop, @expression.step, @method closure.getID()
     else
-      @require b, "std/for_in"
+      @import b, "std/for_in"
       b.root.goto current_screen
       @invoke b, "for_in", @expression, @method closure.getID()

@@ -12,7 +12,7 @@ exports.ForOf = class ForOf extends Extension
   type: -> 'string'
   to_code: -> "for #{@varid.to_code()} of #{@expression.to_code()}\n#{@block.to_code()}"
   compile: (b) ->
-    @require b, 'std/for_of'
+    @import b, 'std/for_of'
     {Closure} = require 'nodes/closure'
 
     current_screen = b.root.current_screen().attrs.id

@@ -8,13 +8,13 @@ exports.Extension = class Extension extends Base
   # Example:
   # 
   #     compile: (builder) ->
-  #       @require builder, "path/to/script"
+  #       @import builder, "path/to/script"
   #       # do other stuff
   #
-  require: (builder, path) ->
+  import: (builder, path) ->
     current_screen = builder.root.current_screen().attrs.id
     throw new Error "path is required" unless path
-    @invoke builder, "require", path
+    @invoke builder, "import", path
     builder.root.goto current_screen
   
   # Causes the compiler to invoke the specified method with the given arguments

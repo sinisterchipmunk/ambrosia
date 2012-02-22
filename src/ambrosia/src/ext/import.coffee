@@ -2,7 +2,7 @@
 path = require 'path'
 fs = require 'fs'
 
-Document.preprocessor 'require',
+Document.preprocessor 'import',
   (builder, _path) ->
     @namespace = _path
     _path = _path + $.ambrosia_file_ext if path.extname(_path) == ""
