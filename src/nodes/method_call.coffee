@@ -56,8 +56,9 @@ exports.MethodCall = class MethodCall extends Extension
   to_code: -> "#{@getMethodName()}(#{(param.to_code() for param in @params).join(', ')})"
     
   compile: (builder) ->
-    # @require builder, 'std/return'
-    @depend 'assign', 'identifier', 'literal'
+    {Assign} = require 'nodes/assign'
+    {Identifier} = require 'nodes/identifier'
+    {Literal} = require 'nodes/literal'
     
     screen = builder.root.current_screen()
     function_screen_id = @getMethodName()

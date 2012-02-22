@@ -4,25 +4,6 @@
 # An Extension is a node that is accompanied by code generated directly
 # from the scripting language itself.
 exports.Extension = class Extension extends Base
-  # Defines dependencies. Dependencies are expected to be listed in
-  # underscored_format, which corresponds to their file names, and
-  # will be expanded into objects named in CamelCaseFormat in the
-  # current scope.
-  #
-  # Example:
-  #
-  #      @depend 'method_call'
-  #      @create MethodCall, ...
-  #
-  depend: (deps...) ->
-    for dep in deps
-      camel = dep
-      while match = /((^[a-z])|(_[a-z]))/.exec camel
-        camel = camel.replace match[1], match[1][match[1].length-1].toUpperCase()
-      if eval("typeof #{camel}") == 'undefined'
-        eval "#{camel} = require('nodes/#{dep}').#{camel}"
-    
-  
   # Call from @compile to include scripting code and insert it into the builder
   # Example:
   # 
@@ -47,7 +28,10 @@ exports.Extension = class Extension extends Base
   # instances of Literal. The method name should be a simple String, which will
   # be converted into an instance of Identifier, or any instance of Base.
   invoke: (builder, method_name, args...) ->
-    @depend 'literal', 'method_call', 'identifier'
+    {Literal} = require 'nodes/literal'
+    {MethodCall} = require 'nodes/method_call'
+    {Identifier} = require 'nodes/identifier'
+
     self = this
     proc = (arg, type = Literal) -> if arg instanceof Base then arg else self.create type, arg
     args = (proc arg for arg in args)
@@ -64,11 +48,11 @@ exports.Extension = class Extension extends Base
   #    :method_name
   #
   method: (name) ->
-    @depend 'method_reference'
+    {MethodReference} = require 'nodes/method_reference'
     if name instanceof Base
       @create MethodReference, name
     else
-      @depend 'literal'
+      {Literal} = require 'nodes/literal'
       @create MethodReference, @create Literal, name
     
   # Creates and compiles an instance of Assign so that a variable is assigned a value,
@@ -83,7 +67,10 @@ exports.Extension = class Extension extends Base
   #     @assign builder, "variable_name", 100
   #
   assign: (builder, lvalue, rvalue) ->
-    @depend 'identifier', 'literal', 'base'
+    {Identifier} = require 'nodes/identifier'
+    {Literal} = require 'nodes/literal'
+    {Base} = require 'nodes/base'
+
     lvalue = @create Identifier, lvalue unless lvalue instanceof Base
     rvalue = @create Literal, rvalue    unless rvalue instanceof Base
     @create(Assign, lvalue, rvalue).compile builder

@@ -12,7 +12,8 @@ exports.Switch = class Switch extends Extension
   type: -> @expression.type()
   
   prepare: ->
-    @depend 'if', 'operation'
+    {If} = require 'nodes/if'
+    {Operation} = require 'nodes/operation'
     
     @actual_value = @create Identifier, 'switch.actual_value'
     @_if = _if = null

@@ -12,7 +12,8 @@ exports.ForIn = class ForIn extends Extension
   type: -> 'string'
   to_code: -> "for #{@varid.to_code()} in #{@expression.to_code()}\n#{@block.to_code()}"
   compile: (b) ->
-    @depend 'range', 'closure'
+    {Range} = require 'nodes/range'
+    {Closure} = require 'nodes/closure'
 
     current_screen = b.root.current_screen().attrs.id
     closure = @create Closure, [@varid], @block

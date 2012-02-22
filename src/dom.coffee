@@ -9,6 +9,6 @@ exports.create_dom = (code) ->
   else
     parser = new DOMParser()
     xmlDoc = parser.parseFromString code, "text/xml"
-    div = xmlDoc.documentElement;
+    div = xmlDoc.documentElement
     
   div.childNodes
