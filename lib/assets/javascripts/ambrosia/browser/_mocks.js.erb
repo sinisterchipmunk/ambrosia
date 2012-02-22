@@ -12,11 +12,12 @@ var path = (_require['path'] = function() {
         for (var j = 0; j < segments.length; j++) {
           var segment = segments[j];
           if (segment != "") {
-            path += "/" + segment;
+            if (path.length > 0) path += "/";
+            path += segment;
           }
         }
       }
-      console.log(path);
+
       return path;
     },
 
@@ -56,6 +57,12 @@ _require['fs'] = function() {
     readFileSync: function(path) {
       if (_files[path]) return _files[path];
       throw new Error("Missing file: "+path);
+    },
+    
+    isMock: function() { return true; },
+    
+    addMockFile: function(path, contents) {
+      _files[path] = contents;
     }
   };
 };

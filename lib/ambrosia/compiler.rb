@@ -21,23 +21,25 @@ module Ambrosia::Compiler
         av.extend self
         av.render :template => path, :handlers => [:erb], :formats => [:js]
       end
-    end
 
-    def sprockets_env
-      @sprockets_env ||= begin
-        sprockets_env = Sprockets::Environment.new
-        sprockets_env.append_path File.expand_path("../assets/javascripts", File.dirname(__FILE__))
-        sprockets_env
+      def sprockets_env
+        @sprockets_env ||= begin
+          sprockets_env = Sprockets::Environment.new
+          sprockets_env.append_path File.expand_path("../assets/javascripts", File.dirname(__FILE__))
+          sprockets_env
+        end
+      end
+
+      def view_env
+        @view_env ||= begin
+          view_env = Sprockets::Environment.new
+          view_env.append_path File.expand_path("../assets/tml", File.dirname(__FILE__))
+          view_env
+        end
       end
     end
-  
-    def view_env
-      @view_env ||= begin
-        view_env = Sprockets::Environment.new
-        view_env.append_path File.expand_path("../assets/tml", File.dirname(__FILE__))
-        view_env
-      end
-    end
+    
+    delegate :sprockets_env, :view_env, :to => '::Ambrosia::Compiler::Source'
   end
   
   def compile(script)

@@ -17,7 +17,8 @@ class PreprocessorVariables
         path.join process.cwd(), 'views'
         path.join @ambrosia_stdlib_path, "std/views"
       ]
-      paths.unshift p if p = process.env['AMBROSIA_VIEW_PATH']
+      p = process.env['AMBROSIA_VIEW_PATH']
+      paths.unshift p if p and paths.indexOf(p) == -1
       paths
     )()
 

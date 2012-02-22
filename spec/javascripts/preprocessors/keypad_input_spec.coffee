@@ -7,7 +7,7 @@ describe "keypad input", ->
     beforeEach ->
       doc = dom """
       a = 1
-      display '../spec/fixtures/views/basic-embedded-variable'
+      display 'views/basic-embedded-variable'
       b = getch('1')
       """
       # console.log doc.toString()

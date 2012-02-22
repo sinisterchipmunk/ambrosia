@@ -12,6 +12,7 @@
 #
 src_files:
     - guides/output/javascripts/ambrosia-browser.js
+    - spec/fixtures/fixtures.js
 
 # stylesheets
 #

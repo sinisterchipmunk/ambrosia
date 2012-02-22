@@ -3,7 +3,7 @@ fs = require 'fs'
 describe "complete scripts", ->
   doc = null
   beforeEach -> 
-    doc = dom fs.readFileSync "./spec/fixtures/scripts/functions", 'UTF-8'
+    doc = dom fs.readFileSync "spec/fixtures/fixtures/scripts/functions", 'UTF-8'
     # console.log doc.toString()
 
   it "should set all variables as expected", ->

@@ -1,0 +1,8 @@
+var path = require('path');
+var fs = require('fs');
+
+if (fs.addMockFile) {
+  <% env.each_logical_path do |f| %>
+    fs.addMockFile(path.join("spec/fixtures/fixtures", <%= f.inspect %>), <%= env[f].to_s.inspect %>);
+  <% end %>
+}

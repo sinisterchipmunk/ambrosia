@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'link_to', ->
   it "should construct a link", ->
-    doc = dom "one:\ndisplay '../spec/fixtures/views/link_to_one'"
+    doc = dom "one:\ndisplay 'views/link_to_one'"
     # console.log doc.toString()
     sim = simulate doc
     sim.start()

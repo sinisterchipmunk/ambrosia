@@ -31,4 +31,5 @@ global.simulate = (dom, callback) ->
 
 beforeEach ->
   $.reset()
-  require 'javascripts/helpers/type_helper'
+  $.view_paths.push 'spec/fixtures/fixtures'
+  require 'helpers/type_helper'
