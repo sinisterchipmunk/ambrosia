@@ -40,7 +40,7 @@ exports.MethodCall = class MethodCall extends Extension
           else if result == false
             return MethodCall.prototype.compile.call this, b
           else
-            sys = require 'sys'
+            sys = require 'util'
             throw new Error "#{@getMethodName()}: return value of preprocessor invocation must be `false` to pass through, or a String, Number, Variable or compileable instance of Base (got #{sys.inspect result})"
           result
   
