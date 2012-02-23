@@ -85,7 +85,7 @@ exports.Simulator = class Simulator
     # check for card parsers, but only those that require interaction      
     if tform = @state.screen.element.first('tform')
       if card = tform.first('card')
-        if card.attrs['parser'] == 'mag' and card.attrs['params'] == 'read_data'
+        if card.attrs['parser'] == 'mag' and card.attrs['parser_params'] == 'read_data'
           return true
     false
     

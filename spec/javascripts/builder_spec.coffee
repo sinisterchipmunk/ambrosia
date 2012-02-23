@@ -5,6 +5,51 @@ describe "Builder", ->
   
   beforeEach -> builder = build('tml')
   
+  describe "reordering", ->
+    it "doubles", ->
+      builder.b 'one'
+      builder.b 'two'
+      builder.b 'three'
+      builder.b 'two'
+      
+      builder.reorder 'one', 'two', 'three'
+      tags = (tag.name for tag in builder.tags)
+      expect(tags).toEqual ['one', 'two', 'two', 'three']
+      
+    it "missing before", ->
+      builder.b 'two'
+      builder.b 'one'
+      
+      builder.reorder 'zero', 'one', 'two'
+      tags = (tag.name for tag in builder.tags)
+      expect(tags).toEqual ['one', 'two']
+      
+    it "missing after", ->
+      builder.b 'two'
+      builder.b 'one'
+      
+      builder.reorder 'one', 'two', 'three'
+      tags = (tag.name for tag in builder.tags)
+      expect(tags).toEqual ['one', 'two']
+
+    it "missing both", ->
+      builder.b 'two'
+      builder.b 'one'
+
+      builder.reorder 'zero', 'one', 'two', 'three'
+      tags = (tag.name for tag in builder.tags)
+      expect(tags).toEqual ['one', 'two']
+      
+    it "with no children", ->
+      builder.reorder 'zero', 'one', 'two', 'three'
+      tags = (tag.name for tag in builder.tags)
+      expect(tags).toEqual []
+      
+    it "should fail on unspecified children", ->
+      builder.b 'two'
+      builder.b 'one'
+      expect(-> builder.reorder 'one').toThrow("child not listed for reorder: 'two'")
+  
   describe "removal", ->
     beforeEach ->
       builder.b 'one'

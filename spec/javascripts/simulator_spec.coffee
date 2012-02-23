@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "Simulator", ->
   doc = sim = null
-  beforeEach -> doc = build('tml')
+  beforeEach -> doc = build('tml', xmlns: 'http://www.ingenico.co.uk/tml')
   
   describe "display output", ->
     beforeEach ->

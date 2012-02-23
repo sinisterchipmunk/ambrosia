@@ -1,10 +1,11 @@
 require 'execjs'
 require 'sprockets'
-require 'nokogiri'
 
 module Ambrosia::Compiler
   EngineError      = ExecJS::RuntimeError
   CompilationError = ExecJS::ProgramError
+  
+  include Ambrosia::Validation
 
   module Source
     class << self
@@ -59,19 +60,5 @@ module Ambrosia::Compiler
   def compile(script)
     tml_code = Source.context.call "Ambrosia.compile_to_string", script
     validate tml_code
-  end
-  
-  def validate(xml)
-    path = File.expand_path('../tml.xsd', File.dirname(__FILE__))
-    xsd = Nokogiri::XML::Schema(File.read path)
-    doc = Nokogiri::XML(xml)
-    
-    errors = []
-    xsd.validate(doc).each { |error| errors.push error.to_s }
-    unless errors.empty?
-      raise errors.join("; ")
-    end
-    
-    xml
   end
 end

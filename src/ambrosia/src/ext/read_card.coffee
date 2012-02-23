@@ -14,6 +14,6 @@ Document.preprocessor 'read_card',
           when 'emv'
             throw new Error "EMV is not supported yet"
           else throw new Error "Expected card reader type to be 'magnetic', 'emv', or both; found #{type}"
-        b.b 'card', parser: parser, params: params
+        b.b 'card', parser: parser, parser_params: params
         
     result

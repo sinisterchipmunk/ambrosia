@@ -1,11 +1,16 @@
 TAB = "  "
 
+Rules =
+  screen: ['setvar', 'next', 'display', 'tform']
+  head: ['link', 'defaults', 'error']
+
 exports.Builder = class Builder
   constructor: (@name, @attrs = {}, inner = null, depth = 0, @parent = null) ->
     throw new Error("name of root tag is required") unless @name
     @tags = []
     @depth = depth
     @root = (if @parent then @parent.root else this)
+    @order = Rules[@name]
     
     # possibly a callback was given but attrs was omitted; correct as necessary.
     if !inner && @attrs instanceof Function
@@ -36,8 +41,34 @@ exports.Builder = class Builder
   b: (name, attrs, inner) ->
     child = @newInstance(name, attrs, inner)
     @tags.push(child)
+    @reorder @order... if @order
     child
     
+  reorder: (expected...) ->
+    sort = (a, b) ->
+      [ai, bi] = [expected.indexOf(a.name), expected.indexOf(b.name)]
+      if ai == -1 then throw new Error "child not listed for reorder: '#{a.name}'"
+      if bi == -1 then throw new Error "child not listed for reorder: '#{b.name}'"
+      if ai <= bi then [a, b]
+      else [b, a]
+      
+    changed = true
+    while changed
+      changed_this_iter = false
+      for i in [0...@tags.length]
+        if i != @tags.length - 1
+          sorted = sort(@tags[i], @tags[i+1])
+          if sorted[0] != @tags[i]
+            changed_this_iter = true
+            [@tags[i], @tags[i+1]] = [sorted[0], sorted[1]]
+      changed = changed_this_iter
+    
+  # ex:
+  #    screen.insert 'next', before: 'display', after: 'setvar'
+  #    screen.insert 'next', (-> ...), before: 'display', after: 'setvar'
+  #    screen.insert 'next', {uri: '/'}, before: 'display', after: 'setvar'
+  #    screen.insert 'next', {uri: '/'}, (-> ...), before: 'display', after: 'setvar'
+  #
   insert: (name, attrs, inner, sort) ->
     if attrs && !sort
       if attrs.before || attrs.after
