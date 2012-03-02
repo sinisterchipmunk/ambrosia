@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.rubyforge_project = "ambrosia"
 
   # Don't include stuff used to document ambrosia, otherwise the gem will get huge
-  useless_files = `git ls-files -- guides/*`.split("\n")
+  useless_files = `git ls-files -- guides/* node_modules/jasmine-node/node_modules/findit/test/symlinks/dir1/dangling-symlink`.split("\n")
 
   s.files         = `git ls-files`.split("\n") - useless_files
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n") - useless_files

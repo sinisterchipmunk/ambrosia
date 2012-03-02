@@ -10,7 +10,15 @@ module Ambrosia
       errors = []
       xsd.validate(doc).each { |error| errors.push error.to_s }
       unless errors.empty?
-        raise errors.join("; ")
+        message = errors.join("; ")
+        
+        if defined?(Rails) and Rails.respond_to?(:logger) and Rails.logger
+          Rails.logger.error "Invalid TML code:"
+          Rails.logger.error xml
+          Rails.logger.error message
+        end
+        
+        raise message
       end
 
       xml

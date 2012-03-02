@@ -45,10 +45,10 @@ exports.Builder = class Builder
     child
     
   reorder: (expected...) ->
-    sort = (a, b) ->
+    sort = (a, b) =>
       [ai, bi] = [expected.indexOf(a.name), expected.indexOf(b.name)]
-      if ai == -1 then throw new Error "child not listed for reorder: '#{a.name}'"
-      if bi == -1 then throw new Error "child not listed for reorder: '#{b.name}'"
+      if ai == -1 then throw new Error "child not listed for reorder: '#{a.name}' (parent: '#{@name}')"
+      if bi == -1 then throw new Error "child not listed for reorder: '#{b.name}' (parent: '#{@name}')"
       if ai <= bi then [a, b]
       else [b, a]
       
