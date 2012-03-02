@@ -3,6 +3,10 @@ require 'spec_helper'
 describe "display", ->
   doc = sim = null
   
+  it "should take a multiline string as template content, not filename", ->
+    doc = dom 'display """\na\nb"""'
+    expect(doc.toString()).toMatch /<display>[\s\n\t]*a[\s\n\t]+b[\s\n\t]*<\/display>/m
+  
   it "should raise a coherent error if the view is not found", ->
     expect(->
       doc = dom '$.view_paths = ["over/the/rainbow"]\ndisplay "somewhere"'

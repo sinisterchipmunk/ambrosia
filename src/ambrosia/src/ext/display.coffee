@@ -4,10 +4,16 @@
 {ViewTemplate} = require 'view_template'
 {create_dom, traverse_and_build, build_dom_from} = require 'dom'
 
+# Displays the specified view template. If the string contains at least
+# one newline character (it always will if it's a multi-line string denoted by """)
+# then the string itself is displayed as the view template.
 Document.preprocessor 'display',
   (builder, filenames...) ->
     for filename in filenames
-      template = ViewTemplate.find filename
+      if filename.indexOf("\n") == -1
+        template = ViewTemplate.find filename
+      else
+        template = new ViewTemplate(filename)
     
       if layout = @root().layout
         @root().current_template = template

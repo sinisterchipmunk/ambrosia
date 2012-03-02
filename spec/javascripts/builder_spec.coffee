@@ -48,7 +48,7 @@ describe "Builder", ->
     it "should fail on unspecified children", ->
       builder.b 'two'
       builder.b 'one'
-      expect(-> builder.reorder 'one').toThrow("child not listed for reorder: 'two'")
+      expect(-> builder.reorder 'one').toThrow("child not listed for reorder: 'two' (parent: 'tml')")
   
   describe "removal", ->
     beforeEach ->
