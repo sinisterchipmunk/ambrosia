@@ -1,4 +1,5 @@
 {Parser, DefaultHandler} = require 'htmlparser'
+{Builder} = require 'builder'
 
 exports.create_dom = (code) ->
   handler = new DefaultHandler (error, dom) -> throw new Error(error) if error
@@ -20,7 +21,10 @@ exports.traverse_and_build = (b, dom_nodes) ->
     built_node = b.b node.name.toLowerCase(), attrs
     exports.traverse_and_build built_node, node.children || []
 
-exports.build_dom_from = (code, builder) ->
+exports.build_dom_from = (code, builder = new Builder('__root__')) ->
   dom_nodes = exports.create_dom code
   exports.traverse_and_build builder, dom_nodes
-  builder
+  if builder.name == '__root__'
+    builder.first('tml')
+  else
+    builder

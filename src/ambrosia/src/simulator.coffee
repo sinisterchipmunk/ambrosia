@@ -21,8 +21,17 @@ require 'simulator/all_expressions'
     
 exports.Simulator = class Simulator
   KEYS = ("0 1 2 3 4 5 6 7 8 9 f1 f2 f3 f4 f5 f6 f7 f8 f9 up down menu stop enter cancel".split(/\s/))
+  KEY_ALIASES = 
+    f: 'menu'
+  CARDS = {}
+
+  @register_card: (name, values) ->
+    CARDS[name.toLowerCase()] = values
   
   constructor: (@dom) ->
+    if typeof(@dom) == 'string'
+      @dom = require('dom').build_dom_from(@dom)
+      
     if @dom.name != 'tml' then throw new Error("TML builder required")
     @recursion_depth = 0
     @max_recursion_depth = 10000
@@ -147,10 +156,36 @@ exports.Simulator = class Simulator
   # valid keys to be pressed include:
   #     0..9, 00, f1..f9, up, down, menu, stop, enter, cancel
   press: (key) ->
+    key = KEY_ALIASES[key.toLowerCase()] if KEY_ALIASES[key.toLowerCase()]
     unless key in KEYS
       throw new Error "Invalid key: '#{key}'"
     @state.key = key
     @start()
+    
+  # Follow the link with the given caption. An error will be raised if the link cannot
+  # be found.
+  follow: (caption) ->
+    match = new RegExp("<a([^>]+)>\\s*#{caption}\\s*<\\/a>", "m").exec(@state.display)
+    throw new Error "No link visible with caption '#{caption}'" unless match
+    target = /href=['"]([^'"]*)['"]/.exec(match[1])
+    throw new Error "Anchor with caption '#{caption}' has no href attribute" unless target
+    @goto target[1]
+    
+  swipe_card: (name) ->
+    card = CARDS[name.toLowerCase()] or throw new Error "No registered card found with type #{name}"
+    
+    # swiping a card has no effect unless we are waiting for it, BUT
+    # we can intuit that if the simulator is not waiting for a card swipe,
+    # the simulator is not where the user thinks it is, so we'll raise an
+    # error instead.
+    if tform = @state.screen.element.first('tform')
+      if parser = tform.first('card', parser: "mag", parser_params: "read_data")
+        for key, value of card
+          @state.variables["card.#{key}"] or= type: "string", value: null
+          @state.variables["card.#{key}"].value = value
+        return @start()
+
+    throw new Error "No card parser found on screen #{@state.screen.id}"
   
   # peek at next screen. This avoids setting variables by actually visiting it.
   peek: ->
@@ -172,3 +207,12 @@ exports.Simulator = class Simulator
         if e.message == "waiting for input"
           return
         else throw e
+
+Simulator.register_card "visa",
+  cardholder_name: "John Smith"
+  effective_date: "01/01/2001"
+  expiry_date: "01/01/2111"
+  issue_number: "N/A"
+  issuer_name: "N/A"
+  pan: "4111111111111111"
+  scheme: "VISA"

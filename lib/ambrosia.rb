@@ -3,6 +3,7 @@ require 'ambrosia/template_handler'
 
 module Ambrosia
   autoload :Compiler,     'ambrosia/compiler'
+  autoload :Simulator,    'ambrosia/simulator'
   autoload :TestCase,     'ambrosia/test_case'
   autoload :Template,     'ambrosia/template'
   autoload :Validation,   'ambrosia/validation'
