@@ -4,7 +4,7 @@
 
 path = require 'path'
 fs   = require 'fs'
-lib  = path.join path.dirname(fs.realpathSync(__filename)), '../lib/assets/javascripts'
+lib  = path.join path.dirname(fs.realpathSync(__filename)), '../lib/assets/javascripts/ambrosia/src'
 cli = new (require("#{lib}/cli").CLI)
 
 switches = [
