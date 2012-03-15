@@ -2,12 +2,16 @@ When /^I press "([^"]*)"$/ do |key|
   simulator.press key
 end
 
+When /^I should see "([^"]*)"$/ do |content|
+  simulator.state[:display].should include(content)
+end
+
 Then /^I should see:$/ do |table|
   table.hashes.each do |hash|
     hash.each do |caption, value|
       # this will produce some redundant checks but I don't think that's a problem
-      simulator.state[:display].should include(caption)
-      simulator.state[:display].should include(value)
+      step 'I should see "%s"' % caption
+      step 'I should see "%s"' % value
     end
   end
 end

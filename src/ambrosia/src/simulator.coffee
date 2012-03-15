@@ -212,6 +212,14 @@ exports.Simulator = class Simulator
       type = if field.attrs.type == 'text' then 'string' else field.attrs.type
       @evaluate variable, type, lo: "tmlvar:#{field.attrs.name}", op: "plus", ro: char
     else
+      # normally #press will not raise an error on a useless keypress, but in this
+      # case we want it to because the developer at this stage very likely is not
+      # on the screen they think they are.
+      found = false
+      for variant in @state.screen.element.search('variant')
+        if variant.attrs['key'] == char
+          found = true
+      throw new Error "No handler for keypress '#{char}' on this screen" unless found
       @press char
       
     if text.length > 1

@@ -3,13 +3,13 @@ fs = require 'fs'
 lexer = require 'lexer'
 builder = require 'builder'
 path = require 'path'
-
-{spawn, exec} = require 'child_process'
+child_process = require 'child_process'
+  
 run = (cmd, args...) ->
   done = false
   errors = ""
   waitsFor -> done
-  proc =         spawn cmd, args
+  proc = child_process.spawn cmd, args
   proc.stderr.on 'data', (buffer) -> errors += buffer
   proc.stdout.on 'data', (buffer) -> process.stdout.write buffer.toString()
   proc.on        'exit', (status) ->
@@ -41,9 +41,10 @@ global.dom = (script) ->
 
 validation_index = 0
 global.validate = (dom, cb) ->
-  tmpfile = "tmp/#{validation_index++}.xml"
-  fs.writeFileSync tmpfile, dom.toString()
-  run "xmllint", "--noout", "--schema", path.join(process.env['AMBROSIA_PATH'], 'lib/tml.xsd'), tmpfile
+  if child_process
+    tmpfile = "tmp/#{validation_index++}.xml"
+    fs.writeFileSync tmpfile, dom.toString()
+    run "xmllint", "--noout", "--schema", path.join(process.env['AMBROSIA_PATH'], 'lib/tml.xsd'), tmpfile
   dom
 
 global.simulate = (dom, callback) ->

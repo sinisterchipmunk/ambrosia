@@ -9,6 +9,11 @@ describe Ambrosia::Simulator do
   end
   
   describe "entering input" do
+    it "should raise an error if a keypress goes unacknowledged" do
+      simulate "a = 0"
+      proc { simulator.enter "1" }.should raise_error("Error: No handler for keypress '1' on this screen")
+    end
+    
     it "should trigger keypresses" do
       simulate "a = 0\nswitch getch '1'\n  when '1' then a = 1"
       simulator.enter "1", false
