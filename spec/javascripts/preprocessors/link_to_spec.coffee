@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe 'link_to', ->
   it "should construct a link", ->
-    doc = dom "one:\ndisplay 'views/link_to_one'"
+    doc = dom "one:\nshow_view 'views/link_to_one'"
     # console.log doc.toString()
     sim = simulate doc
     sim.start()
@@ -10,7 +10,7 @@ describe 'link_to', ->
     expect(sim.state.display).toMatch />[\s\n\t]*one[\s\n\t]*<\/a>/
     
   it "should work with closures", ->
-    doc = dom "a = 0\none = -> a = 1\ndisplay '\\n<%= link_to \"Caption\", one %>'"
+    doc = dom "a = 0\none = -> a = 1\ndisplay '<%= link_to \"Caption\", one %>'"
     # console.log doc.toString()
     sim = simulate doc
     sim.start()

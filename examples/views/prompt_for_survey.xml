@@ -1,0 +1,3 @@
+<h1>Would you like to take a survey?</h1>
+<%= link_to "Yes", :take_survey %>
+<%= link_to "No", :decline_survey %>

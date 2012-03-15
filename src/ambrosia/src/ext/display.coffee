@@ -4,13 +4,8 @@
 {ViewTemplate} = require 'view_template'
 {create_dom, traverse_and_build, build_dom_from} = require 'dom'
 
-frontend_element = (element_name, builder, filenames...) ->
-  for filename in filenames
-    if filename.indexOf("\n") == -1 and not /<[^>]+>/.test(filename)
-      template = ViewTemplate.find filename
-    else
-      template = new ViewTemplate(filename)
-  
+frontend_element = (element_name, builder, templates...) ->
+  for template in templates
     if layout = @root().layout
       @root().current_template = template
       dom_nodes = create_dom layout.process this, builder
@@ -28,18 +23,20 @@ frontend_element = (element_name, builder, filenames...) ->
   # what is there to return?
   @create Literal, ""
 
-# Displays the specified view template. If the string contains at least
-# one newline character (it always will if it's a multi-line string denoted by """)
-# then the string itself is displayed as the view template. Also, if the string
-# contains any XML tags, it is treated as the view template instead of the filename.
+# Displays the string as a view template.
 Document.preprocessor 'display',
-  (builder, filenames...) ->
-    frontend_element.call this, 'display', builder, filenames...
+  (builder, strings...) ->
+    frontend_element.call this, 'display', builder, (new ViewTemplate string for string in strings)...
     
-# Prints the specified view template. If the string contains at least
-# one newline character, then the string itself is printed as the view template.
-# Also, if the string
-# contains any XML tags, it is treated as the view template instead of the filename.
+# Prints the string as a view template.
 Document.preprocessor 'print',
+  (builder, strings...) ->
+    frontend_element.call this, 'print', builder, (new ViewTemplate string for string in strings)...
+
+Document.preprocessor 'show_view',
   (builder, filenames...) ->
-    frontend_element.call this, 'print', builder, filenames...
+    frontend_element.call this, 'display', builder, (ViewTemplate.find filename for filename in filenames)...
+
+Document.preprocessor 'print_view',
+  (builder, filenames...) ->
+    frontend_element.call this, 'print', builder, (ViewTemplate.find filename for filename in filenames)...

@@ -1,0 +1,14 @@
+phone = ""
+
+take_survey:
+  # Prompt for the user's phone number.
+  show_view "enter_phone_number"
+  
+  # Send the user's phone number to the server.
+  post '/call_me', phone
+
+decline_survey:
+  display "<h1>Survey declined.</h1>"
+
+# Ask the user to take a survey.
+show_view "prompt_for_survey"

@@ -15,7 +15,7 @@ RSpec.configure do |c|
     create_file 'app/views/tml/test.tml.ambrosia', 'a = 1'
     create_file 'app/assets/tml/test.tml.ambrosia', 'a = 1'
     create_file 'app/assets/tml/views/helloworld.xml', 'Hello World'
-    create_file 'app/assets/tml/test-with-views.tml.ambrosia', 'display "helloworld"'
+    create_file 'app/assets/tml/test-with-views.tml.ambrosia', 'show_view "helloworld"'
     setup
   end
 end

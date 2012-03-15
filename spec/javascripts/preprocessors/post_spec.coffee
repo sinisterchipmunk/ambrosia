@@ -12,6 +12,6 @@ describe "post", ->
     
   it "should split display screens", ->
     doc = dom 'display "<h1>a</h1>"; post "/path/to/post"'
-    console.log doc.toString()
+    # console.log doc.toString()
     expect(doc.search('display')[0].parent).not.toBe(doc.search('submit')[0].parent)
     

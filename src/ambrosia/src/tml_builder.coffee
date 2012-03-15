@@ -98,16 +98,17 @@ Builder.screen = class Screen extends Builder
     return_target_uri = uri_for return_target
     method_uri = uri_for name
     
-    next = @next()
+    next_uri = @next().attrs.uri
     # create the call stack if it doesn't exist already
     @root.add_return_screen()
     # insert the destination _following_ the method call into the call stack
     @b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
     @b 'setvar', name: 'call.stack', lo: "#{return_target_uri}", op: "plus", ro: "tmlvar:call.stack"
     # direct the current screen into the method screen
-    @b 'next', uri: method_uri
+    next = @first('next') || @b 'next'
+    next.attrs.uri = method_uri
     # build the screen that will take over operation after the method call returns
-    @root.screen return_target, next: next.attrs.uri
+    @root.screen return_target, next: next_uri
 
 exports.TMLBuilder = class TMLBuilder extends Builder 
   constructor: ->

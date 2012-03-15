@@ -12,7 +12,7 @@ submit_txn:
   post "/payments", amount
   
 read_card 'magnetic'
-display 'enter_amount', 'show_total_amount'
+show_view 'enter_amount', 'show_total_amount'
 
 switch getch 'f1 f3'
   when 'f1' then submit_txn()

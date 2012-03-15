@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "display", ->
+describe "print", ->
   doc = sim = null
   
   it "should print to the receipt", ->

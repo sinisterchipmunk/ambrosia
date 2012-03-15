@@ -3,6 +3,28 @@ require 'spec_helper'
 describe "methods", ->
   doc = sim = null
   
+  it "should not double next after display", ->
+    # basically we are ending up with more than 1 <next> element,
+    # which fails validation out of the gate.
+    doc = dom """
+      a = 0
+      one:
+        a = 1
+      two:
+        display "test"
+        one()
+      two()
+    """
+    
+    # it's very brittle to directly check the number of <next> elements
+    # so let's pass it into the simulator and verify proper operation
+    # instead.
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    sim.press("enter") # to move past the display
+    expect(sim.state.variables.a.value).toEqual 1
+  
   describe "with void return", ->
     beforeEach ->
       code = """

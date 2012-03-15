@@ -10,7 +10,7 @@ class PreprocessorVariables
     
   defaults: ->
     @ambrosia_path = __dirname
-    @ambrosia_stdlib_path = process.env['AMBROSIA_STDLIB_PATH'] || path.join(__dirname, '../tml')
+    @ambrosia_stdlib_path = process.env['AMBROSIA_STDLIB_PATH'] || path.join(__dirname, '../../../tml')
     @ambrosia_file_ext = process.env['AMBROSIA_FILE_EXT'] || ".tml.ambrosia"
     @view_paths or= (=>
       paths = [

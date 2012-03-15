@@ -5,7 +5,7 @@ describe "tform with display", ->
   beforeEach ->
     doc = dom """
       read_card 'magnetic'
-      display "views/without-embedded"
+      show_view "views/without-embedded"
     """
     
   it "should pass validation", ->
