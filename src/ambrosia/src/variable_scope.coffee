@@ -1,7 +1,9 @@
-Builtins = (scope) ->
-  # TODO support built-in variables
-  key for key of scope.defs
+{Builtins} = require('builtins')
 
+# Builtins = (scope) ->
+#   # TODO support built-in variables
+#   key for key of scope.defs
+# 
 debug = (mesg) -> console.log mesg if process.env['DEBUG']
 
 exports.Variable = class Variable
@@ -56,8 +58,13 @@ exports.VariableScope = class Scope
   constructor: (prefix = null, @parent = null) ->
     @_prefix = (if prefix then "#{prefix}." else "")
     @defs = {}
-    @builtin = Builtins(this)
+    # @builtin = Builtins(this)
+    @builtin = {}
     @subscopes = {}
+    unless @parent
+      for name, default_value of Builtins
+        type = (if typeof(default_value) == 'string' then 'string' else 'integer')
+        @builtin[name] = new Variable name, type
     
   to_simulator_scope: (sim = {}) ->
     for localname, def of @defs
@@ -133,6 +140,12 @@ exports.VariableScope = class Scope
       return def if def.name == name or localname == name
     if @parent && !downward
       return @parent.find name, false
+      
+    # check for builtins
+    if !@parent
+      for _name, variable of @builtin
+        if _name == name
+          return variable
     
     # check for qualified names relative to this scope, e.g. prefixed with one of child scope prefixes
     #   root can find one.two.three,

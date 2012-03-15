@@ -4,6 +4,14 @@ describe "Simulator", ->
   doc = sim = null
   beforeEach -> doc = build('tml', xmlns: 'http://www.ingenico.co.uk/tml')
   
+  it "should handle text entry", ->
+    doc = dom "text = ''\nswitch getch '1'\n  when '1' then text += 'A'\ndisplay '\\n<input type=\"text\" name=\"text\" />'"
+    sim = simulate doc
+    sim.start()
+    sim.enter "1234", false
+    expect(sim.state.variables.text.value).toEqual("A234")
+    
+  
   describe "display output", ->
     beforeEach ->
       doc.b 'screen', id: 'first', next: '#second', (b) -> b.b 'display', (b) -> b.b '#text', value: 'text one'

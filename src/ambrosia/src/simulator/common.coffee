@@ -1,3 +1,5 @@
+{Builtins} = require 'builtins'
+
 exports.DefaultVariableValue = DefaultVariableValue = (variable) ->
   CastValue variable.attrs.value, variable.attrs.type
     
@@ -13,8 +15,9 @@ exports.CastValue = CastValue = (value, type) ->
     else value # TML variable types default to 'string'
 
 exports.VariableValue = VariableValue = (variable_state, varname) ->
-  variable = variable_state[varname]
-  throw new Error "Undefined variable: #{varname}" if variable == undefined
+  variable = variable_state[varname] or= Builtins.descriptor_for(varname)
+  if variable == undefined
+    throw new Error "Undefined variable: #{varname}"
   variable
     
     

@@ -3,6 +3,10 @@ require 'spec_helper'
 describe "display", ->
   doc = sim = null
   
+  it "should take a string with xml tags as template content, not filename", ->
+    doc = dom 'display "<a>b</a>"'
+    expect(doc.toString()).toMatch /<display>[\s\n\t]*<a>/m
+  
   it "should take a multiline string as template content, not filename", ->
     doc = dom 'display """\na\nb"""'
     expect(doc.toString()).toMatch /<display>[\s\n\t]*a[\s\n\t]+b[\s\n\t]*<\/display>/m
@@ -14,8 +18,7 @@ describe "display", ->
   
   it "should display a relative view in the view path", ->
     doc = dom '$.view_paths = ["spec/fixtures/fixtures/views"]\ndisplay "without-embedded"'
-    display = doc.first('screen', id: '__main__').first 'display'
-    expect(display).toBeDefined()
+    expect(doc.toString()).toMatch(/this is test content/)
     
   it "should display multiple views", ->
     doc = dom '$.view_paths = ["spec/fixtures/fixtures/views"]\ndisplay "without-embedded", "link_to_one"'
@@ -24,10 +27,9 @@ describe "display", ->
   
   it "should display a view", ->
     doc = dom 'display "views/without-embedded"'
-    display = doc.first('screen', id: '__main__').first 'display'
-    
+
     # validate the view was constructed properly (e.g. tags are in order, text appears as expected, etc.)
-    str = display.toString()
+    str = doc.toString()
     # console.log str
     expect(/one\s*<h1/.test str).toBeTruthy()
     expect(/<h1\s+class=['"]title["']>/.test str).toBeTruthy()

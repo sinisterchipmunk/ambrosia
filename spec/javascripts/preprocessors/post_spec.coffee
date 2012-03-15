@@ -3,11 +3,15 @@ require 'spec_helper'
 describe "post", ->
   doc = null
   
-  beforeEach ->
-    doc = dom 'one = 1; init: post "/path/to/post", one'
+  it "should create a simulator state containing post information", ->
+    doc = dom 'one = 1; post "/path/to/post", one'
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.post).toEqual path: "/path/to/post", one: 1
     
-  it "should add 'one' to the list of getvars", ->
-    getvars = doc.first('screen', id:'init').first('submit').all 'getvar'
-    getvars = (getvar.attrs.name for getvar in getvars)
-    expect(getvars).toInclude 'one'
-  
+  it "should split display screens", ->
+    doc = dom 'display "<h1>a</h1>"; post "/path/to/post"'
+    console.log doc.toString()
+    expect(doc.search('display')[0].parent).not.toBe(doc.search('submit')[0].parent)
+    

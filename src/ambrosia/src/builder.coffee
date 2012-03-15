@@ -1,8 +1,8 @@
 TAB = "  "
 
 Rules =
-  screen: ['setvar', 'next', 'display', 'tform']
-  head: ['link', 'defaults', 'error']
+  screen: ['setvar', 'strtemplate', 'logrec', 'next', 'error', 'call_func', 'display', 'print', 'submit', 'tform']
+  head: ['base', 'link', 'defaults', 'error']
 
 exports.Builder = class Builder
   constructor: (@name, @attrs = {}, inner = null, depth = 0, @parent = null) ->

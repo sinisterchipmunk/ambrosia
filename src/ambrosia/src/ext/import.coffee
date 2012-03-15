@@ -1,4 +1,5 @@
 {Document} = require 'nodes/document'
+{Literal} = require 'nodes/literal'
 path = require 'path'
 fs = require 'fs'
 

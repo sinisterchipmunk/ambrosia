@@ -1,8 +1,8 @@
-{Base} = require 'nodes/base'
+{Extension} = require 'nodes/extension'
 {TMLBuilder} = require 'tml_builder'
 {VariableScope}  = require 'variable_scope'
 
-exports.Document = class Document extends Base
+exports.Document = class Document extends Extension
   Document.preprocessors or= {}
   
   constructor: (nodes...) ->
