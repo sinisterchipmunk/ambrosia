@@ -169,8 +169,13 @@ grammar =
 
   # An individual **When** clause, with action.
   When: [
-    o 'LEADING_WHEN Expression Block',            -> [[$2, $3]]
-    o 'LEADING_WHEN Expression Block TERMINATOR', -> [[$2, $3]]
+    o 'LEADING_WHEN WhenArgs Block',            -> [[$2, $3]]
+    o 'LEADING_WHEN WhenArgs Block TERMINATOR', -> [[$2, $3]]
+  ]
+  
+  WhenArgs: [
+    o 'Expression', -> [ $1 ]
+    o 'WhenArgs , Expression', -> $1.push $3; $1
   ]
   
   Return: [

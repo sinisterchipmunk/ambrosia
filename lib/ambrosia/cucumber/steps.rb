@@ -76,3 +76,7 @@ end
 Then /^show me the program flow$/ do
   puts simulator.state[:flow]
 end
+
+Then /^the receipt should be blank$/ do
+  simulator.state[:receipt].should be_blank
+end

@@ -5,11 +5,18 @@ describe "Simulator", ->
   beforeEach -> doc = build('tml', xmlns: 'http://www.ingenico.co.uk/tml')
   
   it "should handle text entry", ->
-    doc = dom "text = ''\nswitch getch '1'\n  when '1' then text += 'A'\ndisplay '\\n<input type=\"text\" name=\"text\" />'"
+    doc = dom "result = ''\nswitch getch '1'\n  when '1' then result += 'A'\ndisplay '\\n<input type=\"text\" name=\"result\" />'"
     sim = simulate doc
     sim.start()
     sim.enter "1234", false
-    expect(sim.state.variables.text.value).toEqual("A234")
+    expect(sim.state.variables.result.value).toEqual("A234")
+    
+  it "should handle number entry", ->
+    doc = dom "result = 5\nswitch getch '1'\n  when '1' then result += 4\ndisplay '\\n<input type=\"number\" name=\"result\" />'"
+    sim = simulate doc
+    sim.start()
+    sim.enter "1234", false
+    expect(sim.state.variables.result.value).toEqual(9234)
     
   
   describe "display output", ->

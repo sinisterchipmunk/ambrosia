@@ -3,11 +3,31 @@ require 'spec_helper'
 describe "keypad input", ->
   doc = sim = null
   
+  it "should not evaluate to no keypress == '0'", ->
+    doc = dom """
+      result = 0
+      closure = ->
+        read_card 'magnetic'
+        switch ch = getch '1 2 3 4 5 6 7 8 9 0 cancel'
+          when 'cancel' then return
+          when '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+            result = 1
+            display "0", "1", "2"
+        display '3'
+      closure()
+    """
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    sim.swipe_card "visa"
+    expect(sim.state.variables.result.value).toEqual 0
+    expect(sim.state.display.trim()).toEqual "3"
+
   describe "with a display", ->
     beforeEach ->
       doc = dom """
       a = 1
-      display 'views/basic-embedded-variable'
+      show_view 'views/basic-embedded-variable'
       b = getch('1')
       """
       # console.log doc.toString()

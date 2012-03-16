@@ -38,6 +38,7 @@ exports.Simulator = class Simulator
     @recursion_depth = 0
     @max_recursion_depth = 10000
     @state =
+      key: ""
       flow: []
       screen:
         id: null
@@ -95,10 +96,12 @@ exports.Simulator = class Simulator
       return true
 
     next = @state.screen.element.first('next')
+    waiting_for_keypad = false
     if next
       for variant in next.all("variant")
-        if variant.attrs['key']
-          return !@state.key
+        if !@state.key and variant.attrs['key']
+          waiting_for_keypad = true
+          # return !@state.key
       
     # check for card parsers, but only those that require interaction      
     if tform = @state.screen.element.first('tform')
@@ -111,7 +114,7 @@ exports.Simulator = class Simulator
     if scr.first('submit')
       return true
     
-    false
+    waiting_for_keypad
     
   # Performs the evaluation on the given variable, and then returns the variable.
   # Ex:
@@ -165,7 +168,7 @@ exports.Simulator = class Simulator
         if variant.attrs['key']
           if @state.key
             return [variant.attrs['uri']] if @state.key == variant.attrs['key']
-          else
+          else if !@state.card
             throw new Error "waiting for input"
         else
           result = Expression.evaluate "boolean", variant.attrs, @state.variables
@@ -209,7 +212,7 @@ exports.Simulator = class Simulator
     
     if field
       variable = @find_variable field.attrs.name
-      type = if field.attrs.type == 'text' then 'string' else field.attrs.type
+      type = 'string'
       @evaluate variable, type, lo: "tmlvar:#{field.attrs.name}", op: "plus", ro: char
     else
       # normally #press will not raise an error on a useless keypress, but in this

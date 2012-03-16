@@ -3,6 +3,19 @@ require 'spec_helper'
 describe "conditions", ->
   doc = sim = null
   
+  it "should not evaluate 0 == ''", ->
+    doc = dom """
+      one = ""
+      two = 0
+      switch one
+        when "0" then two = 1
+        when 0   then two = 2
+        when ""  then two = 3
+    """
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.variables.two.value).toEqual 3
+  
   describe "program flow", ->
     beforeEach ->
       doc = dom """

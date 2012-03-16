@@ -154,7 +154,11 @@ exports.TMLBuilder = class TMLBuilder extends Builder
 
   current_screen: -> @root.first 'screen', id: @_current_screen
   
-  goto: (screen_id) -> @_current_screen = screen_id
+  goto: (screen_id) ->
+    if screen_id.attrs
+      @_current_screen = screen_id.attrs.id
+    else
+      @_current_screen = screen_id
 
   # Manages a simple call stack in TML and helps return from method calls
   add_return_screen: ->
