@@ -3,6 +3,16 @@ require 'spec_helper'
 describe "closures", ->
   doc = null
   
+  it "should be able to post data from a closure passed into a method", -> # wtf ???
+    doc = dom """
+      a = 1
+      d(x): x()
+      d -> post "/path", a
+    """
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.post.a).toEqual 1
+  
   it "should pass closures as arguments without variable assignment", ->
     doc = dom """
       a = 0

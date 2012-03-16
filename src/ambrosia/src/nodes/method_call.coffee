@@ -43,6 +43,11 @@ exports.MethodCall = class MethodCall extends Extension
             sys = require 'util'
             throw new Error "#{@getMethodName()}: return value of preprocessor invocation must be `false` to pass through, or a String, Number, Variable or compileable instance of Base (got #{sys.inspect result})"
           result
+          
+  run_prepare_blocks: ->
+    super()
+    for param in @params
+      param.run_prepare_blocks()
   
   get_dependent_variable: ->
     function_screen_id = @getMethodName()
