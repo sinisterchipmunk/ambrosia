@@ -3,6 +3,9 @@ require 'spec_helper'
 describe "show_view", ->
   doc = sim = null
   
+  it "should not raise an error given an empty view", ->
+    expect(-> doc = dom 'show_view "views/empty"').not.toThrow()
+  
   it "should raise a coherent error if the view is not found", ->
     expect(->
       doc = dom '$.view_paths = ["over/the/rainbow"]\nshow_view "somewhere"'

@@ -2,6 +2,17 @@ require 'spec_helper'
 
 describe "closures", ->
   doc = null
+  
+  it "should pass closures as arguments without variable assignment", ->
+    doc = dom """
+      a = 0
+      call_closure(closure): closure()
+      call_closure -> a = 1
+    """
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.variables.a.value).toEqual 1
 
   describe "another test, which should be no different...", ->
     sim = simulate dom """

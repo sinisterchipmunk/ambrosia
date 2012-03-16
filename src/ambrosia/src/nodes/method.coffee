@@ -56,9 +56,7 @@ exports.Method = class Method extends Base
     @current_scope().define param.name, null for param in @params
   
   compile: (builder) ->
-    # this is to counter an error where method bodies are compiled twice. TODO Remove this when
-    # the compile phase solidifies.
-    if @compiled then throw new Error "Already compiled method #{@getID()} (#{@node_tree()})"
+    if @compiled then return @method_reference
     else @compiled = true
     previous = builder.root.current_screen() || {attrs:id:"__main__"}
     screen = builder.root.screen @getID()
@@ -93,4 +91,4 @@ exports.Method = class Method extends Base
     
     # Build a method reference as a return value.
     # This can be used by Assigns.
-    @create(MethodReference, new Literal @getID()).compile builder
+    @method_reference = @create(MethodReference, new Literal @getID()).compile builder
