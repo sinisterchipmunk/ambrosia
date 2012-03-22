@@ -61,7 +61,7 @@ Then /^show me the current screen element$/ do
   puts simulator.state[:screen][:element]
 end
 
-Then /^show me the screen$/ do
+Then /^show me the( current)? screen$/ do |unused|
   puts simulator.state[:display]
 end
 

@@ -84,7 +84,6 @@ exports.MethodCall = class MethodCall extends Extension
     for i in [0...@params.length]
       param = @params[i]
       variable = param_type = null
-      # @create(Assign, @create(Identifier, ".__method_param_#{i}"), param).compile(screen.root.current_screen())
 
       if param instanceof Identifier
         # use variable's fully qualified name to avoid scoping issues in method
@@ -93,19 +92,18 @@ exports.MethodCall = class MethodCall extends Extension
       else
         param_list.push param.compile screen
         param_type = param.type()
-
+        
       if method
         param_name = method.params[i].name
         v = method.current_scope().define param_name, param_type
         if variable then v.depends_upon variable
         @assign screen, v.name, param
+        screen = screen.root.current_screen() # in case it was extended by the assignment
       else
         @current_scope().silently_define ".__generic_method_param_#{i}", 'string'
         @assign screen, ".__generic_method_param_#{i}", param
 
     @assign screen, ".__generic_method", true if !method
-    # @current_scope().define ".__method_params", 'string'
-    # @assign screen, ".__method_params", param_list.join ";"
     screen.root.current_screen().call_method function_screen_id, return_screen_id
 
     # create the return screen and link into it

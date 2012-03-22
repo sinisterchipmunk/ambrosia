@@ -87,7 +87,6 @@ exports.Method = class Method extends Base
       @create(Assign, varname, @create(Literal, false)).compile builder.root.current_screen()
     @block.compile builder.root.current_screen() if @block
     builder.root.goto previous.attrs.id
-    # console.log builder.root.toString()
     
     # Build a method reference as a return value.
     # This can be used by Assigns.

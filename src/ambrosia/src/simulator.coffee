@@ -60,7 +60,7 @@ exports.Simulator = class Simulator
     id = id[1..-1] if id[0] == '#'
     screen = @dom.first("screen", id: id)
     throw new Error "Screen '#{id}' not found!" unless screen
-    @state.flow.push screen.attrs.id
+    @state.flow.push ["Switched to screen", screen.attrs.id]
     @state.screen.id = screen.attrs.id
     @state.screen.element = screen
     @process_variable_assignments()
@@ -70,8 +70,10 @@ exports.Simulator = class Simulator
     @state.display = ""
     @state.print or= ""
     if display = @state.screen.element.first 'display'
+      @state.flow.push ["Displayed output", display.toString()]
       @state.display = @process_output_element display
     if print = @state.screen.element.first 'print'
+      @state.flow.push ["Printed output", print.toString()]
       @state.print += @process_output_element print
       
   process_output_element: (e) ->
@@ -122,6 +124,7 @@ exports.Simulator = class Simulator
   #   @evaluate variable, "integer", lo: "tmlvar:payment.amount", op: "plus", ro: 100
   #
   evaluate: (variable, type, attrs) ->
+    @state.flow.push ["Evaluated expression", [variable, type, attrs]]
     variable.value = Expression.evaluate type, attrs, @state.variables
     variable.value = parseInt(variable.value) if variable.type == 'integer'
     variable
@@ -146,6 +149,7 @@ exports.Simulator = class Simulator
   process_form_submission: (submit_element) ->
     getvars = submit_element.all('getvar')
     @state.post = path: submit_element.attrs.tgt
+    @state.flow.push ["Submitted form", @state.post]
     for getvar in getvars
       variable_name = getvar.attrs.name
       @state.post[variable_name] = @state.variables[variable_name].value
@@ -236,6 +240,7 @@ exports.Simulator = class Simulator
     key = KEY_ALIASES[key.toLowerCase()] if KEY_ALIASES[key.toLowerCase()]
     unless key.toLowerCase() in KEYS
       throw new Error "Invalid key: '#{key}'"
+    @state.flow.push ["Pressed key", key]
     @state.key = key.toLowerCase()
     @start()
     
@@ -254,10 +259,12 @@ exports.Simulator = class Simulator
     rx = new RegExp("<input [^>]*name=['\"]#{field}[\"']", 'm')
     throw new Error "Field #{field} is not visible on this screen" unless rx.exec(@state.display)
     content = parseInt(content) if @state.variables[field].type == 'integer'
+    @state.flow.push ["Filled in", [field, content]]
     @state.variables[field].value = content
     
   swipe_card: (name) ->
     @state.card = CARDS[name.toLowerCase()] or throw new Error "No registered card found with type #{name}"
+    @state.flow.push ["Swiped card", name]
     
     # swiping a card has no effect unless we are waiting for it, BUT
     # we can intuit that if the simulator is not waiting for a card swipe,

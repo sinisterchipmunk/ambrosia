@@ -3,7 +3,21 @@ require 'spec_helper'
 describe "closures", ->
   doc = null
   
-  it "should be able to post data from a closure passed into a method", -> # wtf ???
+  it "should flow appropriately when supplied to a method call after a display", -> # wtf ????
+    doc = dom """
+      a = 0
+      caller(x): x()
+      start:
+        display 'a'
+        caller -> a = 1
+      start()
+    """
+    sim = simulate doc
+    sim.start()
+    sim.press 'enter' # bypass the display
+    expect(sim.state.variables.a.value).toEqual 1
+  
+  it "should be able to post data from a closure passed into a method", ->
     doc = dom """
       a = 1
       d(x): x()
