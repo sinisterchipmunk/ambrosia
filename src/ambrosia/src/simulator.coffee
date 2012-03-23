@@ -57,7 +57,7 @@ exports.Simulator = class Simulator
       
   goto: (id) ->
     if match = /^tmlvar:(.*)$/.exec id
-      id = id.replace match[0], @state.variables[match[1]].value
+      id = id.replace match[0], @find_variable(match[1]).value
     id = id[1..-1] if id[0] == '#'
     screen = @dom.first("screen", id: id)
     throw new Error "Screen '#{id}' not found!" unless screen
@@ -85,9 +85,7 @@ exports.Simulator = class Simulator
         [key, value] = attr.split '='
         attrs[key] = value[1..-2]
       
-      variable = @state.variables[attrs['name']]
-      result = variable.value
-
+      result = @find_variable(attrs['name']).value
       str = str.replace match[0], result
     str
     
@@ -157,7 +155,7 @@ exports.Simulator = class Simulator
     @state.flow.push ["Submitted form", @state.post]
     for getvar in getvars
       variable_name = getvar.attrs.name
-      @state.post[variable_name] = @state.variables[variable_name].value
+      @state.post[variable_name] = @find_variable(variable_name).value
   
   step: ->
     if !@state.screen.element # first screen
@@ -265,7 +263,7 @@ exports.Simulator = class Simulator
     throw new Error "Field #{field} is not visible on this screen" unless rx.exec(@state.display)
     content = parseInt(content) if @state.variables[field].type == 'integer'
     @state.flow.push ["Filled in", [field, content]]
-    @state.variables[field].value = content
+    @find_variable(field).value = content
     
   swipe_card: (name) ->
     @state.card = CARDS[name.toLowerCase()] or throw new Error "No registered card found with type #{name}"
@@ -278,9 +276,7 @@ exports.Simulator = class Simulator
     if tform = @state.screen.element.first('tform')
       if parser = tform.first('card', parser: "mag", parser_params: "read_data")
         for key, value of @state.card
-          @state.variables["card.#{key}"] or= Builtins.descriptor_for("card.#{key}")
-          throw new Error "No variable named card.#{key}" unless @state.variables["card.#{key}"]
-          @state.variables["card.#{key}"].value = value
+          @find_variable("card.#{key}").value = value
         return @start()
 
     throw new Error "No card parser found on screen #{@state.screen.id}"
