@@ -18,6 +18,10 @@ describe "Simulator", ->
     sim.enter "1234", false
     expect(sim.state.variables.result.value).toEqual(9234)
     
+  it "should raise coherent errors when missing variables", ->
+    sim = simulate dom ""
+    expect(-> sim.find_variable "what").toThrow "Variable not defined: what"
+    
   
   describe "display output", ->
     beforeEach ->

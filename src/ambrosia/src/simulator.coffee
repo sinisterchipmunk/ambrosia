@@ -136,7 +136,7 @@ exports.Simulator = class Simulator
     
   find_variable: (varname) ->
     variable = @state.variables[varname] or= Builtins.descriptor_for(varname)
-    throw new Error "Variable not defined: #{assign.attrs.name}" unless variable
+    throw new Error "Variable not defined: #{varname}" unless variable
     variable
     
   process_variable_assignments: ->
