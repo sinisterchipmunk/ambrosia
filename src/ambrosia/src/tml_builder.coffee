@@ -94,19 +94,23 @@ Builder.screen = class Screen extends Builder
     @root.goto @merge_to.attrs.id
     @merge_to
   
-  call_method: (name, return_target) ->
+  # If push_stack is false, then the return screen won't be pushed onto
+  # the call stack, so `return` will return from the calling method, not
+  # from this method.
+  call_method: (name, return_target, push_stack = true) ->
     return_target_uri = uri_for return_target
     method_uri = uri_for name
     
     next_uri = @next().attrs.uri
     # create the call stack if it doesn't exist already
     @root.add_return_screen()
-    # insert the destination _following_ the method call into the call stack
-    @b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
-    @b 'setvar', name: 'call.stack', lo: "#{return_target_uri}", op: "plus", ro: "tmlvar:call.stack"
     # direct the current screen into the method screen
     next = @first('next') || @b 'next'
     next.attrs.uri = method_uri
+    # insert the destination _following_ the method call into the call stack
+    if push_stack
+      @b 'setvar', name: 'call.stack', lo: ";", op: "plus", ro: "tmlvar:call.stack"
+      @b 'setvar', name: 'call.stack', lo: "#{return_target_uri}", op: "plus", ro: "tmlvar:call.stack"
     # build the screen that will take over operation after the method call returns
     @root.screen return_target, next: next_uri
 

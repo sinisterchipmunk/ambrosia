@@ -20,6 +20,7 @@ exports.Switch = class Switch extends Extension
     @actual_value = @create Identifier, 'switch.actual_value'
     @_if = _if = null
     @closures = []
+    @closure_calls = []
     for _when in @whens
       # Switches can have multiple conditions to a given block, but the conditions
       # are replicated as individual variants each with their own result block,
@@ -27,8 +28,10 @@ exports.Switch = class Switch extends Extension
       # and then replace the block itself with a call to the closure. Results in a
       # vast reduction in TML.
       @closures.push closure = @create(Closure, [], _when[1])
+      method_call = @create MethodCall, @create(Identifier, closure.getID()), []
+      method_call.push_stack = false
       for condition in _when[0]
-        invocation = @create Block, [@create MethodCall, @create(Identifier, closure.getID()), []]
+        invocation = @create Block, [method_call]
         new_if = @create If, @create(Operation, @actual_value, '==', condition), invocation, 'if'
         if @_if
           _if.addElse @create Block, [new_if]
@@ -40,6 +43,12 @@ exports.Switch = class Switch extends Extension
   compile: (b) ->
     @assign b, @actual_value, @expression
     current_screen = b.root.current_screen()
-    closure.compile(b) for closure in @closures
-    b.root.goto current_screen
-    @_if.compile current_screen
+    result = @_if.compile b.root.current_screen()
+    # link all closures back to the current screen, since they can't be returned
+    # from normally
+    current_screen = b.root.current_screen()
+    for closure in @closures
+      closure.next = '#' + current_screen.attrs.id
+      closure.compile(b)
+    
+    result

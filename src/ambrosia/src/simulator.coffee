@@ -39,6 +39,7 @@ exports.Simulator = class Simulator
     @max_recursion_depth = 10000
     @state =
       key: ""
+      card: null
       flow: []
       screen:
         id: null
@@ -70,10 +71,10 @@ exports.Simulator = class Simulator
     @state.display = ""
     @state.print or= ""
     if display = @state.screen.element.first 'display'
-      @state.flow.push ["Displayed output", display.toString()]
+      @state.flow.push ["Displayed output", display.toString(false)]
       @state.display = @process_output_element display
     if print = @state.screen.element.first 'print'
-      @state.flow.push ["Printed output", print.toString()]
+      @state.flow.push ["Printed output", print.toString(false)]
       @state.print += @process_output_element print
       
   process_output_element: (e) ->
@@ -89,34 +90,38 @@ exports.Simulator = class Simulator
 
       str = str.replace match[0], result
     str
-  
-  is_waiting_for_input: ->
-    return false unless @state.screen and @state.screen.element
     
-    scr = @state.screen.element
-    if scr.first('display') and !@state.key # display screen
-      return true
+  # Returns true if the terminal is not waiting for any kind of user intervention.
+  can_continue: ->
+    return true unless @state.screen and @state.screen.element
+    return false if @waiting_for_display()
+    return false if @waiting_for_keypad()
+    return false if @waiting_for_cardswipe()
+    return false if @at_submit_screen()
+    return true
+    
+  # Returns true if the terminal is waiting for some kind of user intervention.
+  is_waiting_for_input: -> !@can_continue()
 
-    next = @state.screen.element.first('next')
-    waiting_for_keypad = false
-    if next
-      for variant in next.all("variant")
-        if !@state.key and variant.attrs['key']
-          waiting_for_keypad = true
-          # return !@state.key
-      
-    # check for card parsers, but only those that require interaction      
-    if tform = @state.screen.element.first('tform')
-      if card = tform.first('card')
-        if card.attrs['parser'] == 'mag' and card.attrs['parser_params'] == 'read_data'
-          return !@state.card
-          
-    # if this is a submit screen, we are waiting for a "response"
-    # which will be a whole new batch of TML.
-    if scr.first('submit')
-      return true
+  waiting_for_display: ->
+    @state.screen.element.first('display') and !@state.key
     
-    waiting_for_keypad
+  waiting_for_keypad: ->
+    if next = @state.screen.element.first 'next'
+      for variant in next.all "variant"
+        if variant.attrs.key isnt undefined
+          return @state.key is "" and @state.card is null
+    false
+    
+  waiting_for_cardswipe: ->
+    # check for card parsers, but only those that require interaction
+    if tform = @state.screen.element.first 'tform'
+      if card = tform.first 'card'
+        if card.attrs.parser == 'mag' and card.attrs.parser_params == 'read_data'
+          return @state.card is null and @state.key is ""
+    false
+  
+  at_submit_screen: -> !!@state.screen.element.first('submit')
     
   # Performs the evaluation on the given variable, and then returns the variable.
   # Ex:

@@ -5,6 +5,8 @@
 {Variable} = require 'variable_scope'
 
 exports.MethodCall = class MethodCall extends Extension
+  constructor: (args...) -> @push_stack = true; super args...
+  
   children: -> ['method_name', 'params']
   
   type: ->
@@ -104,7 +106,7 @@ exports.MethodCall = class MethodCall extends Extension
         @assign screen, ".__generic_method_param_#{i}", param
 
     @assign screen, ".__generic_method", true if !method
-    screen.root.current_screen().call_method function_screen_id, return_screen_id
+    screen.root.current_screen().call_method function_screen_id, return_screen_id, @push_stack
 
     # create the return screen and link into it
     dest = screen.root.screen return_screen_id
