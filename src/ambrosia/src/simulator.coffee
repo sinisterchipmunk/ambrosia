@@ -64,6 +64,7 @@ exports.Simulator = class Simulator
     @state.flow.push ["Switched to screen", screen.attrs.id]
     @state.screen.id = screen.attrs.id
     @state.screen.element = screen
+    @validate_screen_variants()
     @process_variable_assignments()
     @state.key = "" # reset input key for processing at next screen
     @state.card = null # reset input card for processing at next screen
@@ -76,6 +77,26 @@ exports.Simulator = class Simulator
     if print = @state.screen.element.first 'print'
       @state.flow.push ["Printed output", print.toString(false)]
       @state.print += @process_output_element print
+    # if it's a risk management screen, perform risk management.
+    if tform = @state.screen.element.first 'tform'
+      if parser = tform.first('card', parser: 'mag', parser_params: 'risk_mgmt')
+        @perform_risk_management()
+  
+  validate_screen_variants: ->
+    variants = @state.screen.element.search 'variant'
+    for variant in variants
+      if key = variant.attrs.key
+        throw new Error "Variant key '#{key}' is not valid" unless key in KEYS
+        throw new Error "'cancel' is not allowed as a variant key" if key in ['cancel']
+        
+  perform_risk_management: ->
+    pan = @find_variable('card.pan').value
+    for name, data of CARDS
+      if data.pan == pan
+        @find_variable('card.scheme').value = data.scheme
+        @find_variable('card.parser.verdict').value = 'online'
+        return
+    throw new Error "Card PAN does not match any registered card data"
       
   process_output_element: (e) ->
     str = "" + (sub.toString(false) for sub in e.all())
@@ -168,6 +189,10 @@ exports.Simulator = class Simulator
   find_possible_variants: ->
     candidates = []
     next = @state.screen.element.first('next')
+    
+    # check cancel button, which is not a variant
+    if @state.key == 'cancel' and @state.screen.element.attrs.cancel
+      return [@state.screen.element.attrs.cancel]
     
     # check for matching conditions
     if next
@@ -310,3 +335,12 @@ Simulator.register_card "visa",
   issuer_name: "N/A"
   pan: "4111111111111111"
   scheme: "VISA"
+
+Simulator.register_card "mastercard",
+  cardholder_name: "John Smith"
+  effective_date: "01/01/2001"
+  expiry_date: "01/01/2111"
+  issue_number: "N/A"
+  issuer_name: "N/A"
+  pan: "5454545454545454"
+  scheme: "MASTERCARD"

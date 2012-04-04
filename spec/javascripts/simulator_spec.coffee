@@ -3,7 +3,7 @@ require 'spec_helper'
 describe "Simulator", ->
   doc = sim = null
   beforeEach -> doc = build('tml', xmlns: 'http://www.ingenico.co.uk/tml')
-  
+    
   it "should handle text entry", ->
     doc = dom "result = ''\nswitch getch '1'\n  when '1' then result += 'A'\ndisplay '\\n<input type=\"text\" name=\"result\" />'"
     sim = simulate doc

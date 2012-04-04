@@ -125,12 +125,12 @@ describe "Builder", ->
   it "should insert preamble by default", ->
     expect(builder.toString()).toEqual("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n<tml />")
 
-  it "should build root tag with children", ->
+  it "should build root tag without children", ->
     expect(builder.toString(false)).toEqual('<tml />')
 
   it "should build root tag with children", ->
     builder.b 'screen'
-    expect(builder.toString(false)).toEqual("<tml>\n  <screen />\n</tml>")
+    expect(builder.toString(false)).toMatch /<tml>[\s\n]*?<screen/
     
   it "should change attributes on root tag", ->
     builder.attrs['one'] = 1
@@ -138,7 +138,7 @@ describe "Builder", ->
     
   it "should set attributes on children", ->
     builder.b 'screen', id: 'idle'
-    expect(builder.toString(false)).toEqual("<tml>\n  <screen id=\"idle\" />\n</tml>")
+    expect(builder.toString(false)).toMatch /<tml>[\s\n]*?<screen id="idle"/
   
   it "should build children with attributes with callbacks", ->
     builder.b 'screen', id: 'idle', (b) -> b.b 'display'

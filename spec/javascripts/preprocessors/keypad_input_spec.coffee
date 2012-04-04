@@ -23,7 +23,7 @@ describe "keypad input", ->
     # console.log sim.state.flow[sim.state.flow.length-1]
     expect(sim.state.variables.result.value).toEqual 2
     expect(sim.state.display.trim()).toEqual ""
-  
+    
   it "should not treat cardswipe as keypress '0'", ->
     doc = dom """
       result = 0

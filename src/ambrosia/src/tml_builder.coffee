@@ -77,7 +77,10 @@ Builder.screen = class Screen extends Builder
     new_screen_id = @root.name_registry.increment base_id
     new_screen_uri = uri_for new_screen_id
     operation.uri = new_screen_uri
-    next.b 'variant', operation
+    if operation.key and operation.key in ['cancel']
+      @attrs.cancel = operation.uri
+    else
+      next.b 'variant', operation
     scr = @root.screen new_screen_id, next: next.attrs.uri
     scr._branched_from = this
     scr.merge_to = @merge_to

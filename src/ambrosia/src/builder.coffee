@@ -125,7 +125,7 @@ exports.Builder = class Builder
     
     front = "<#{@name} "
     front += "#{k}=\"#{v}\" " for k, v of @attrs
-    if @tags.length > 0
+    if @tags.length > 0 or @force_endtag
       @tabs() + front.trim() + ">\n" +
         (tag.toString(false) + "\n" for tag in @tags).join("") +
       @tabs() + "</#{@name}>"
