@@ -74,7 +74,7 @@ exports.MethodCall = class MethodCall extends Extension
     screen = builder.root.current_screen()
     function_screen_id = @getMethodName()
     return_screen_id = "#{screen.attrs['id']}_#{builder.root.name_registry.register function_screen_id}"
-
+    
     # see if it's a local variable *referencing* a method; if so, get the reference instead
     # note we do this *after* calculating return_screen_id; this is so we can reuse the
     # return screen, since it's common code.

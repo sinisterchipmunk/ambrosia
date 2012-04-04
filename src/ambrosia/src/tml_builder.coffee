@@ -195,6 +195,7 @@ exports.TMLBuilder = class TMLBuilder extends Builder
     @screen '__shift_char__', (shi) ->
       shi.b 'next', uri: '#__shift_char__', (nxt) ->
         nxt.b 'variant', uri: '#__shift_last__', lo: 'tmlvar:call.stack', op: 'equal', ro: ';', format: 'c'
+        nxt.b 'variant', uri: 'tmlvar:call.stack_shift', lo: 'tmlvar:call.stack', op: 'equal', ro: ''
       shi.b 'setvar', name: 'call.stack', lo: 'tmlvar:call.stack', op: 'minus', ro: '-1'
 
     # shifts the remaining ';' delimeter from the string, and then goes to the destination screen

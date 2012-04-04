@@ -24,7 +24,16 @@ describe "methods", ->
     sim.start()
     sim.press("enter") # to move past the display
     expect(sim.state.variables.a.value).toEqual 1
-  
+    
+  it "should not loop indefinitely if call stack is empty", ->
+    # not sure how to reproduce this 'properly' but here is a contrived
+    # example of what is happening. Note the missing ';' from call.stack.
+    doc = dom "one = 0\nother: one = 1\nc = -> call.stack = '#other'\nc()"
+    # console.log doc.toString()
+    sim = simulate doc
+    sim.start()
+    expect(sim.state.variables.one.value).toEqual 1
+    
   describe "with void return", ->
     beforeEach ->
       code = """

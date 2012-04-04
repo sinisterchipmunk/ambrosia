@@ -1,3 +1,5 @@
+# Not currently in use!
+
 call.stack = ""
 
 __return__:
@@ -7,7 +9,7 @@ __return__:
 
 __shift_char__:
   call.stack = call.stack - -1
-  if call.stack % 'c' == ';' then __shift_last__()
+  if call.stack % 'c' == ';' or call.stack == '' then __shift_last__()
   else __shift_char__()
 
 __shift_last__:
