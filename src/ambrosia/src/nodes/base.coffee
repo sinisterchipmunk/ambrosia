@@ -7,18 +7,18 @@ exports.Base = class Base
     self = this
     children = @children() if @children
     
-    setParent = (node) ->
-      node.parent = self
-      if node instanceof Array
-        setParent n for n in node
-      
     for index in [0...nodes.length]
       node = nodes[index]
-      setParent node
+      @setParent node, self
       if children && children[index] != undefined
         self[children[index]] = node
     @after_initialize() if @after_initialize
   
+  setParent: (node, p) ->
+    node.parent = p
+    if node instanceof Array
+      @setParent n, p for n in node
+    
   # Prefixes str and any new lines in str with two spaces, returning the result. Str
   # is not modified in-place.
   #

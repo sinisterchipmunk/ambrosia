@@ -9,8 +9,9 @@ Document.preprocessor 'eval',
     if namespace == null
       subscope = @current_scope().sub 'eval'
     else
-      if namespace[0] == '.' then subscope = @current_scope().root().sub namespace[1..-1]
-      else subscope = @current_scope().sub namespace
+      subscope = @current_scope().root()
+      # if namespace[0] == '.' then subscope = @current_scope().root().sub namespace[1..-1]
+      # else subscope = @current_scope().sub namespace
       
     entry_name = '__eval_'+eval_id++
     block = TML.parse(code).block
@@ -25,4 +26,5 @@ Document.preprocessor 'eval',
     block.parent = this
     block.scope = subscope
     block.run_prepare_blocks()
+    
     block

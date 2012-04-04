@@ -12,7 +12,7 @@ frontend_element = (element_name, builder, templates...) ->
       @root().current_template = null
     else
       dom_nodes = create_dom template.process this, builder
-      
+    
     screen = builder.current_screen().extend()
 
     frontend = screen.b element_name

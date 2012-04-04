@@ -90,6 +90,19 @@ exports.Simulator = class Simulator
         throw new Error "Variant key '#{key}' is not valid" unless key in KEYS
         throw new Error "'cancel' is not allowed as a variant key" if key in ['cancel']
         
+  # Fails the current TML operation. If the simulator is not waiting at
+  # a state that can involve a failure, an error will be raised.
+  # Valid failable states include:
+  # - post data submission
+  fail: (message = "unknown failure") ->
+    if @at_submit_screen()
+      econn = @state.screen.element.first('submit').attrs.econn
+      @evaluate @find_variable('err.description'), 'string', lo: message
+      @goto econn
+      @start()
+    else
+      throw new Error "Simulator is not at a failable state"
+  
   perform_risk_management: ->
     pan = @find_variable('card.pan').value
     for name, data of CARDS
@@ -172,6 +185,8 @@ exports.Simulator = class Simulator
     @process_form_submission submit if submit = @state.screen.element.first('submit')
       
   process_form_submission: (submit_element) ->
+    if !submit_element.attrs.econn
+      throw new Error "Submit tag in screen '#{@state.screen.id}' requires an 'econn' attribute"
     getvars = submit_element.all('getvar')
     @state.post = path: submit_element.attrs.tgt
     @state.flow.push ["Submitted form", @state.post]

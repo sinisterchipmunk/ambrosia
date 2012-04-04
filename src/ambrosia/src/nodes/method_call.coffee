@@ -32,8 +32,12 @@ exports.MethodCall = class MethodCall extends Extension
       if preps and prep = preps[@getMethodName()]
         @compile = (b) ->
           result = prep.invoke.call this, b.root, (param.compile b for param in @params)...
-          if result instanceof Variable or result instanceof Base
+          if result instanceof Variable
             @type = -> result.type()
+          else if result instanceof Base
+            @type = -> result.type()
+            @setParent result, this
+            result.run_prepare_blocks()
             return result.compile b if result.compile
           else if typeof(result) == 'string'
             @type = -> 'string'

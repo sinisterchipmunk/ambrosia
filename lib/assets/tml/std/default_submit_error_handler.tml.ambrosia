@@ -1,0 +1,2 @@
+default_submit_error_handler:
+  throw err.description
