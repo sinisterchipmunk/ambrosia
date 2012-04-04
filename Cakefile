@@ -23,4 +23,7 @@ task 'build:parser', 'rebuild the Jison parser (run build first)', build_parser 
   cb() if typeof(cb) is 'function'
 
 task 'test', 'run the ambrosia tests',  ->
-  build -> build_parser -> run null, 'script/test'
+  if process.env['SPEC']
+    build -> build_parser -> run null, 'script/test', process.env['SPEC']
+  else
+    build -> build_parser -> run null, 'script/test'

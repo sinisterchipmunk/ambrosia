@@ -20,6 +20,16 @@ exports.Builder = class Builder
     @after_initialize() if @after_initialize
     
     inner(this) if inner
+    
+  make_root: ->
+    @parent = null
+    @root = this
+    tag.set_root this for tag in @tags
+    this
+    
+  set_root: (root) ->
+    @root = root
+    tag.set_root root for tag in @tags
   
   remove: (node_or_name, attrs = {}) ->
     if typeof(node_or_name) == 'object'

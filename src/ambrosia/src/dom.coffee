@@ -25,6 +25,6 @@ exports.build_dom_from = (code, builder = new Builder('__root__')) ->
   dom_nodes = exports.create_dom code
   exports.traverse_and_build builder, dom_nodes
   if builder.name == '__root__'
-    builder.first('tml')
+    builder.first('tml').make_root()
   else
     builder

@@ -48,6 +48,12 @@ Builder.screen = class Screen extends Builder
   is_wait_screen: () ->
     return true if @first 'display' or @first 'print'
     false
+    
+  toString: ->
+    unless @first('next') or not @attrs.next
+      @b 'next', uri: @attrs.next
+      delete @attrs.next
+    super false
   
   variants: () ->
     if next = @first 'next'

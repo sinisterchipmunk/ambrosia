@@ -57,7 +57,7 @@ describe "Simulator", ->
       doc.b 'vardcl', name: 'last_key', type: 'string'
       screen = doc.b 'screen', id: "init"
       screen.b 'setvar', name:'last_key', lo: ''
-      doc.b 'screen', id: 'none'
+      doc.b 'screen', id: 'none', (b) -> b.b 'display'
       key1 = doc.b 'screen', id: 'key1', next: '#init'
       key1.b 'setvar', name: 'last_key', lo: '1'
       next = screen.b "next", uri: "#none"
@@ -89,7 +89,7 @@ describe "Simulator", ->
     describe "with default value", ->
       beforeEach ->
         doc.b 'vardcl', name: 'one', value: '1', type: 'integer'
-        doc.b 'screen', id: 'init'
+        doc.b 'screen', id: 'init', (b) -> b.b 'display'
       
       it "should set value to 1", ->
         simulate doc, (sim) ->
@@ -112,7 +112,7 @@ describe "Simulator", ->
   describe "with a screen leading to another via <next>", ->
     beforeEach ->
       doc.b 'screen', id: 'init', (b) -> b.b 'next', uri: '#other'
-      doc.b 'screen', id: 'other'
+      doc.b 'screen', id: 'other', (b) -> b.b 'display'
     
     it "should follow the <next>", ->
       found = false
@@ -128,7 +128,7 @@ describe "Simulator", ->
       expect(-> simulate doc, (sim) -> true).toThrow()
     
   describe "with a single screen", ->
-    beforeEach -> doc.b 'screen', id: 'init'
+    beforeEach -> doc.b 'screen', id: 'init', (b) -> b.b 'display'
     
     it "should call callback", ->
       called = false

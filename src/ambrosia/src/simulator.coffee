@@ -61,6 +61,7 @@ exports.Simulator = class Simulator
     id = id[1..-1] if id[0] == '#'
     screen = @dom.first("screen", id: id)
     throw new Error "Screen '#{id}' not found!" unless screen
+    throw new Error "Screen element '#{id}' cannot be empty" unless screen.tags.length > 0
     @state.flow.push ["Switched to screen", screen.attrs.id]
     @state.screen.id = screen.attrs.id
     @state.screen.element = screen
