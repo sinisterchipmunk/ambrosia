@@ -86,6 +86,7 @@ exports.Method = class Method extends Base
 
       @create(Assign, varname, @create(Literal, false)).compile builder.root.current_screen()
     @block.compile builder.root.current_screen() if @block
+    builder.root.add_return_screen()
     builder.root.goto previous.attrs.id
     
     # Build a method reference as a return value.
